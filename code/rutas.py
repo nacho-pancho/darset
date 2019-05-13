@@ -106,7 +106,7 @@ def leerArchiSCADA(nidCentral):
             
 
     
-    Medidor = datos.Medidor(tiempo,medidas,ubicacion)
+    Medidor = datos.Medidor("BRAVO1",tiempo,medidas,ubicacion)
     
     parque = datos.Parque(Medidor,cgm,pot,dis)
     
@@ -114,5 +114,4 @@ def leerArchiSCADA(nidCentral):
     return parque
 
 
-parque = leerArchiSCADA(5)    
 #♣fechaNumtoDateTime([42139])      
