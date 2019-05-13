@@ -7,6 +7,7 @@ Created on Thu May  2 16:07:55 2019
 
 import numpy as np
 import filtros as f
+DATADIR = '../data/'
 
 class Ubicacion(object):
     '''

@@ -11,6 +11,8 @@ import numpy as np
 import datetime
 import copy
 
+RUTA_DATOS = '../data/'
+
 
 def fechaNumtoDateTime(dt_num):
     dtini=datetime.datetime(1900, 1,1)
@@ -22,11 +24,7 @@ def fechaNumtoDateTime(dt_num):
     return dt
 
 def archiSCADA(ncentral):
-    pathIni = os.getcwd()
-    os.chdir("..")
-    path = os.getcwd()
-    os.chdir(pathIni)
-    return path +'\modelado_ro\c'+ str(ncentral) +'\c'+str(ncentral)+'_series10min.sas'
+    return RUTA_DATOS +'modelado_ro/c'+ str(ncentral) +'/c'+str(ncentral)+'_series10min.sas'
 
 
 def leerArchiSCADA(nidCentral):    
