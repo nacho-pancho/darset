@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import pandas as pd
 import scipy.signal as signal
+import plotGrafs as pltGrfs
 
 RUTA_DATOS = '../data/'
 
@@ -115,7 +116,7 @@ def leerArchiSCADA(nidCentral):
         minmax = filtros.min_max(tipoDato,PAutorizada)
         nrep = filtros.Nrep(tipoDato)
         
-        med = datos.Medida(meds,tipoDato,nombre,minmax[0],minmax[1],nrep)
+        med = datos.Medida(meds,tiempo,tipoDato,nombre,minmax[0],minmax[1],nrep)
         
         if (tipoDato != 'pot' and tipoDato != 'cgm' and tipoDato != 'dis'):
             medidas.append(med)
@@ -128,7 +129,7 @@ def leerArchiSCADA(nidCentral):
             
 
     
-    Medidor = datos.Medidor(tiempo,medidas,ubicacion)
+    Medidor = datos.Medidor(medidas,ubicacion)
     
     parque = datos.Parque(Medidor,cgm,pot,dis)
     
@@ -169,10 +170,24 @@ def leerArchiSMEC(nidCentral):
     muestras10min = signal.resample_poly(muestras15min,up=15,down=10)
     dt_10min = fechaInitoDateTime(dtini,ndias,10)   
     
-    ran = np.arange(70494,70700,dtype=int)
-    ran2 = np.arange(m.trunc(70494*15/10),m.trunc(70700*15/10),dtype=int)
+    ran = np.arange(80550,80600,dtype=int)
+    ran2 = np.arange(m.trunc(80550*15/10),m.trunc(80600*15/10),dtype=int)
+
+    tipoDato = 'pot'
+    minmax = filtros.min_max(tipoDato,50)
+    nrep = filtros.Nrep(tipoDato)
+    
+    med_10min = datos.Medida(muestras10min,dt_10min,'pot','pot_SMEC_10m',minmax[0],minmax[1],nrep)
+    
+    med_15min = datos.Medida(muestras15min,dt_15min,'pot','pot_SMEC_15m',minmax[0],minmax[1],nrep)
+    
+    ax = pltGrfs.plotMedida(med_10min,'False',ran2,None,False,nidCentral)
+
+    pltGrfs.plotMedida(med_15min,'False',ran,ax,True,nidCentral)
+        
     
     # grafico datos 
+    '''
     dt_15min = list( dt_15min[i] for i in ran )
     dt_10min = list( dt_10min[i] for i in ran2 )
     df = pd.DataFrame(muestras15min[ran], index=dt_15min)
@@ -186,8 +201,6 @@ def leerArchiSMEC(nidCentral):
     archi = path(nidCentral) + "SMEC"  
     plt.savefig(archi,dpi=150)         
 
-    
-    '''
     dt_15min_plt = mdates.date2num(dt_15min)
 #   plt.plot(dt_15min_plt, muestras)
 
