@@ -10,39 +10,29 @@ import matplotlib.dates as mdates
 import pandas as pd
 import datos as d
 
-def plotMedidas(medidas,plt_filtros,ran,ax = None,guardar=False,nidCentral=0):
+def plotMedidas(medidas,plt_filtros,fecha_ini,fecha_fin,guardarFig=False):
 
-    #plt.close('all')    
-    # grafico datos 
+    plt.close('all') 
 
+    ax = None  
 
-
-
-    dt = list( medidas.tiempo[i] for i in ran )
-    muestras = medidas.muestras[ran]
+    for k in range(len(medidas)):   
+        df = pd.DataFrame(medidas[k].muestras, index=medidas[k].tiempo,columns=[medidas[k].nombre])
+          
+        df_filt = df[(df.index >= fecha_ini) & (df.index <= fecha_fin)]
+        
+        if ax == None:
+            fig, ax = plt.subplots()
+            plt.grid(True)
+        
+        df_filt.plot(ax=ax)
     
-    if ax == None:
-        fig, ax = plt.subplots()
-
-    ax.plot_date(dt, muestras)
-   
-    plt.show()
+    plt.show() 
     
-    if guardar:
-        archi ='../data/modelado_ro/c5/SMEC'
-        plt.savefig(archi,dpi=150)
-
+           
+    if guardarFig:
+        archi ='../data/modelado_ro/c5/fig.png'
+        fig.savefig(archi,dpi=150)
     
-    return  ax   
+    return  ax
     
-    '''
-    plt.close('all')    
-    # grafico datos 
-    dt = list( medida.tiempo[i] for i in ran )
-    df = pd.DataFrame(medida.muestras[ran], index=dt,columns=[medida.nombre])
-    
-    if ax == None:
-        ax = df.plot(figsize=(16, 6), grid=True)
-    else:
-        df.plot(ax=ax2)
-    '''

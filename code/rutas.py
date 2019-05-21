@@ -52,7 +52,6 @@ def path(ncentral):
 
 def leerArchiSCADA(nidCentral):    
     
-    nidCentral=5
     archi_scada = archiSCADA(nidCentral)       
     
     f = open(archi_scada, 'r')
@@ -78,8 +77,6 @@ def leerArchiSCADA(nidCentral):
     line=f.readline()
     cols = line.split('\t')
     meteo_utm_yn = float(cols[0])
-    
-
     
     line=f.readline()
     cols = line.split('\t')
@@ -153,7 +150,7 @@ def leerArchiSMEC(nidCentral):
 
     muestras_mat = np.array(result)
     ndias,n15min = muestras_mat.shape
-    muestras15min = muestras_mat.flatten().astype(float)
+    muestras15min = muestras_mat.flatten().astype(float)*4
 
     # Leo fecha inicial
     f = open(archi_SMEC, 'r')
@@ -165,71 +162,35 @@ def leerArchiSMEC(nidCentral):
     dtini_str = cols[0]
     dtini = datetime.datetime.strptime(dtini_str, '%d/%m/%Y') 
 
-    dt_15min = fechaInitoDateTime(dtini,ndias,15)
+    delta_15min = datetime.timedelta(minutes=15)
+    dt_ini_corr = dtini + delta_15min
+    dt_15min = fechaInitoDateTime(dt_ini_corr,ndias,15) # sumo 15 min para que este en fase con SCADA
     
     muestras10min = signal.resample_poly(muestras15min,up=15,down=10)
-    dt_10min = fechaInitoDateTime(dtini,ndias,10)   
-    
-    ran = np.arange(80550,80600,dtype=int)
-    ran2 = np.arange(m.trunc(80550*15/10),m.trunc(80600*15/10),dtype=int)
+    dt_10min = fechaInitoDateTime(dt_ini_corr,ndias,10)   
 
     tipoDato = 'pot'
     minmax = filtros.min_max(tipoDato,50)
     nrep = filtros.Nrep(tipoDato)
-    
+  
     med_10min = datos.Medida(muestras10min,dt_10min,'pot','pot_SMEC_10m',minmax[0],minmax[1],nrep)
-    
     med_15min = datos.Medida(muestras15min,dt_15min,'pot','pot_SMEC_15m',minmax[0],minmax[1],nrep)
-    
-    ax = pltGrfs.plotMedida(med_10min,'False',ran2,None,False,nidCentral)
 
-    pltGrfs.plotMedida(med_15min,'False',ran,ax,True,nidCentral)
-        
-    
-    # grafico datos 
-    '''
-    dt_15min = list( dt_15min[i] for i in ran )
-    dt_10min = list( dt_10min[i] for i in ran2 )
-    df = pd.DataFrame(muestras15min[ran], index=dt_15min)
-    
-    ax = df.plot(figsize=(16, 6), marker='o')
+    return med_10min, med_15min       
 
-    df2 = pd.DataFrame(muestras10min[ran2], index=dt_10min)
-    df2.plot(ax=ax)
-    plt.show()
-
-    archi = path(nidCentral) + "SMEC"  
-    plt.savefig(archi,dpi=150)         
-
-    dt_15min_plt = mdates.date2num(dt_15min)
-#   plt.plot(dt_15min_plt, muestras)
-
-    plt.close('all')
-    plt.figure(1,figsize=(150,20))
-    plt.grid(True)
+nidCentral = 5    
+med_10min, med_15min = leerArchiSMEC(nidCentral)
+parque = leerArchiSCADA(nidCentral)    
 
 
-    x = dt_15min_plt[70494:70700]
-    y = muestras[70494:70700]
-    
-    dates = mdates.date2num(dt_15min)
-    plt.plot_date(dates, y)
-    
-    
-    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%d/%Y'))
-    plt.gca().xaxis.set_major_locator(mdates.DayLocator(30))
-    plt.plot(x,y)
-    plt.gcf().autofmt_xdate()
-    plt.show()
+meds = []
+meds.append(med_10min)
+meds.append(med_15min)
+meds.append(parque.pot)
 
-    plt.plot_date(dt_15min[70494:70700], muestras[70494:70700])
-    plt.show()
-    archi = path(nidCentral) + "SMEC"
-    plt.savefig(archi,dpi=150)
-    '''
 
-    a=1
+pltGrfs.plotMedidas(meds,'False','2018-10-04','2018-10-05',True)
 
-leerArchiSMEC(5) 
-#parque = leerArchiSCADA(5)    
+
+#leerArchiSMEC(5) 
 #♣fechaNumtoDateTime([42139])      

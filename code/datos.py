@@ -76,7 +76,7 @@ class Medidor(object):
     instantes de tiempo
     \see Medida
     '''
-    def __init__(self,tiempo, medidas, ubicacion):
+    def __init__(self, medidas, ubicacion):
         self.medidas = medidas
         self.ubicacion = ubicacion
     
