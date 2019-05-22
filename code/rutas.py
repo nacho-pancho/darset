@@ -186,10 +186,11 @@ parque = leerArchiSCADA(nidCentral)
 meds = []
 meds.append(med_10min)
 meds.append(med_15min)
-meds.append(parque.pot)
+vel_SCADA = parque.medidores.medidas[0]
+meds.append(vel_SCADA)
+meds.append(parque.cgm) 
 
-
-pltGrfs.plotMedidas(meds,'False','2018-10-04','2018-10-05',True)
+pltGrfs.plotMedidas(meds,'False','2018-10-11','2018-10-12',path(nidCentral),True)
 
 
 #leerArchiSMEC(5) 

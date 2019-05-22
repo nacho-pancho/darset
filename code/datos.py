@@ -68,7 +68,13 @@ class Medida(object):
                 self.fuera_de_rango(self)
             self._tranc,cnt = f.filtrar_rep(self.muestras,self._fr,self.nrep)
         return self._tranc
-
+    
+    def filtrosAsInt(self):
+        
+        filtros = np.array((self._fr, self._tranc)).T.astype(int)
+        nombres = columns=[self.nombre + '_filtro_fr',self.nombre + '_filtro_tranc']
+        
+        return filtros, nombres
 
 class Medidor(object):
     '''
