@@ -109,7 +109,7 @@ def leerArchiSCADA(nidCentral):
         if tipoDato == None:
             break
         meds = data[:,i+1]
-        nombre = tipoDato +'_'+ ident
+        nombre = tipoDato + ident
         minmax = filtros.min_max(tipoDato,PAutorizada)
         nrep = filtros.Nrep(tipoDato)
         
@@ -173,25 +173,12 @@ def leerArchiSMEC(nidCentral):
     minmax = filtros.min_max(tipoDato,50)
     nrep = filtros.Nrep(tipoDato)
   
-    med_10min = datos.Medida(muestras10min,dt_10min,'pot','pot_SMEC_10m',minmax[0],minmax[1],nrep)
-    med_15min = datos.Medida(muestras15min,dt_15min,'pot','pot_SMEC_15m',minmax[0],minmax[1],nrep)
+    med_10min = datos.Medida(muestras10min,dt_10min,'pot','potSMEC10m',minmax[0],minmax[1],nrep)
+    med_15min = datos.Medida(muestras15min,dt_15min,'pot','potSMEC15m',minmax[0],minmax[1],nrep)
 
     return med_10min, med_15min       
 
-nidCentral = 5    
-med_10min, med_15min = leerArchiSMEC(nidCentral)
-parque = leerArchiSCADA(nidCentral)    
 
-
-meds = []
-meds.append(med_10min)
-meds.append(med_15min)
-vel_SCADA = parque.medidores.medidas[0]
-meds.append(vel_SCADA)
-meds.append(parque.cgm) 
-
-pltGrfs.plotMedidas(meds,'False','2018-10-11','2018-10-12',path(nidCentral),True)
-
-
+#med_10min, med_15min = leerArchiSMEC(nidCentral)
 #leerArchiSMEC(5) 
 #♣fechaNumtoDateTime([42139])      
