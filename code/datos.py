@@ -35,8 +35,9 @@ class Medida(object):
     Representa una serie de tiempo asociada a una medida
     de tipo particular, por ejemplo meteorologica o de potencia
     '''
-    def __init__(self,muestras,tipo,nombre,minval,maxval,nrep):
+    def __init__(self,muestras,tiempo,tipo,nombre,minval,maxval,nrep):
         self.muestras = muestras
+        self.tiempo = tiempo
         self.tipo = tipo # vel,dir, rad, temp, etc
         self.nombre = nombre #vel_scada, vel_dir, vel_otrogen,etc
         self.minval = minval
