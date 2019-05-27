@@ -27,7 +27,7 @@ parque = r.leerArchiSCADA(nidCentral)
 meds = []
 meds.append(med_10min)
 meds.append(med_15min)
-vel_SCADA = parque.medidores.medidas[0]
+vel_SCADA = parque.medidores[0].medidas[0]
 #meds.append(vel_SCADA)
 meds.append(parque.pot) 
 

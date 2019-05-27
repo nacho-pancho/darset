@@ -86,7 +86,6 @@ class Medidor(object):
     def __init__(self, medidas, ubicacion):
         self.medidas = medidas
         self.ubicacion = ubicacion
-        self.nombre = nombre
     
     def decorrelacion(self):
         '''
