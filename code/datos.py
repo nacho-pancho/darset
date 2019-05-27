@@ -72,7 +72,7 @@ class Medida(object):
     def filtrosAsInt(self):
         
         filtros = np.array((self._fr, self._tranc)).T.astype(int)
-        nombres = columns=[self.nombre + '_filtro_fr',self.nombre + '_filtro_tranc']
+        nombres = [self.nombre + '_filtro_fr',self.nombre + '_filtro_tranc']
         
         return filtros, nombres
 

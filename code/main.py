@@ -28,7 +28,7 @@ meds = []
 meds.append(med_10min)
 meds.append(med_15min)
 vel_SCADA = parque.medidores.medidas[0]
-meds.append(vel_SCADA)
-meds.append(parque.cgm) 
+#meds.append(vel_SCADA)
+meds.append(parque.pot) 
 
 pltGrfs.plotMedidas(meds,'False','2018-10-25','2018-10-30',r.path(nidCentral),True)

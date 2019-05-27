@@ -35,7 +35,6 @@ def plotMedidas(medidas,plt_filtros,fecha_ini,fecha_fin,ruta,guardarFig=False):
     axes[0].grid(True)
     axes[1].grid(True)
     plt.show() 
-
            
     if guardarFig:
         nombreFig = ''
