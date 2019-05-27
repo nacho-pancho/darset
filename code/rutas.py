@@ -10,12 +10,6 @@ import os
 import numpy as np
 import datetime
 import copy
-import math as m
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-import pandas as pd
-import scipy.signal as signal
-import plotGrafs as pltGrfs
 
 RUTA_DATOS = '../data/'
 
@@ -29,25 +23,8 @@ def fechaNumtoDateTime(dt_num):
         dt.append(dt_datetime)
     return dt
 
-def fechaInitoDateTime(dt_ini,ndias,cant_min):
-    dt = []
-    muestras_por_dia = m.trunc((60*24) / cant_min + 0.00001)
-    for dia in range(ndias):
-        for muestra in range(muestras_por_dia):
-            seg = dia*24*3600 + muestra * cant_min * 60
-            dt_datetime=dt_ini + datetime.timedelta(seconds=seg)
-            dt.append(dt_datetime)
-    return dt
-
 def archiSCADA(ncentral):
     return RUTA_DATOS +'modelado_ro/c'+ str(ncentral) +'/c'+str(ncentral)+'_series10min.sas'
-
-def archiSMEC(ncentral):
-    return RUTA_DATOS +'modelado_ro/c'+ str(ncentral) + '/medidasSMEC.txt'
-
-def path(ncentral):
-    return RUTA_DATOS +'modelado_ro/c'+ str(ncentral) + '/'
-
 
 
 def leerArchiSCADA(nidCentral):    
@@ -116,7 +93,7 @@ def leerArchiSCADA(nidCentral):
         minmax = filtros.min_max(tipoDato,PAutorizada)
         nrep = filtros.Nrep(tipoDato)
         
-        med = datos.Medida(meds,tiempo,tipoDato,nombre,minmax[0],minmax[1],nrep)
+        med = datos.Medida(meds,tipoDato,nombre,minmax[0],minmax[1],nrep)
         
         if (tipoDato != 'pot' and tipoDato != 'cgm' and tipoDato != 'dis'):
             medidas.append(med)
@@ -129,11 +106,7 @@ def leerArchiSCADA(nidCentral):
             
 
     
-<<<<<<< HEAD
     Medidor = datos.Medidor("BRAVO1",tiempo,medidas,ubicacion)
-=======
-    Medidor = datos.Medidor(medidas,ubicacion)
->>>>>>> 8dad793769da9c68a264aa96323106146c5c3c5d
     
     parque = datos.Parque(Medidor,cgm,pot,dis)
     
@@ -141,102 +114,4 @@ def leerArchiSCADA(nidCentral):
     return parque
 
 
-<<<<<<< HEAD
-=======
-def leerArchiSMEC(nidCentral):
-    archi_SMEC = archiSMEC(nidCentral)
-
-    # Leo muestras (todas las celdas tienen que tener un valor)
-    f = open(archi_SMEC, 'r')
-    line=f.readline()
-    line=f.readline()    
-    lines=f.readlines()
-    result=[]
-    for x in lines:
-        result.append(x.split('\t')[1:-1])
-        
-    f.close()    
-
-    muestras_mat = np.array(result)
-    ndias,n15min = muestras_mat.shape
-    muestras15min = muestras_mat.flatten().astype(float)
-
-    # Leo fecha inicial
-    f = open(archi_SMEC, 'r')
-    line=f.readline()
-    line=f.readline()
-    line=f.readline()
-    f.close() 
-    cols = line.split('\t')    
-    dtini_str = cols[0]
-    dtini = datetime.datetime.strptime(dtini_str, '%d/%m/%Y') 
-
-    dt_15min = fechaInitoDateTime(dtini,ndias,15)
-    
-    muestras10min = signal.resample_poly(muestras15min,up=15,down=10)
-    dt_10min = fechaInitoDateTime(dtini,ndias,10)   
-    
-    ran = np.arange(80550,80600,dtype=int)
-    ran2 = np.arange(m.trunc(80550*15/10),m.trunc(80600*15/10),dtype=int)
-
-    tipoDato = 'pot'
-    minmax = filtros.min_max(tipoDato,50)
-    nrep = filtros.Nrep(tipoDato)
-    
-    med_10min = datos.Medida(muestras10min,dt_10min,'pot','pot_SMEC_10m',minmax[0],minmax[1],nrep)
-    
-    med_15min = datos.Medida(muestras15min,dt_15min,'pot','pot_SMEC_15m',minmax[0],minmax[1],nrep)
-    
-    ax = pltGrfs.plotMedida(med_10min,'False',ran2,None,False,nidCentral)
-
-    pltGrfs.plotMedida(med_15min,'False',ran,ax,True,nidCentral)
-        
-    
-    # grafico datos 
-    '''
-    dt_15min = list( dt_15min[i] for i in ran )
-    dt_10min = list( dt_10min[i] for i in ran2 )
-    df = pd.DataFrame(muestras15min[ran], index=dt_15min)
-    
-    ax = df.plot(figsize=(16, 6), marker='o')
-
-    df2 = pd.DataFrame(muestras10min[ran2], index=dt_10min)
-    df2.plot(ax=ax)
-    plt.show()
-
-    archi = path(nidCentral) + "SMEC"  
-    plt.savefig(archi,dpi=150)         
-
-    dt_15min_plt = mdates.date2num(dt_15min)
-#   plt.plot(dt_15min_plt, muestras)
-
-    plt.close('all')
-    plt.figure(1,figsize=(150,20))
-    plt.grid(True)
-
-
-    x = dt_15min_plt[70494:70700]
-    y = muestras[70494:70700]
-    
-    dates = mdates.date2num(dt_15min)
-    plt.plot_date(dates, y)
-    
-    
-    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%d/%Y'))
-    plt.gca().xaxis.set_major_locator(mdates.DayLocator(30))
-    plt.plot(x,y)
-    plt.gcf().autofmt_xdate()
-    plt.show()
-
-    plt.plot_date(dt_15min[70494:70700], muestras[70494:70700])
-    plt.show()
-    archi = path(nidCentral) + "SMEC"
-    plt.savefig(archi,dpi=150)
-    '''
-
-    a=1
-
-leerArchiSMEC(5) 
-#parque = leerArchiSCADA(5)    
->>>>>>> 8dad793769da9c68a264aa96323106146c5c3c5d
 #♣fechaNumtoDateTime([42139])      
