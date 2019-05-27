@@ -123,9 +123,7 @@ def leerArchiSCADA(nidCentral):
             cgm=copy.copy(med) 
         elif (tipoDato == 'dis'):
             dis=copy.copy(med) 
-            
 
-    
     Medidor = datos.Medidor(medidas,ubicacion)
     
     parque = datos.Parque(Medidor,cgm,pot,dis)
@@ -177,6 +175,7 @@ def leerArchiSMEC(nidCentral):
     med_15min = datos.Medida(muestras15min,dt_15min,'pot','potSMEC15m',minmax[0],minmax[1],nrep)
 
     return med_10min, med_15min       
+
 
 
 #med_10min, med_15min = leerArchiSMEC(nidCentral)

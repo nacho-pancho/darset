@@ -65,7 +65,7 @@ class Medida(object):
         '''
         if self._tranc is None:
             if self._fr is None:
-                self.fuera_de_rango(self)
+                self.fuera_de_rango()
             self._tranc,cnt = f.filtrar_rep(self.muestras,self._fr,self.nrep)
         return self._tranc
     
@@ -80,11 +80,13 @@ class Medidor(object):
     '''
     Genera una o varias Medidas en determinados
     instantes de tiempo
-    \see Medida
+    @see Medida
     '''
+
     def __init__(self, medidas, ubicacion):
         self.medidas = medidas
         self.ubicacion = ubicacion
+        self.nombre = nombre
     
     def decorrelacion(self):
         '''
@@ -96,9 +98,9 @@ class Medidor(object):
         m = len(self.medidas)
         n = len(self.tiempo)
         trancadas = np.zeros((m,n))
-        for i in len(medidas):
-            trancacas[i,:] = self.medidas[i].trancada()
-            
+        for i in len(self.medidas):
+            trancadas[i,:] = self.medidas[i].trancada()
+        # FALTA TERMINAR
         return 
     
         
@@ -109,7 +111,11 @@ class Parque(object):
     mas medidores.
     '''
     def __init__(self,medidores,cgm,pot,dis):
-        self.medidores = medidores
+        if isinstance(medidores,list):
+            self.medidores = medidores
+        else:
+            self.medidores = list()
+            self.medidores.append(medidores)
         self.cgm = cgm
         self.pot = pot
         self.dis = dis
@@ -132,4 +138,17 @@ class Concentrador(object):
     def deriva (self):
         return None
         
+    @staticmethod
+    def geteventos(filtro, margen=0):
+        '''
+        devuelve una lista de rangos de a forma
+        np.arange(a,b) -> a,.....,b-1
+        correspondientes a lapsos de tiempo durante
+        los que se detectó alguna anomalía.
+        los rangos pueden ser "engorfados" por un margen dado 
+        (por defecto 0) para darle contexto a un graficado posterior.
+        '''
+        N = len(filtro)
+        f0 = filtro.astype(filtro,np.int8)
+    
 #pepe = Ubicacion("loma del orto")
