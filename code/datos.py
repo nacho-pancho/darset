@@ -7,6 +7,7 @@ Created on Thu May  2 16:07:55 2019
 
 import numpy as np
 import filtros as f
+import scipy
 
 class Ubicacion(object):
     '''
@@ -118,9 +119,71 @@ class Parque(object):
         self.cgm = cgm
         self.pot = pot
         self.dis = dis
+        self.filtro_vel_pot = None
         
-    def descorrelacion (self):
+        
+    def decorrelacion_vel_pot (self):
+        
+        NDatosCorr = 30 
+        
+        self.filtro_vel_pot = np.zeros(len(self.pot), dtype=bool)
+
+        
+        vel = self.medidores[0].medidas[0].muestras
+        filt_vel = vel.filtrosAsInt()
+        filt_pot = pot.filtrosAsInt()
+        
+        #encuentro NDatosCorr válidos
+        cnt_datos_OK = 0
+        
+        
+        idx_buff = np.zeros(NDatosCorr,dtype=int)
+        corr = np.zeros(len(vel))
+        k_idx_buff = 0
+        k = 0
+        while k < len(vel):
+            if (filt_vel[k] == 0) and (filt_pot[k] == 0) and (self.cgm[k] > 49.9):
+                if k_idx_buff < NDatosCorr - 1
+                    idx_buff[k_idx_buff] = k
+                    k_idx_buff = k_idx_buff + 1
+                else:
+                    idx_buff_aux = idx_buff
+                    idx_buff[1:NDatosCorr-1] = idx_buff_aux[0:NDatosCorr-2]
+                    idx_buff[0] = k
+            
+            k = k + 1
+                
+            corr[k] = scipy.stats.spearmanr(vel[idx_buff], self.pot[idx_buff])[0]
+        
+        
+        #ahora tengo que ver si corr cambia mucho poner filtro = 1
+        
+        
+               
+            
+            
+
+                
+                
+                
+                
+        vel_buff = np.zeros(NDatosCorr)
+        pot_buff = np.zeros(NDatosCorr)        
+        
+
+        
+        
+        
+        
+        
+        
+        
+        
+        
         return None
+
+
+
     
     def deriva (self):
         return None

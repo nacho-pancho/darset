@@ -18,9 +18,11 @@ def plotMedidas(medidas,plt_filtros,fecha_ini,fecha_fin,ruta,guardarFig=False):
     plt.grid()
     
     for k in range(len(medidas)):   
-        df_meds = pd.DataFrame(medidas[k].muestras, index=medidas[k].tiempo,columns=[medidas[k].nombre])
+        df_meds = pd.DataFrame(medidas[k].muestras, index=medidas[k].tiempo,
+                               columns=[medidas[k].nombre])
           
-        df_meds_filt = df_meds[(df_meds.index >= fecha_ini) & (df_meds.index <= fecha_fin)]
+        df_meds_filt = df_meds[(df_meds.index >= fecha_ini) &
+                               (df_meds.index <= fecha_fin)]
                
         df_meds_filt.plot(ax=axes[0], linewidth=2)
         
@@ -28,7 +30,8 @@ def plotMedidas(medidas,plt_filtros,fecha_ini,fecha_fin,ruta,guardarFig=False):
         
         df_filt = pd.DataFrame(filtros,index=medidas[k].tiempo,columns=nombres)
  
-        df_filt_filt = df_filt[(df_filt.index >= fecha_ini) & (df_filt.index <= fecha_fin)] 
+        df_filt_filt = df_filt[(df_filt.index >= fecha_ini) & 
+                               (df_filt.index <= fecha_fin)] 
         
         df_filt_filt.plot(ax=axes[1], linewidth=2)
 

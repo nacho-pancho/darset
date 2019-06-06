@@ -148,7 +148,7 @@ def leerArchiSMEC(nidCentral):
 
     muestras_mat = np.array(result)
     ndias,n15min = muestras_mat.shape
-    muestras15min = muestras_mat.flatten().astype(float)*4
+    muestras15min = muestras_mat.flatten().astype(float)/4
 
     # Leo fecha inicial
     f = open(archi_SMEC, 'r')
