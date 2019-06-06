@@ -17,43 +17,18 @@ import numpy as np
 from os.path import dirname as up
 import os 
 import rutas as r
+import plotGrafs as pltGrfs
 
-def clip(data,minv,maxv):
-    return np.minimum(maxv, np.maximum(minv,data) )
-
-os.chdir("../modelado_ro")
-
-nroCentral = 5
-
-carpeta =r.carpeta(nroCentral)
-archiSCADA = r.archiSCADA(nroCentral,carpeta)
+nidCentral = 5    
+med_10min, med_15min = r.leerArchiSMEC(nidCentral)
+parque = r.leerArchiSCADA(nidCentral)    
 
 
-legends = ('vel','dir','pot','tmp','pre','hum','cgm','dis')
-data=np.loadtxt(archiSCADA,skiprows=6)
-n,m = data.shape
-marcas = np.zeros((n,4))
+meds = []
+meds.append(med_10min)
+meds.append(med_15min)
+vel_SCADA = parque.medidores[0].medidas[0]
+#meds.append(vel_SCADA)
+meds.append(parque.pot) 
 
-data = clip(data,-10,360)
-rmax = np.std(np.abs(data),axis=0)
-print(rmax)
-
-for i in range(m):
-    data[:,i] = data[:,i]/rmax[i]
-    
-seg = np.arange(0,n,n/20,dtype=np.int)
-i = 0
-ns = len(seg)
-for i in range(len(seg)-1):
-    print(i)
-    a = seg[i]
-    b = seg[i+1]
-    plt.close('all')
-    plt.figure(1,figsize=(150,20))
-    clip = data[a:b,:-1]
-    clip_marcas = marcas[a:b,:]
-    plt.plot(clip,lw=1)
-    plt.legend(legends,fontsize='xx-large')
-    plt.grid(True)
-    plt.savefig(DATADIR + f"c5/c5-{a}-{b}.png",dpi=150)
-    np.savez_compressed(DATADIR + f"c5/c5-{a}-{b}.npz",clip=clip)
+pltGrfs.plotMedidas(meds,'False','2018-10-25','2018-10-30',r.path(nidCentral),True)

@@ -68,7 +68,13 @@ class Medida(object):
                 self.fuera_de_rango()
             self._tranc,cnt = f.filtrar_rep(self.muestras,self._fr,self.nrep)
         return self._tranc
-
+    
+    def filtrosAsInt(self):
+        
+        filtros = np.array((self._fr, self._tranc)).T.astype(int)
+        nombres = [self.nombre + '_filtro_fr',self.nombre + '_filtro_tranc']
+        
+        return filtros, nombres
 
 class Medidor(object):
     '''
@@ -76,11 +82,10 @@ class Medidor(object):
     instantes de tiempo
     @see Medida
     '''
-    def __init__(self,nombre, tiempo, medidas, ubicacion):
-        self.tiempo = tiempo
+
+    def __init__(self, medidas, ubicacion):
         self.medidas = medidas
         self.ubicacion = ubicacion
-        self.nombre = nombre
     
     def decorrelacion(self):
         '''
