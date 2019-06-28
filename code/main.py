@@ -21,8 +21,11 @@ import plotGrafs as pltGrfs
 
 nidCentral = 5    
 med_10min, med_15min = r.leerArchiSMEC(nidCentral)
-parque = r.leerArchiSCADA(nidCentral)    
+parque = r.leerArchiSCADA(nidCentral) 
 
+parque.pot_SMEC  = med_10min
+
+parque.decorrelacion()
 
 meds = []
 #meds.append(med_10min)

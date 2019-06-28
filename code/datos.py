@@ -70,13 +70,14 @@ class Medida(object):
             self._tranc,cnt = f.filtrar_rep(self.muestras,self._fr,self.nrep)
         return self._tranc
     
-    def filtrosAsInt(self):
-        
+    def filtrosAsInt(self):        
         filtros = np.array((self._fr, self._tranc)).T.astype(int)
-        nombres = [self.nombre + '_filtro_fr',self.nombre + '_filtro_tranc']
-        
+        nombres = [self.nombre + '_filtro_fr',self.nombre + '_filtro_tranc']        
         return filtros, nombres
 
+    def filtrada(self):
+        return self.trancada() | self.fuera_de_rango()
+    
 class Medidor(object):
     '''
     Genera una o varias Medidas en determinados
@@ -86,22 +87,14 @@ class Medidor(object):
 
     def __init__(self, medidas, ubicacion):
         self.medidas = medidas
-        self.ubicacion = ubicacion
-    
-    def decorrelacion(self):
-        '''
-        devuelve una matriz de mxn con m la cantidad de medidas
-        y n la cantidad de muestras(comun a todas las medidas).
-        True en la posicion [i,j] indica que la medida i
-        está decorrelacionada del resto en el tiempo j.
-        '''
-        m = len(self.medidas)
-        n = len(self.tiempo)
-        trancadas = np.zeros((m,n))
-        for i in len(self.medidas):
-            trancadas[i,:] = self.medidas[i].trancada()
-        # FALTA TERMINAR
-        return 
+        self.ubicacion = ubicacion    
+
+    def get_medida(self,t):
+        for m in self.medidas:
+            if m.tipo == t:
+                return m
+        print(f"AVISO: medida de tipo {t} no encontrada.")
+        return None
     
         
 class Parque(object):
@@ -118,59 +111,80 @@ class Parque(object):
             self.medidores.append(medidores)
         self.cgm = cgm
         self.pot = pot
+        self.pot_SMEC = None
         self.dis = dis
         self.filtro_vel_pot = None
+        self._filtro_cgm = None
         
+    def filtro_cgm(self):
+        if self._filtro_cgm == None:
+            self._filtro_cgm = np.abs(self.pot.muestras - self.cgm.muestras) < (self.cgm.maxval * 0.1)                 
+        return self._filtro_cgm
         
-    def decorrelacion_vel_pot (self):
+    def decorrelacion(self):
+        '''
+        Arma un filtro para cada medidor
+        donde 1 en cada filtro indica que en ese momento
+        el medidor corresp. esta decorrelacionado con 
+        la potencia reportada por el parque
+        '''
+        self.decorr = list()
+        for med in self.medidores:
+            self.decorr.append( self.decorrelacion_medidor(med) )
+        
+        return self.decorr
+            
+    def decorrelacion_medidor (self,med):
+        
+        vel = med.get_medida('vel')
+        
+        filtro_cons = self.filtro_cgm()
+        filtro_vel = vel.filtrada()
+        filtro_pot = self.pot.filtrada()
+        filtro_total = filtro_cons | filtro_vel | filtro_pot
         
         NDatosCorr = 30 
-        
-        self.filtro_vel_pot = np.zeros(len(self.pot), dtype=bool)
-
-        
-        vel = self.medidores[0].medidas[0].muestras
-        filt_vel = vel.filtrosAsInt()
-        filt_pot = pot.filtrosAsInt()
         
         #encuentro NDatosCorr válidos
         cnt_datos_OK = 0
         
         
         idx_buff = np.zeros(NDatosCorr,dtype=int)
-        corr = np.zeros(len(vel))
+        corr = np.zeros(len(vel.muestras))
         k_idx_buff = 0
         k = 0
-        while k < len(vel):
-            if (filt_vel[k] == 0) and (filt_pot[k] == 0) and (self.cgm[k] > 49.9):
-                if k_idx_buff < NDatosCorr - 1
+        vel_m = vel.muestras
+        pot_m = self.pot.muestras
+        while k < len(vel_m):
+            if not filtro_total[k]:
+                if k_idx_buff < NDatosCorr:
                     idx_buff[k_idx_buff] = k
                     k_idx_buff = k_idx_buff + 1
+                    k = k + 1
+                    continue
                 else:
                     idx_buff_aux = idx_buff
                     idx_buff[1:NDatosCorr-1] = idx_buff_aux[0:NDatosCorr-2]
                     idx_buff[0] = k
-            
+                #print(idx_buff)
+                corr[k] = scipy.stats.spearmanr(vel_m[idx_buff], pot_m[idx_buff])[0]
+                print(k,corr[k])
+            else:
+                corr[k] = corr[k-1]
+                print('(filtrado)')
             k = k + 1
-                
-            corr[k] = scipy.stats.spearmanr(vel[idx_buff], self.pot[idx_buff])[0]
         
         
         #ahora tengo que ver si corr cambia mucho poner filtro = 1
         
         
+        return corr
                
             
             
 
                 
                 
-                
-                
-        vel_buff = np.zeros(NDatosCorr)
-        pot_buff = np.zeros(NDatosCorr)        
-        
-
         
         
         
