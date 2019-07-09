@@ -145,16 +145,14 @@ class Parque(object):
         
         NDatosCorr = 30 
         
-        #encuentro NDatosCorr válidos
-        cnt_datos_OK = 0
-        
-        
+
         idx_buff = np.zeros(NDatosCorr,dtype=int)
         corr = np.zeros(len(vel.muestras))
         k_idx_buff = 0
         k = 0
         vel_m = vel.muestras
         pot_m = self.pot.muestras
+        
         while k < len(vel_m):
             if not filtro_total[k]:
                 if k_idx_buff < NDatosCorr:
@@ -173,31 +171,12 @@ class Parque(object):
                 corr[k] = corr[k-1]
                 print('(filtrado)')
             k = k + 1
-        
-        
+                
         #ahora tengo que ver si corr cambia mucho poner filtro = 1
         
-        
+        corr = corr        
         return corr
-               
-            
-            
-
-                
-                
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        return None
-
-
-
+              
     
     def deriva (self):
         return None
