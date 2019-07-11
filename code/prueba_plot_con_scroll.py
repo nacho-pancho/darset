@@ -22,8 +22,8 @@ class MyFrame(wx.Frame):
         
         self.fig = Figure((5, 4), 75)
 
-        self.axes = self.fig.subplots(nrows=2, ncols=1)    
-
+        self.axes = self.fig.subplots(nrows=2, ncols=1)
+        self.ax2 = self.axes[0].twinx()
         self.canvas = FigureCanvasWxAgg(self.panel, -1, self.fig)
         self.scroll_range = 4000000
         self.canvas.SetScrollbar(wx.HORIZONTAL, 0, 5,
@@ -60,7 +60,7 @@ class MyFrame(wx.Frame):
         self.i_max = len(self.medidas[0].tiempo)
 
         # Size of plot window:
-        self.i_window = 1000
+        self.i_window = 500
 
         # Indices of data interval to be plotted:
         self.i_start = 0
@@ -71,9 +71,7 @@ class MyFrame(wx.Frame):
             med = self.medidas[k]
             self.df_meds.append(pd.DataFrame(med.muestras, index=self.medidas[k].tiempo,
                                    columns=[med.nombre]))
-    
-            
-            
+       
             nombres = med.get_filtros().keys()           
             filtros = np.zeros((len(med.muestras),len(nombres)),dtype=int)
             j = 0
@@ -89,29 +87,30 @@ class MyFrame(wx.Frame):
     def draw_plot(self):
 
         fecha_ini_aux_ts = self.fecha_ini_ts + self.i_start/6/24 * 3600 * 24
-        #print(fecha_ini_aux_ts)
-
         fecha_fin_aux_ts = self.fecha_ini_ts + self.i_end/6/24  * 3600 * 24
-        #print(fecha_fin_aux_ts)
-        
+       
         f_ini_aux = datetime.fromtimestamp(fecha_ini_aux_ts)
-        #print(f_ini_aux)
         f_fin_aux = datetime.fromtimestamp(fecha_fin_aux_ts)
-
+        
         self.axes[0].clear()
         self.axes[1].clear()
-        for k in range(len(self.df_meds)):   
+        #self.ax2.clear()
 
-            #print(f_fin_aux)
+        for k in range(len(self.df_meds)):   
             df_meds_filt = self.df_meds[k][(self.df_meds[k].index >= f_ini_aux) &
-                                   (self.df_meds[k].index <= f_fin_aux)]
-            df_meds_filt.plot(ax=self.axes[0], linewidth=2)
-                    
+                                   (self.df_meds[k].index <= f_fin_aux)]           
+            if self.medidas[k].tipo == 'corr':
+                ejeSec = True
+                #eje = self.ax2
+            else:
+                ejeSec = False
+                #eje = self.axes[0]
+                
+            df_meds_filt.plot(secondary_y=ejeSec,ax=self.axes[0], linewidth=2)                      
             df_filt_filt = self.df_filt[k][(self.df_filt[k].index >= f_ini_aux) & 
                                    (self.df_filt[k].index <= f_fin_aux)] 
             df_filt_filt.plot(ax=self.axes[1], linewidth=2)        
 
-        # Redraw:
         self.canvas.draw()
         
         self.axes[0].grid(True)
