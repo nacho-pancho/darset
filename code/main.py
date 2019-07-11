@@ -12,12 +12,10 @@ Spyder Editor
 This is a temporary script file.
 """
 
-import matplotlib.pyplot as plt
-import numpy as np
-from os.path import dirname as up
-import os 
+
 import rutas as r
 import plotGrafs as pltGrfs
+import prueba_plot_con_scroll as pltScroll
 
 nidCentral = 5    
 med_10min, med_15min = r.leerArchiSMEC(nidCentral)
@@ -25,7 +23,7 @@ parque = r.leerArchiSCADA(nidCentral)
 
 parque.pot_SMEC  = med_10min
 
-parque.decorrelacion()
+#parque.decorrelacion()
 
 meds = []
 #meds.append(med_10min)
@@ -34,4 +32,7 @@ vel_SCADA = parque.medidores[0].medidas[0]
 meds.append(vel_SCADA)
 meds.append(parque.pot) 
 
-pltGrfs.plotMedidas(meds,'False','2018-10-25','2018-10-30',r.path(nidCentral),True)
+#pltGrfs.plotMedidas(meds,'False','2018-10-25','2018-10-30',r.path(nidCentral),True)
+
+app = pltScroll.MyApp(meds)
+app.MainLoop()
