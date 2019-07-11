@@ -23,7 +23,7 @@ parque = r.leerArchiSCADA(nidCentral)
 
 parque.pot_SMEC  = med_10min
 
-#parque.decorrelacion()
+decorr = parque.decorrelacion()
 
 meds = []
 #meds.append(med_10min)
@@ -32,6 +32,7 @@ vel_SCADA = parque.medidores[0].medidas[0]
 meds.append(vel_SCADA)
 meds.append(parque.pot)
 meds.append(parque.cgm)
+meds.append(decorr)
 
 #pltGrfs.plotMedidas(meds,'False','2018-10-25','2018-10-30',r.path(nidCentral),True)
 

@@ -26,6 +26,8 @@ def str_to_tipo(s):
         return 'cgm'    
     elif s.find('dis') != -1:
         return 'dis'
+    elif s.find('corr_sp') != -1:
+        return 'corr_sp'
     else:
         return None
 
@@ -47,6 +49,8 @@ def min_max(tipo,PotAut):
         return [0,PotAut]
     elif tipo == 'dis':
         return [0,1]
+    elif tipo == 'corr_sp':
+        return [-1,1]    
 
 
 def Nrep(tipo):
@@ -71,7 +75,7 @@ def filtrar_rep(v,filtro_huecos,nRep):
  
     filtro = numpy.zeros(len(v), dtype=bool)
     if nRep is None:
-        return filtro,0
+        return filtro
     
     k1 = 1
     cnt_total = 0
@@ -85,7 +89,7 @@ def filtrar_rep(v,filtro_huecos,nRep):
             buscando = False
     
     if buscando:
-        return filtro,0
+        return filtro
 
     vant = v[k1]
     k = k1 + 1
@@ -105,7 +109,7 @@ def filtrar_rep(v,filtro_huecos,nRep):
         
         k = k + 1
 
-    return filtro,cnt_total        
+    return filtro     
 
 tipo=str_to_tipo('vel')
 tipo2=str_to_tipo('dirgasdfgsdfg')

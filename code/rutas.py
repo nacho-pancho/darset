@@ -51,7 +51,7 @@ def path(ncentral):
 
 
 def leerArchiSCADA(nidCentral):    
-    
+    print(nidCentral)
     archi_scada = archiSCADA(nidCentral)       
     
     f = open(archi_scada, 'r')
@@ -124,7 +124,7 @@ def leerArchiSCADA(nidCentral):
         elif (tipoDato == 'dis'):
             dis=copy.copy(med) 
 
-    Medidor = datos.Medidor(medidas,ubicacion)
+    Medidor = datos.Medidor(ident,medidas,ubicacion)
     
     parque = datos.Parque(Medidor,cgm,pot,dis)
     

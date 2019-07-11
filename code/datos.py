@@ -8,6 +8,7 @@ Created on Thu May  2 16:07:55 2019
 import numpy as np
 import filtros as f
 import scipy
+import datos as d
 
 class Ubicacion(object):
     '''
@@ -44,39 +45,28 @@ class Medida(object):
         self.minval = minval
         self.maxval = maxval
         self.nrep = nrep
-        self._fr = None
-        self._tranc = None
-        self.fuera_de_rango()
-        self.trancada()
+        self.filtros = dict()
+        self.agregar_filtro('fuera de rango',f.filtrar_rango
+                            (self.muestras,self.minval,self.maxval))
+        if self.tipo != 'corr':        
+            self.agregar_filtro('trancada',f.filtrar_rep
+                                (self.muestras,self.get_filtro('fuera de rango'),self.nrep))
 
+    def agregar_filtro(self,nombre,filt):
+        print ('filtro',filt)
+        self.filtros[nombre] = filt.astype(np.uint8)
         
-    def fuera_de_rango(self):
-        '''
-        devuelve una lista de verdadero/falso segun la medida
-        esté fuera de rango o no
-        '''
-        if self._fr is None:
-            self._fr  = f.filtrar_rango(self.muestras,self.minval,self.maxval)
-        return self._fr    
+    def get_filtro(self,nombre):
+        return self.filtros[nombre]
     
-    def trancada(self):
-        '''
-        devuelve una lista de verdadero/falso según se detecte
-        que la medida está trancada en ciertos intervalos de tiempo
-        '''
-        if self._tranc is None:
-            if self._fr is None:
-                self.fuera_de_rango()
-            self._tranc,cnt = f.filtrar_rep(self.muestras,self._fr,self.nrep)
-        return self._tranc
-    
-    def filtrosAsInt(self):        
-        filtros = np.array((self._fr, self._tranc)).T.astype(int)
-        nombres = [self.nombre + '_filtro_fr',self.nombre + '_filtro_tranc']        
-        return filtros, nombres
-
+    def get_filtros(self):
+        return self.filtros
+ 
     def filtrada(self):
-        return self.trancada() | self.fuera_de_rango()
+        filtrada = np.zeros(len(self.muestras),dtype=bool)
+        for f in self.filtros.values():
+            filtrada = filtrada | f
+        return f    
     
 class Medidor(object):
     '''
@@ -85,7 +75,8 @@ class Medidor(object):
     @see Medida
     '''
 
-    def __init__(self, medidas, ubicacion):
+    def __init__(self, nombre, medidas, ubicacion):
+        self.nombre = nombre
         self.medidas = medidas
         self.ubicacion = ubicacion    
 
@@ -113,9 +104,9 @@ class Parque(object):
         self.pot = pot
         self.pot_SMEC = None
         self.dis = dis
-        self.filtro_vel_pot = None
+        self.decorr = None
         self._filtro_cgm = None
-        
+
     def filtro_cgm(self):
         if self._filtro_cgm == None:
             self._filtro_cgm = np.abs(self.pot.muestras - self.cgm.muestras) < (self.cgm.maxval * 0.1)                 
@@ -128,10 +119,10 @@ class Parque(object):
         el medidor corresp. esta decorrelacionado con 
         la potencia reportada por el parque
         '''
-        self.decorr = list()
-        for med in self.medidores:
-            self.decorr.append( self.decorrelacion_medidor(med) )
-        
+        if self.decorr is None:
+            self.decorr = dict()
+            for med in self.medidores:
+                self.decorr[med.nombre] = self.decorrelacion_medidor(med)
         return self.decorr
             
     def decorrelacion_medidor (self,med):
@@ -143,8 +134,7 @@ class Parque(object):
         filtro_pot = self.pot.filtrada()
         filtro_total = filtro_cons | filtro_vel | filtro_pot
         
-        NDatosCorr = 30 
-        
+        NDatosCorr = 30     
 
         idx_buff = np.zeros(NDatosCorr,dtype=int)
         corr = np.zeros(len(vel.muestras))
@@ -172,11 +162,7 @@ class Parque(object):
                 print('(filtrado)')
             k = k + 1
                 
-        #ahora tengo que ver si corr cambia mucho poner filtro = 1
-        
-        corr = corr        
-        return corr
-              
+        return Medida(corr,vel.tiempo,'corr','corr_vel_pot',0.7,1.0,0)
     
     def deriva (self):
         return None

@@ -8,6 +8,7 @@ import rutas as r
 import matplotlib.pyplot as plt
 import pandas as pd
 from datetime import datetime
+import numpy as np
 
 import wx
 
@@ -66,13 +67,22 @@ class MyFrame(wx.Frame):
         self.i_end = self.i_start + self.i_window
 
     def init_plot(self):
-        for k in range(len(self.medidas)):   
-            self.df_meds.append(pd.DataFrame(self.medidas[k].muestras, index=self.medidas[k].tiempo,
-                                   columns=[self.medidas[k].nombre]))
+        for k in range(len(self.medidas)):
+            med = self.medidas[k]
+            self.df_meds.append(pd.DataFrame(med.muestras, index=self.medidas[k].tiempo,
+                                   columns=[med.nombre]))
     
-            filtros, nombres = self.medidas[k].filtrosAsInt()
             
-            self.df_filt.append(pd.DataFrame(filtros,index=self.medidas[k].tiempo,
+            
+            nombres = med.get_filtros().keys()           
+            filtros = np.zeros((len(med.muestras),len(nombres)),dtype=int)
+            j = 0
+            for nombre in nombres:
+                f = med.get_filtros().get(nombre)
+                filtros[:,j] = f
+                j = j + 1
+                
+            self.df_filt.append(pd.DataFrame(filtros,index=med.tiempo,
                                columns=nombres))
      
 
@@ -103,6 +113,9 @@ class MyFrame(wx.Frame):
 
         # Redraw:
         self.canvas.draw()
+        
+        self.axes[0].grid(True)
+        self.axes[1].grid(True)
 
     def update_scrollpos(self, new_pos):
         self.i_start = self.i_min + new_pos
