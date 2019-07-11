@@ -1,15 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sat May 11 23:57:26 2019
-
-@author: jfpbf
-"""
-
-# -*- coding: utf-8 -*-
-"""
-Spyder Editor
-
-This is a temporary script file.
 """
 
 

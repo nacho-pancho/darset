@@ -1,7 +1,40 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu May  2 16:07:55 2019
+Este módulo incluye las clases que representan datos del sistema
+a distintos niveles de agregación.
 
+La estructura general es la siguiente:
+
+* El Sistema está compuesto por un número de Plantas.
+
+* Una Planta reune la salida de un número de Medidores, más un conjunto
+  de Medidas propias, como ser la consigna, la generación del parque
+  medida por los equipos del parque, y la generación del parque medida 
+  de manera externa por ADME (SMEC)
+
+* Un Medidor reune un conjunto de Medidas, por ejemplo velocidad del viento,
+  temperatura, radiación solar, etc.
+  
+* Una Medida representa la serie temporal univariada de valores de una variable
+  a lo largo de un tiempo determinado.
+
+Según su nivel de agregación, los distintos objetos de datos son capaces
+de realizar ciertos chequeos sobre los datos. El resultado de lo chequeos
+se denomina 'filtro', y tiene un valor '1' cuando se detecta una anomalía,
+y '0' en condiciones normales.
+
+Por ejemplo, una Medida por sí misma puede determinar si ella está fuera de rango
+o atascada. Estos son dos filtros incorporados por defecto en la clase 'Medida'.
+Es posible agregar otros filtros a una Medida de ser necesario.
+
+Un Parque puede medir decorrelaciones entre la potencia reportada por el parque
+y la medida de velocidad del viento de sus medidores. También puede detectar si acaso una medida
+está desfasada respecto a las demás.
+
+El Sistema en su conjunto puede detectar comportamientos anómalos entre medidas 
+tomadas en distintos parques.
+
+Created on Thu May  2 16:07:55 2019
 @author: fpalacio
 """
 

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon May 13 10:47:38 2019
+Rutinas de procesamiento de señales.
 
-@author: jfpbf
+Created on Mon May 13 10:47:38 2019
 """
 
 import scipy.signal as signal

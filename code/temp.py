@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Spyder Editor
+No debería haber archivos llamados temp.py en el proyecto!
 
 This is a temporary script file.
 """

@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 """
+En este archivo se implementan lo distintos filtros, es decir,
+los distintos métodos para detectar que una medida dada es anómala
+o no.
+
 Created on Thu May  2 14:55:56 2019
 
 @author: fpalacio
