@@ -17,13 +17,14 @@ class MyFrame(wx.Frame):
         wx.Frame.__init__(self,parent, id, 'scrollable plot',
                 style=wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER,
                 size=(800, 400))
-        self.panel = wx.Panel(self, -1)
-
+        self.panel = wx.Panel(self, -1)        
         
         self.fig = Figure((5, 4), 75)
 
-        self.axes = self.fig.subplots(nrows=2, ncols=1)
+        self.axes = self.fig.subplots(nrows=2, ncols=1,sharex=True)
+        
         self.ax2 = self.axes[0].twinx()
+        
         self.canvas = FigureCanvasWxAgg(self.panel, -1, self.fig)
         self.scroll_range = 4000000
         self.canvas.SetScrollbar(wx.HORIZONTAL, 0, 5,
@@ -94,27 +95,28 @@ class MyFrame(wx.Frame):
         
         self.axes[0].clear()
         self.axes[1].clear()
-        #self.ax2.clear()
+        self.ax2.clear()
+        
 
         for k in range(len(self.df_meds)):   
             df_meds_filt = self.df_meds[k][(self.df_meds[k].index >= f_ini_aux) &
                                    (self.df_meds[k].index <= f_fin_aux)]           
             if self.medidas[k].tipo == 'corr':
-                ejeSec = True
-                #eje = self.ax2
+                df_meds_filt.plot(secondary_y=True,ax=self.ax2, linewidth=2,linestyle = '--',color = 'b')                      
             else:
-                ejeSec = False
-                #eje = self.axes[0]
+                df_meds_filt.plot(ax=self.axes[0], linewidth=2)                      
+
                 
-            df_meds_filt.plot(secondary_y=ejeSec,ax=self.axes[0], linewidth=2)                      
             df_filt_filt = self.df_filt[k][(self.df_filt[k].index >= f_ini_aux) & 
                                    (self.df_filt[k].index <= f_fin_aux)] 
             df_filt_filt.plot(ax=self.axes[1], linewidth=2)        
 
-        self.canvas.draw()
-        
         self.axes[0].grid(True)
         self.axes[1].grid(True)
+        self.ax2.grid(True)
+
+        
+        self.canvas.draw()      
 
     def update_scrollpos(self, new_pos):
         self.i_start = self.i_min + new_pos
@@ -169,8 +171,7 @@ if __name__ == '__main__':
     vel_SCADA = parque.medidores[0].medidas[0]
     meds.append(vel_SCADA)
     meds.append(parque.pot) 
-    
-    #pltGrfs.plotMedidas(meds,'False','2018-10-25','2018-10-30',r.path(nidCentral),True)
-    
+    meds.append(parque.cgm) 
+   
     app = MyApp(meds)
     app.MainLoop()

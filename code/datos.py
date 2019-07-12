@@ -139,11 +139,17 @@ class Parque(object):
         self.dis = dis
         self.decorr = None
         self._filtro_cgm = None
+        self._filtro_potBaja = None
 
     def filtro_cgm(self):
         if self._filtro_cgm == None:
             self._filtro_cgm = np.abs(self.pot.muestras - self.cgm.muestras) < (self.cgm.maxval * 0.1)                 
         return self._filtro_cgm
+
+    def filtro_potBaja(self):
+        if self._filtro_potBaja == None:
+            self._filtro_potBaja = np.abs(self.pot.muestras) < (self.cgm.maxval * 0.05)                 
+        return self._filtro_potBaja    
         
     def decorrelacion(self):
         '''
@@ -165,9 +171,10 @@ class Parque(object):
         filtro_cons = self.filtro_cgm()
         filtro_vel = vel.filtrada()
         filtro_pot = self.pot.filtrada()
-        filtro_total = filtro_cons | filtro_vel | filtro_pot
+        filtro_potBaja = self.filtro_potBaja()
+        filtro_total = filtro_cons | filtro_vel | filtro_pot | filtro_potBaja
         
-        NDatosCorr = 30     
+        NDatosCorr = 10     
 
         idx_buff = np.zeros(NDatosCorr,dtype=int)
         corr = np.zeros(len(vel.muestras))
