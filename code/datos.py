@@ -42,6 +42,9 @@ import numpy as np
 import filtros as f
 import scipy
 import datos as d
+import scipy.stats as r
+import matplotlib.pyplot as plt
+from windrose import WindroseAxes
 
 class Ubicacion(object):
     '''
@@ -79,18 +82,18 @@ class Medida(object):
         self.maxval = maxval
         self.nrep = nrep
         self.filtros = dict()
-        self.agregar_filtro('fuera de rango',f.filtrar_rango
+        self.agregar_filtro('fuera_de_rango',f.filtrar_rango
                             (self.muestras,self.minval,self.maxval))
         if self.tipo != 'corr':        
             self.agregar_filtro('trancada',f.filtrar_rep
-                                (self.muestras,self.get_filtro('fuera de rango'),self.nrep))
+                                (self.muestras,self.get_filtro('fuera_de_rango'),self.nrep))
 
-    def agregar_filtro(self,nombre,filt):
+    def agregar_filtro(self,nombre_f,filt):
         print ('filtro',filt)
-        self.filtros[nombre] = filt.astype(np.uint8)
+        self.filtros[self.nombre + '_' + nombre_f] = filt.astype(np.uint8)
         
-    def get_filtro(self,nombre):
-        return self.filtros[nombre]
+    def get_filtro(self,nombre_f):
+        return self.filtros[self.nombre + '_' + nombre_f]
     
     def get_filtros(self):
         return self.filtros
@@ -99,7 +102,7 @@ class Medida(object):
         filtrada = np.zeros(len(self.muestras),dtype=bool)
         for f in self.filtros.values():
             filtrada = filtrada | f
-        return f    
+        return filtrada    
     
 class Medidor(object):
     '''
@@ -111,7 +114,9 @@ class Medidor(object):
     def __init__(self, nombre, medidas, ubicacion):
         self.nombre = nombre
         self.medidas = medidas
-        self.ubicacion = ubicacion    
+        self.ubicacion = ubicacion 
+        plt.figure()
+        self.plot_rosa_vientos()
 
     def get_medida(self,t):
         for m in self.medidas:
@@ -120,6 +125,19 @@ class Medidor(object):
         print(f"AVISO: medida de tipo {t} no encontrada.")
         return None
     
+    def plot_rosa_vientos(self):
+        
+        vel = self.get_medida('vel')
+        dir_ = self.get_medida('dir')
+        
+        filtro = vel.filtrada() | dir_.filtrada()
+        
+        wd = dir_.muestras[filtro < 1]
+        ws = vel.muestras[filtro < 1]
+        ax = WindroseAxes.from_ax()
+        ax.bar(wd, ws, normed=True, opening=0.8, edgecolor='white')
+        ax.set_legend()
+        
         
 class Parque(object):
     '''
@@ -174,16 +192,38 @@ class Parque(object):
         filtro_potBaja = self.filtro_potBaja()
         filtro_total = filtro_cons | filtro_vel | filtro_pot | filtro_potBaja
         
-        NDatosCorr = 10     
+        NDatosCorr = 6     
 
+        idx_mask = np.where(filtro_total < 1)
+        
+        vel_m = vel.muestras
+        pot_m = self.pot.muestras
+        
+        vel_m_mask = vel_m[idx_mask]
+        pot_m_mask = pot_m[idx_mask]
+        
+        plt.figure()
+        plt.scatter(vel_m[idx_mask], pot_m[idx_mask])
+
+        vel_m_mask_u = r.rankdata(vel_m_mask, "average")/len(vel_m_mask)
+        pot_m_mask_u = r.rankdata(pot_m_mask, "average")/len(pot_m_mask)        
+        
+        vel_m_g = np.zeros(len(vel_m))
+        pot_m_g = np.zeros(len(pot_m))
+        
+        vel_m_g [idx_mask] = r.norm.ppf(vel_m_mask_u) 
+        pot_m_g [idx_mask] = r.norm.ppf(pot_m_mask_u)
+
+        plt.figure()        
+        plt.scatter(vel_m_g [idx_mask], pot_m_g [idx_mask])
+         
         idx_buff = np.zeros(NDatosCorr,dtype=int)
         corr = np.zeros(len(vel.muestras))
         k_idx_buff = 0
         k = 0
-        vel_m = vel.muestras
-        pot_m = self.pot.muestras
+
         
-        while k < len(vel_m):
+        while k < len(vel_m_g):
             if not filtro_total[k]:
                 if k_idx_buff < NDatosCorr:
                     idx_buff[k_idx_buff] = k
@@ -195,7 +235,7 @@ class Parque(object):
                     idx_buff[1:NDatosCorr-1] = idx_buff_aux[0:NDatosCorr-2]
                     idx_buff[0] = k
                 #print(idx_buff)
-                corr[k] = scipy.stats.spearmanr(vel_m[idx_buff], pot_m[idx_buff])[0]
+                corr[k] = scipy.stats.pearsonr(vel_m_g[idx_buff], pot_m_g[idx_buff])[0]
                 print(k,corr[k])
             else:
                 corr[k] = corr[k-1]

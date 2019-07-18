@@ -3,10 +3,15 @@
 Created on Sat May 11 23:57:26 2019
 """
 
+from IPython import get_ipython
+get_ipython().magic('reset -sf')
 
 import rutas as r
 import plotGrafs as pltGrfs
 import prueba_plot_con_scroll as pltScroll
+import matplotlib.pyplot as plt
+
+plt.close('all')
 
 nidCentral = 5    
 med_10min, med_15min = r.leerArchiSMEC(nidCentral)
