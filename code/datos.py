@@ -192,7 +192,7 @@ class Parque(object):
         filtro_potBaja = self.filtro_potBaja()
         filtro_total = filtro_cons | filtro_vel | filtro_pot | filtro_potBaja
         
-        NDatosCorr = 6     
+        NDatosCorr = 12     
 
         idx_mask = np.where(filtro_total < 1)
         
@@ -205,8 +205,19 @@ class Parque(object):
         plt.figure()
         plt.scatter(vel_m[idx_mask], pot_m[idx_mask])
 
-        vel_m_mask_u = r.rankdata(vel_m_mask, "average")/len(vel_m_mask)
-        pot_m_mask_u = r.rankdata(pot_m_mask, "average")/len(pot_m_mask)        
+        vel_m_mask_u = r.rankdata(vel_m_mask, "average")#/len(vel_m_mask)
+        pot_m_mask_u = r.rankdata(pot_m_mask, "average")#/len(pot_m_mask)        
+        
+        vel_m_mask_u = vel_m_mask_u / np.max(vel_m_mask_u)
+        pot_m_mask_u = pot_m_mask_u / np.max(pot_m_mask_u)
+        
+        plt.figure()        
+        vel_m_u = np.zeros(len(vel_m))
+        pot_m_u = np.zeros(len(pot_m))
+        
+        vel_m_u [idx_mask] = vel_m_mask_u 
+        pot_m_u [idx_mask] = pot_m_mask_u
+        plt.scatter(vel_m_mask_u, pot_m_mask_u)
         
         vel_m_g = np.zeros(len(vel_m))
         pot_m_g = np.zeros(len(pot_m))
@@ -222,7 +233,8 @@ class Parque(object):
         k_idx_buff = 0
         k = 0
 
-        
+        cualquiera = list()
+        decorr = False
         while k < len(vel_m_g):
             if not filtro_total[k]:
                 if k_idx_buff < NDatosCorr:
@@ -235,13 +247,22 @@ class Parque(object):
                     idx_buff[1:NDatosCorr-1] = idx_buff_aux[0:NDatosCorr-2]
                     idx_buff[0] = k
                 #print(idx_buff)
-                corr[k] = scipy.stats.pearsonr(vel_m_g[idx_buff], pot_m_g[idx_buff])[0]
-                print(k,corr[k])
+                #corr[k] = scipy.stats.pearsonr(vel_m_g[idx_buff], pot_m_g[idx_buff])[0]
+                corr[k] = np.dot(vel_m_u[idx_buff], pot_m_u [idx_buff]) /(np.linalg.norm(vel_m_u[idx_buff]) * np.linalg.norm(pot_m_u[idx_buff]))
+                #print(k,corr[k])
+                if corr[k] < 0.7:
+                    print(k,corr[k])
+                    if not decorr:
+                        cualquiera.append(k)
+                        decorr = True
+                else:
+                    decorr = False
             else:
                 corr[k] = corr[k-1]
-                print('(filtrado)')
+                #print('(filtrado)')
             k = k + 1
-                
+        print(cualquiera)
+        print('Episodios:',len(cualquiera))
         return Medida(corr,vel.tiempo,'corr','corr_vel_pot',0.7,1.0,0)
     
     def deriva (self):
