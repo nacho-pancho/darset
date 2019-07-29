@@ -268,6 +268,18 @@ class Parque(object):
     def deriva (self):
         return None
     
+    def correlacion_dir(self,medidores):
+        dir_ref = medidores[0].get_medida('dir')
+        dir_2 = medidores[1].get_medida('dir')
+        
+        dir_dif  = dir_2 - dir_ref
+        
+        return Medida(np.cos(dir_dif),dir_ref.tiempo,'corr','corr_dir_dir',0.7,1.0,0)
+        
+        
+        
+    
+    
 class Concentrador(object):
     '''
     Reune (concentra) la informacion de varios parques.

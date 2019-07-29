@@ -31,19 +31,19 @@ meds = []
 #for v in decorr.values():
 #    meds.append(v)
 
-#meds.append(med_10min)
+meds.append(parque.pot_SMEC)
 #meds.append(med_15min)
 
 #meds.append(vel_SCADA)
 #meds.append(vel_pronos)
-#meds.append(parque.pot)
+meds.append(parque.pot)
 #meds.append(parque.cgm)
 
 #meds.append(vel_SCADA)
 #meds.append(vel_pronos)
 
-meds.append(dir_SCADA)
-meds.append(dir_pronos)
+#meds.append(dir_SCADA)
+#meds.append(dir_pronos)
 
 
 #pltGrfs.plotMedidas(meds,'False','2018-10-25','2018-10-30',r.path(nidCentral),True)
