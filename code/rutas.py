@@ -42,6 +42,9 @@ def fechaInitoDateTime(dt_ini,ndias,cant_min):
 def archiSCADA(ncentral):
     return RUTA_DATOS +'modelado_ro/c'+ str(ncentral) +'/c'+str(ncentral)+'_series10min.sas'
 
+def archiPRONOS(ncentral):
+    return RUTA_DATOS +'modelado_ro/c'+ str(ncentral) +'/c'+str(ncentral)+'_series60min_pronos.txt'
+
 def archiSMEC(ncentral):
     return RUTA_DATOS +'modelado_ro/c'+ str(ncentral) + '/medidasSMEC.txt'
 
@@ -176,6 +179,75 @@ def leerArchiSMEC(nidCentral):
 
     return med_10min, med_15min       
 
+def leerArchiPRONOS(nidCentral):    
+    print(nidCentral)
+    archi_pronos = archiPRONOS(nidCentral)       
+    
+    f = open(archi_pronos, 'r')
+    
+    # Leo datos de las estaciones
+    
+    line=f.readline()
+    cols = line.split('\t')
+    nSeries = int(cols[0])
+    
+    line=f.readline()
+    cols = line.split('\t')
+    meteo_utm_zona = cols[0]
+    
+    line=f.readline()
+    cols = line.split('\t')
+    meteo_utm_huso = int(cols[0])    
+    
+    line=f.readline()
+    cols = line.split('\t')
+    meteo_utm_xe = float(cols[0])
+
+    line=f.readline()
+    cols = line.split('\t')
+    meteo_utm_yn = float(cols[0])
+    
+    line=f.readline()
+    cols = line.split('\t')
+    ident = cols[0]
+
+    ubicacion = datos.Ubicacion(meteo_utm_zona,meteo_utm_huso,meteo_utm_xe,meteo_utm_yn,ident)
+    
+    line=f.readline()
+    cols = line.split('\t')
+    PAutorizada = float(cols[0])
+
+    line=f.readline()
+    tipos = line.split('\t')
+    seg = np.arange(1,nSeries+1,1,dtype=np.int)
+    tipos = [ tipos[i] for i in seg]
+    
+    f.close() 
+
+    # Leo etiquetas de tiempo comunes a todos los datos
+    data=np.loadtxt(archi_pronos,skiprows=8)
+    dt_num=data[:,0]
+    tiempo=fechaNumtoDateTime(dt_num)
+    
+    # Leo medidas
+
+    medidas = []
+    for i in range(nSeries):
+
+        tipoDato = filtros.str_to_tipo(tipos[i])
+        if tipoDato == None:
+            break
+        meds = data[:,i+1]
+        nombre = tipoDato + ident
+        minmax = filtros.min_max(tipoDato,PAutorizada)
+        nrep = filtros.Nrep(tipoDato)
+        
+        med = datos.Medida(meds,tiempo,tipoDato,nombre,minmax[0],minmax[1],nrep)
+        medidas.append(med)
+
+    Medidor = datos.Medidor(ident,medidas,ubicacion)
+           
+    return Medidor
 
 
 #med_10min, med_15min = leerArchiSMEC(nidCentral)
