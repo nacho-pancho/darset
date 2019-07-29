@@ -5,17 +5,17 @@ a distintos niveles de agregación.
 
 La estructura general es la siguiente:
 
-* El Sistema está compuesto por un número de Plantas.
+* El SISTEMA está compuesto por un número de PLANTAS.
 
-* Una Planta reune la salida de un número de Medidores, más un conjunto
-  de Medidas propias, como ser la consigna, la generación del parque
+* Una PLANTA reune la salida de un número de MEDIDORES, más un conjunto
+  de MEDIDAS propias, como ser la consigna, la generación del parque
   medida por los equipos del parque, y la generación del parque medida 
   de manera externa por ADME (SMEC)
 
-* Un Medidor reune un conjunto de Medidas, por ejemplo velocidad del viento,
+* Un MEDIDOR reune un conjunto de MEDIDAS, por ejemplo velocidad del viento,
   temperatura, radiación solar, etc.
   
-* Una Medida representa la serie temporal univariada de valores de una variable
+* Una MEDIDA representa la serie temporal univariada de valores de una variable
   a lo largo de un tiempo determinado.
 
 Según su nivel de agregación, los distintos objetos de datos son capaces
@@ -37,6 +37,7 @@ tomadas en distintos parques.
 Created on Thu May  2 16:07:55 2019
 @author: fpalacio
 """
+##############################################################################
 
 import numpy as np
 import filtros as f
@@ -44,6 +45,8 @@ import datos as d
 import scipy.stats as r
 import matplotlib.pyplot as plt
 from windrose import WindroseAxes
+
+##############################################################################
 
 class Ubicacion(object):
     '''
@@ -59,13 +62,7 @@ class Ubicacion(object):
         self.y = y
         self.ident = ident
 
-#    def __init__(self,texto):
-        '''
-        inicializa la ubicacion en base a un texto en formato estandar
-        '''
-#        self.zona = 0
-        
- # nacho fing eduy, ignacio.ramirez gmail, ignacio.ramirez.iie 
+##############################################################################
 
 class Medida(object):
     '''
@@ -87,21 +84,31 @@ class Medida(object):
             self.agregar_filtro('trancada',f.filtrar_rep
                                 (self.muestras,self.get_filtro('fuera_de_rango'),self.nrep))
 
+
+
     def agregar_filtro(self,nombre_f,filt):
         #print ('filtro',filt)
         self.filtros[self.nombre + '_' + nombre_f] = filt.astype(np.uint8)
+
+
         
     def get_filtro(self,nombre_f):
         return self.filtros[self.nombre + '_' + nombre_f]
+
+
     
     def get_filtros(self):
         return self.filtros
+
+
  
     def filtrada(self):
         filtrada = np.zeros(len(self.muestras),dtype=bool)
         for f in self.filtros.values():
             filtrada = filtrada | f
         return filtrada    
+    
+##############################################################################
     
 class Medidor(object):
     '''
@@ -110,11 +117,14 @@ class Medidor(object):
     @see Medida
     '''
 
+
     def __init__(self, nombre, medidas, ubicacion):
         self.nombre = nombre
         self.medidas = medidas
         self.ubicacion = ubicacion 
         #self.plot_rosa_vientos()
+
+
 
     def get_medida(self,t):
         for m in self.medidas:
@@ -122,6 +132,8 @@ class Medidor(object):
                 return m
         print(f"AVISO: medida de tipo {t} no encontrada.")
         return None
+
+
     
     def plot_rosa_vientos(self):
         
@@ -136,7 +148,8 @@ class Medidor(object):
         ax.bar(wd, ws, normed=True, opening=0.8, edgecolor='white')
         ax.set_legend()
         
-        
+##############################################################################
+
 class Parque(object):
     '''
     Representa un parque de generación de energía
@@ -157,15 +170,21 @@ class Parque(object):
         self._filtro_cgm = None
         self._filtro_potBaja = None
 
+
+
     def filtro_cgm(self):
         if self._filtro_cgm == None:
             self._filtro_cgm = np.abs(self.pot.muestras - self.cgm.muestras) < (self.cgm.maxval * 0.1)                 
         return self._filtro_cgm
 
+
+
     def filtro_potBaja(self):
         if self._filtro_potBaja == None:
             self._filtro_potBaja = np.abs(self.pot.muestras) < (self.cgm.maxval * 0.05)                 
         return self._filtro_potBaja    
+
+
         
     def decorrelacion(self):
         '''
@@ -179,6 +198,8 @@ class Parque(object):
             for med in self.medidores:
                 self.decorr[med.nombre] = self.decorrelacion_medidor(med)
         return self.decorr
+
+
             
     def decorrelacion_medidor (self,med):
         
@@ -262,9 +283,13 @@ class Parque(object):
         print(cualquiera)
         print('Episodios:',len(cualquiera))
         return Medida(corr,vel.tiempo,'corr','corr_vel_pot',0.7,1.0,0)
+
+
     
     def deriva (self):
         return None
+
+
     
     def correlacion_dir(self,medidores):
         dir_ref = medidores[0].get_medida('dir')
@@ -274,10 +299,8 @@ class Parque(object):
         
         return Medida(np.cos(dir_dif),dir_ref.tiempo,'corr','corr_dir_dir',0.7,1.0,0)
         
-        
-        
-    
-    
+##############################################################################
+            
 class Concentrador(object):
     '''
     Reune (concentra) la informacion de varios parques.
@@ -287,8 +310,12 @@ class Concentrador(object):
     def __init__(self,parques):
         self.parques = parques
 
+
+
     def deriva (self):
         return None
+
+
         
     @staticmethod
     def geteventos(filtro, margen=0):
@@ -303,4 +330,4 @@ class Concentrador(object):
         N = len(filtro)
         f0 = filtro.astype(filtro,np.int8)
     
-#pepe = Ubicacion("loma del orto")
+##############################################################################

@@ -5,9 +5,13 @@ Created on Mon May 20 12:04:47 2019
 @author: fpalacio
 """
 
+##############################################################################
+
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+
+##############################################################################
 
 def plotMedidas(medidas,plt_filtros,fecha_ini,fecha_fin,ruta,guardarFig=False):
 
@@ -48,3 +52,4 @@ def plotMedidas(medidas,plt_filtros,fecha_ini,fecha_fin,ruta,guardarFig=False):
     
     return  None
     
+##############################################################################

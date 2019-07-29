@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
+# SE USA ESTO?
+#
+##############################################################################
 import matplotlib.pyplot as plt
 import rutas
+
+##############################################################################
 
 def plotmedidas(medidor):
     fh = plt.figure()
@@ -15,9 +20,13 @@ def plotmedidas(medidor):
     plt.legend(leg)            
     return fh
 
+##############################################################################
+
 if __name__ == "__main__":
     parque = rutas.leerArchiSCADA(5)
     handles = list()
     for med in  parque.medidores:
         handles.append(plotmedidas(med))
     plt.show()
+    
+##############################################################################

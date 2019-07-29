@@ -8,8 +8,11 @@ Created on Thu May  2 14:55:56 2019
 
 @author: fpalacio
 """
+##############################################################################
+
 import numpy
 
+##############################################################################
 
 def str_to_tipo(s):
     if s.find('Var(vel)') != -1:
@@ -35,6 +38,7 @@ def str_to_tipo(s):
     else:
         return None
 
+##############################################################################
         
 def min_max(tipo,PotAut):
     if tipo == 'vel':
@@ -56,6 +60,7 @@ def min_max(tipo,PotAut):
     elif tipo == 'corr_sp':
         return [-1,1]    
 
+##############################################################################
 
 def Nrep(tipo):
     if tipo == 'cgm' or tipo == 'dis':
@@ -65,6 +70,7 @@ def Nrep(tipo):
     else:
         return 3
 
+##############################################################################
 
 def filtrar_rango(v,min_v,max_v):
     filtro = numpy.zeros(len(v), dtype=bool)
@@ -73,7 +79,7 @@ def filtrar_rango(v,min_v,max_v):
             filtro[i] = True    
     return filtro 
         
-
+##############################################################################
 
 def filtrar_rep(v,filtro_huecos,nRep):
  
@@ -115,6 +121,8 @@ def filtrar_rep(v,filtro_huecos,nRep):
 
     return filtro     
 
-tipo=str_to_tipo('vel')
-tipo2=str_to_tipo('dirgasdfgsdfg')
+##############################################################################
+
+#tipo=str_to_tipo('vel')
+#tipo2=str_to_tipo('dirgasdfgsdfg')
         

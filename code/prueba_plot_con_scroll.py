@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+##############################################################################
+#
+# Ploteo de series largas con scroll
+#
+##############################################################################
+
 from numpy import arange, sin, pi, float, size
 
 import matplotlib
@@ -9,8 +16,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from datetime import datetime
 import numpy as np
-
 import wx
+
+##############################################################################
 
 class MyFrame(wx.Frame):
     
@@ -68,6 +76,7 @@ class MyFrame(wx.Frame):
         self.i_start = 0
         self.i_end = self.i_start + self.i_window
 
+
     def init_plot(self):
         for k in range(len(self.medidas)):
             med = self.medidas[k]
@@ -115,10 +124,9 @@ class MyFrame(wx.Frame):
 
         self.axes[0].grid(True)
         self.axes[1].grid(True)
-        self.ax2.grid(True)
-
-        
+        self.ax2.grid(True)        
         self.canvas.draw()      
+
 
     def update_scrollpos(self, new_pos):
         print("update_scrollpos",new_pos)
@@ -126,6 +134,7 @@ class MyFrame(wx.Frame):
         self.i_end = self.i_min + self.i_window + new_pos
         self.canvas.SetScrollPos(wx.HORIZONTAL, new_pos)
         self.draw_plot()
+
 
     def OnScrollEvt(self, event):
         evtype = event.GetEventType()
@@ -148,6 +157,8 @@ class MyFrame(wx.Frame):
         else:
             print ("unhandled scroll event, type id:", evtype)
 
+##############################################################################
+
 class MyApp(wx.App):
     def __init__(self, medidas):
         self.medidas = medidas
@@ -159,3 +170,4 @@ class MyApp(wx.App):
         self.SetTopWindow(self.frame)
         return True
 
+##############################################################################

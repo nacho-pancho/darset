@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu May  2 14:49:07 2019
+Funciones para lear archivos de datos y cargarlos en las distintas
+estructuras y clases que se definen en este paquete.
 
 @author: fpalacio
 """
@@ -17,8 +18,11 @@ import pandas as pd
 import scipy.signal as signal
 import plotGrafs as pltGrfs
 
+##############################################################################
+
 RUTA_DATOS = '../data/'
 
+##############################################################################
 
 def fechaNumtoDateTime(dt_num):
     dtini=datetime.datetime(1900, 1,1)
@@ -28,6 +32,8 @@ def fechaNumtoDateTime(dt_num):
         dt_datetime=dtini + datetime.timedelta(seconds=((num-2)*24*3600))
         dt.append(dt_datetime)
     return dt
+
+##############################################################################
 
 def fechaInitoDateTime(dt_ini,ndias,cant_min):
     dt = []
@@ -39,19 +45,27 @@ def fechaInitoDateTime(dt_ini,ndias,cant_min):
             dt.append(dt_datetime)
     return dt
 
+##############################################################################
+
 def archiSCADA(ncentral):
     return RUTA_DATOS +'modelado_ro/c'+ str(ncentral) +'/c'+str(ncentral)+'_series10min.sas'
+
+##############################################################################
 
 def archiPRONOS(ncentral):
     return RUTA_DATOS +'modelado_ro/c'+ str(ncentral) +'/c'+str(ncentral)+'_series60min_pronos.txt'
 
+##############################################################################
+
 def archiSMEC(ncentral):
     return RUTA_DATOS +'modelado_ro/c'+ str(ncentral) + '/medidasSMEC.txt'
+
+##############################################################################
 
 def path(ncentral):
     return RUTA_DATOS +'modelado_ro/c'+ str(ncentral) + '/'
 
-
+##############################################################################
 
 def leerArchiSCADA(nidCentral):    
     print(nidCentral)
@@ -131,9 +145,9 @@ def leerArchiSCADA(nidCentral):
     
     parque = datos.Parque(Medidor,cgm,pot,dis)
     
-    
     return parque
 
+##############################################################################
 
 def leerArchiSMEC(nidCentral):
     archi_SMEC = archiSMEC(nidCentral)
@@ -178,6 +192,8 @@ def leerArchiSMEC(nidCentral):
     med_15min = datos.Medida(muestras15min,dt_15min,'pot','potSMEC15m',minmax[0],minmax[1],nrep)
 
     return med_10min, med_15min       
+
+##############################################################################
 
 def leerArchiPRONOS(nidCentral):    
     print(nidCentral)
@@ -249,6 +265,7 @@ def leerArchiPRONOS(nidCentral):
            
     return Medidor
 
+##############################################################################
 
 #med_10min, med_15min = leerArchiSMEC(nidCentral)
 #leerArchiSMEC(5) 
