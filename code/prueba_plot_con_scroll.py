@@ -13,6 +13,7 @@ import numpy as np
 import wx
 
 class MyFrame(wx.Frame):
+    
     def __init__(self, medidas,parent,id):
         wx.Frame.__init__(self,parent, id, 'scrollable plot',
                 style=wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER,
@@ -26,7 +27,7 @@ class MyFrame(wx.Frame):
         self.ax2 = self.axes[0].twinx()
         
         self.canvas = FigureCanvasWxAgg(self.panel, -1, self.fig)
-        self.scroll_range = 4000000
+        self.scroll_range = 400000
         self.canvas.SetScrollbar(wx.HORIZONTAL, 0, 5,
                                  self.scroll_range)
 
@@ -70,7 +71,8 @@ class MyFrame(wx.Frame):
     def init_plot(self):
         for k in range(len(self.medidas)):
             med = self.medidas[k]
-            self.df_meds.append(pd.DataFrame(med.muestras, index=self.medidas[k].tiempo,
+            print(med.nombre,med.tiempo[0])
+            self.df_meds.append(pd.DataFrame(med.muestras, index=med.tiempo,
                                    columns=[med.nombre]))
        
             nombres = med.get_filtros().keys()           
@@ -92,7 +94,7 @@ class MyFrame(wx.Frame):
        
         f_ini_aux = datetime.fromtimestamp(fecha_ini_aux_ts)
         f_fin_aux = datetime.fromtimestamp(fecha_fin_aux_ts)
-        
+        print(f"ini_aux={f_ini_aux} fin_aux={f_fin_aux}")
         self.axes[0].clear()
         self.axes[1].clear()
         self.ax2.clear()
@@ -119,6 +121,7 @@ class MyFrame(wx.Frame):
         self.canvas.draw()      
 
     def update_scrollpos(self, new_pos):
+        print("update_scrollpos",new_pos)
         self.i_start = self.i_min + new_pos
         self.i_end = self.i_min + self.i_window + new_pos
         self.canvas.SetScrollPos(wx.HORIZONTAL, new_pos)
@@ -156,22 +159,3 @@ class MyApp(wx.App):
         self.SetTopWindow(self.frame)
         return True
 
-if __name__ == '__main__':
-    nidCentral = 5    
-    med_10min, med_15min = r.leerArchiSMEC(nidCentral)
-    parque = r.leerArchiSCADA(nidCentral) 
-    
-    parque.pot_SMEC  = med_10min
-    
-    #parque.decorrelacion()
-    
-    meds = []
-    #meds.append(med_10min)
-    #meds.append(med_15min)
-    vel_SCADA = parque.medidores[0].medidas[0]
-    meds.append(vel_SCADA)
-    meds.append(parque.pot) 
-    meds.append(parque.cgm) 
-   
-    app = MyApp(meds)
-    app.MainLoop()

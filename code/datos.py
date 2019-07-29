@@ -40,7 +40,6 @@ Created on Thu May  2 16:07:55 2019
 
 import numpy as np
 import filtros as f
-import scipy
 import datos as d
 import scipy.stats as r
 import matplotlib.pyplot as plt
@@ -89,7 +88,7 @@ class Medida(object):
                                 (self.muestras,self.get_filtro('fuera_de_rango'),self.nrep))
 
     def agregar_filtro(self,nombre_f,filt):
-        print ('filtro',filt)
+        #print ('filtro',filt)
         self.filtros[self.nombre + '_' + nombre_f] = filt.astype(np.uint8)
         
     def get_filtro(self,nombre_f):
@@ -115,8 +114,7 @@ class Medidor(object):
         self.nombre = nombre
         self.medidas = medidas
         self.ubicacion = ubicacion 
-        plt.figure()
-        self.plot_rosa_vientos()
+        #self.plot_rosa_vientos()
 
     def get_medida(self,t):
         for m in self.medidas:
@@ -251,7 +249,7 @@ class Parque(object):
                 corr[k] = np.dot(vel_m_u[idx_buff], pot_m_u [idx_buff]) /(np.linalg.norm(vel_m_u[idx_buff]) * np.linalg.norm(pot_m_u[idx_buff]))
                 #print(k,corr[k])
                 if corr[k] < 0.7:
-                    print(k,corr[k])
+                    #print(k,corr[k])
                     if not decorr:
                         cualquiera.append(k)
                         decorr = True

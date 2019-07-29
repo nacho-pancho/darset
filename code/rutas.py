@@ -167,7 +167,7 @@ def leerArchiSMEC(nidCentral):
     dt_ini_corr = dtini + delta_15min
     dt_15min = fechaInitoDateTime(dt_ini_corr,ndias,15) # sumo 30 min para que este en fase con SCADA
     
-    muestras10min = signal.resample_poly(muestras15min,up=3,down=2)
+    muestras10min = signal.resample_poly(muestras15min,up=15,down=10)
     dt_10min = fechaInitoDateTime(dt_ini_corr,ndias,10)   
 
     tipoDato = 'pot'
