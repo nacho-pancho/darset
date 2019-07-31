@@ -25,11 +25,11 @@ if __name__ == '__main__':
     
     parque.pot_SMEC  = med_10min
     
-    #vel_SCADA = parque.medidores[0].get_medida('vel')
-    #dir_SCADA = parque.medidores[0].get_medida('dir')
+    vel_SCADA = parque.medidores[0].get_medida('vel')
+    dir_SCADA = parque.medidores[0].get_medida('dir')
     
     #vel_pronos = medidor_pronos.get_medida('vel')
-    #dir_pronos = medidor_pronos.get_medida('dir')
+    dir_pronos = medidor_pronos.get_medida('dir')
     #parque.decorrelacion()
     
     meds = []
@@ -37,18 +37,18 @@ if __name__ == '__main__':
     #for v in decorr.values():
     #    meds.append(v)
     
-    meds.append(parque.pot)
-    meds.append(parque.cgm)
+    #meds.append(parque.pot)
+    #meds.append(parque.cgm)
     
-    meds.append(vel_SCADA)
-    meds.append(vel_pronos)
+    #meds.append(vel_SCADA)
+    #meds.append(vel_pronos)
     
-    #meds.append(dir_SCADA)
-    #meds.append(dir_pronos)    
+    meds.append(dir_SCADA)
+    meds.append(dir_pronos)    
     
     #pltGrfs.plotMedidas(meds,'False','2018-10-25','2018-10-30',r.path(nidCentral),True)
-    meds.append(med_10min)
-    meds.append(med_15min)
+    #meds.append(med_10min)
+    #meds.append(med_15min)
    
     app = pltScroll.MyApp(meds)
     app.MainLoop()
