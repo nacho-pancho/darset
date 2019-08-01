@@ -25,13 +25,20 @@ RUTA_DATOS = '../data/'
 ##############################################################################
 
 def fechaNumtoDateTime(dt_num):
-    dtini=datetime.datetime(1900, 1,1)
     dt = []
     for i in range(len(dt_num)):
         num= dt_num[i]
-        dt_datetime=dtini + datetime.timedelta(seconds=((num-2)*24*3600))
+        dt_datetime=NumtoDateTime(num)
         dt.append(dt_datetime)
     return dt
+
+##############################################################################
+    
+
+def NumtoDateTime(num):
+    dtini=datetime.datetime(1900, 1,1)
+    dt_datetime=dtini + datetime.timedelta(seconds=((num-2)*24*3600))
+    return dt_datetime
 
 ##############################################################################
 
@@ -237,19 +244,20 @@ def leerArchiPRONOS(nidCentral):
     tipos = line.split('\t')
     seg = np.arange(1,nSeries+1,1,dtype=np.int)
     tipos = [ tipos[i] for i in seg]
-    
-    f.close() 
+        
 
     # Leo etiquetas de tiempo comunes a todos los datos
     data=np.loadtxt(archi_pronos,skiprows=8)
 
-    cols = line.split('\t')    
+    line=f.readline()
+    cols = line.split('\t')   
+    f.close() 
     dtini_str = cols[0]
-    dtini_num=fechaNumtoDateTime(dtini_str)
+    dtini = NumtoDateTime(int(dtini_str))
 
     delta_30min = datetime.timedelta(minutes=30) # sumo 30 min para que este en fase con SCADA
-    dt_ini_corr = dtini_num + delta_30min
-    dt_10min = fechaInitoDateTime(dt_ini_corr,len(data[:,1]),10)       
+    dt_ini_corr = dtini + delta_30min
+    dt_10min = fechaInitoDateTime(dt_ini_corr,m.trunc(len(data[:,1])/24),10)       
     
     # Leo medidas
     medidas = []
@@ -266,15 +274,20 @@ def leerArchiPRONOS(nidCentral):
         if tipoDato == 'vel':
             meds10min = signal.resample_poly(meds,up=60,down=10)
         else:            
-            meds_sin = m.sin(m.radians(meds))
-            meds_cos = m.cos(m.radians(meds))
+            meds_sin = [m.sin(m.radians(k)) for k in meds ]
+            meds_cos = [m.cos(m.radians(k)) for k in meds ]
             
             meds_sin_10m = signal.resample_poly(meds_sin,up=60,down=10)
             meds_cos_10m = signal.resample_poly(meds_cos,up=60,down=10)
             
-            meds10min = m.atan(meds_sin_10m/meds_cos_10m)
-            meds10min = m.degrees(meds10min)
-        
+            meds_tan_10m = meds_sin_10m/meds_cos_10m
+            
+            meds10min = [m.atan2(s,c) for s,c in zip(meds_sin_10m,meds_cos_10m)]
+            #meds10min = [m.degrees(k) for k in meds10min]
+            for k in range(len(meds10min)):
+                if meds10min[k] < 0 :
+                    meds10min[k] = meds10min[k] + 360 
+                                
         med = datos.Medida(meds10min,dt_10min,tipoDato,nombre,minmax[0],minmax[1],nrep)
         medidas.append(med)
 
