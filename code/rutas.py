@@ -287,7 +287,7 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
                     if meds_m[k] < 0 :
                         meds_m[k] = meds_m[k] + 360
                 
-                meds = meds_m
+                meds = np.asarray(meds_m) 
             
         med = datos.Medida(meds,dt_10min,tipoDato,nombre,minmax[0],minmax[1],nrep)
         medidas.append(med)

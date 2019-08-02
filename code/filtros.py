@@ -13,7 +13,7 @@ Created on Thu May  2 14:55:56 2019
 import numpy
 import datos as d
 import numpy as np
-import rutas as r
+import scipy.stats as r
 
 ##############################################################################
 
@@ -145,8 +145,8 @@ def corr_medidas(x,y,filtro_total,NDatosCorr):
     x_m_mask_u = x_m_mask_u / np.max(x_m_mask_u)
     y_m_mask_u = y_m_mask_u / np.max(y_m_mask_u)
            
-    x_m_u = np.zeros(len(x))
-    y_m_u = np.zeros(len(y))
+    x_m_u = np.zeros(len(x_m))
+    y_m_u = np.zeros(len(y_m))
     
     x_m_u [idx_mask] = x_m_mask_u 
     y_m_u [idx_mask] = y_m_mask_u
@@ -158,7 +158,7 @@ def corr_medidas(x,y,filtro_total,NDatosCorr):
 
     cualquiera = list()
     decorr = False
-    while k < len(x_m_u):
+    while k < len(x_m):
         if not filtro_total[k]:
             if k_idx_buff < NDatosCorr:
                 idx_buff[k_idx_buff] = k
@@ -171,7 +171,7 @@ def corr_medidas(x,y,filtro_total,NDatosCorr):
                 idx_buff[0] = k
 
             if flg_dir_dir:
-                corr[k] = 1 - np.mean(x_m_u[idx_buff] - y_m_u [idx_buff])/360
+                corr[k] = 1 - np.abs(np.mean(x_m[idx_buff] - y_m [idx_buff]))/360
             else:     
                 corr[k] = np.dot(x_m_u[idx_buff], y_m_u [idx_buff]) / \
                     (np.linalg.norm(x_m_u[idx_buff]) * np.linalg.norm(y_m_u[idx_buff]))
