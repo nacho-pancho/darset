@@ -11,6 +11,9 @@ Created on Thu May  2 14:55:56 2019
 ##############################################################################
 
 import numpy
+import datos as d
+import numpy as np
+import rutas as r
 
 ##############################################################################
 
@@ -122,6 +125,74 @@ def filtrar_rep(v,filtro_huecos,nRep):
     return filtro     
 
 ##############################################################################
+    
+def corr_medidas(x,y,filtro_total,NDatosCorr):
+
+    if ((x.tipo == 'dir') and (y.tipo == 'dir')):
+        flg_dir_dir = True
+       
+    idx_mask = np.where(filtro_total < 1)
+    
+    x_m = x.muestras
+    y_m = y.muestras
+    
+    x_m_mask = x_m[idx_mask]
+    y_m_mask = y_m[idx_mask]
+    
+    x_m_mask_u = r.rankdata(x_m_mask, "average")
+    y_m_mask_u = r.rankdata(y_m_mask, "average")       
+    
+    x_m_mask_u = x_m_mask_u / np.max(x_m_mask_u)
+    y_m_mask_u = y_m_mask_u / np.max(y_m_mask_u)
+           
+    x_m_u = np.zeros(len(x))
+    y_m_u = np.zeros(len(y))
+    
+    x_m_u [idx_mask] = x_m_mask_u 
+    y_m_u [idx_mask] = y_m_mask_u
+         
+    idx_buff = np.zeros(NDatosCorr,dtype=int)
+    corr = np.zeros(len(x.muestras))
+    k_idx_buff = 0
+    k = 0
+
+    cualquiera = list()
+    decorr = False
+    while k < len(x_m_u):
+        if not filtro_total[k]:
+            if k_idx_buff < NDatosCorr:
+                idx_buff[k_idx_buff] = k
+                k_idx_buff = k_idx_buff + 1
+                k = k + 1
+                continue
+            else:
+                idx_buff_aux = idx_buff
+                idx_buff[1:NDatosCorr-1] = idx_buff_aux[0:NDatosCorr-2]
+                idx_buff[0] = k
+
+            if flg_dir_dir:
+                corr[k] = 1 - np.mean(x_m_u[idx_buff] - y_m_u [idx_buff])/360
+            else:     
+                corr[k] = np.dot(x_m_u[idx_buff], y_m_u [idx_buff]) / \
+                    (np.linalg.norm(x_m_u[idx_buff]) * np.linalg.norm(y_m_u[idx_buff]))
+                if corr[k] < 0.7:
+                    if not decorr:
+                        cualquiera.append(k)
+                        decorr = True
+                else:
+                    decorr = False
+        else:
+            corr[k] = corr[k-1]
+            #print('(filtrado)')
+        k = k + 1
+    print(cualquiera)
+    print('Episodios:',len(cualquiera))
+    
+    if flg_dir_dir:
+        return d.Medida(corr,x.tiempo,'corr','corr_dir_dir',0.7,1.0,0)
+    else:
+        return d.Medida(corr,x.tiempo,'corr','corr_vel_pot',0.7,1.0,0)
+    
 
 #tipo=str_to_tipo('vel')
 #tipo2=str_to_tipo('dirgasdfgsdfg')
