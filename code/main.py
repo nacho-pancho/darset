@@ -27,13 +27,13 @@ if __name__ == '__main__':
     
     #parque.pot_SMEC  = med_10min
     
-    vel_SCADA = parque.medidores[0].get_medida('vel')
+    #vel_SCADA = parque.medidores[0].get_medida('vel')
     dir_SCADA = parque.medidores[0].get_medida('dir')
     
-    vel_pronos10min = medidor_pronos10min.get_medida('vel')
+    #vel_pronos10min = medidor_pronos10min.get_medida('vel')
     dir_pronos10min = medidor_pronos10min.get_medida('dir')
     
-    vel_pronos60min = medidor_pronos60min.get_medida('vel')
+    #vel_pronos60min = medidor_pronos60min.get_medida('vel')
     dir_pronos60min = medidor_pronos60min.get_medida('dir')
     
     meds = []
@@ -58,7 +58,7 @@ if __name__ == '__main__':
     
     meds.append(dir_SCADA)
     meds.append(dir_pronos10min)
-    meds.append(dir_pronos60min)    
+    #meds.append(dir_pronos60min)    
     
     #pltGrfs.plotMedidas(meds,'False','2018-10-25','2018-10-30',r.path(nidCentral),True)
     #meds.append(med_10min)

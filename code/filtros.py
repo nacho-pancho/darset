@@ -14,6 +14,7 @@ import numpy
 import datos as d
 import numpy as np
 import scipy.stats as r
+import math as m
 
 ##############################################################################
 
@@ -171,7 +172,14 @@ def corr_medidas(x,y,filtro_total,NDatosCorr):
                 idx_buff[0] = k
 
             if flg_dir_dir:
-                corr[k] = 1 - np.abs(np.mean(x_m[idx_buff] - y_m [idx_buff]))/360
+                x_ = x_m[idx_buff]
+                y_ = y_m[idx_buff]
+                dif_sin = [m.sin(m.radians(x)) - m.sin(m.radians(y)) for x,y in zip(x_,y_) ]
+                dif_cos = [m.cos(m.radians(x)) - m.cos(m.radians(y)) for x,y in zip(x_,y_) ]
+                dif_ang = [m.atan2(s,c) for s,c in zip(dif_sin,dif_cos)]
+                dif_ang_deg = [m.degrees(k) for k in dif_ang]
+                dang = np.abs(np.mean(dif_ang_deg))/180
+                corr[k] = 1 - dang
             else:     
                 corr[k] = np.dot(x_m_u[idx_buff], y_m_u [idx_buff]) / \
                     (np.linalg.norm(x_m_u[idx_buff]) * np.linalg.norm(y_m_u[idx_buff]))
