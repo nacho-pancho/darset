@@ -87,7 +87,6 @@ class Medida(object):
 
 
     def agregar_filtro(self,nombre_f,filt):
-        #print ('filtro',filt)
         self.filtros[self.nombre + '_' + nombre_f] = filt.astype(np.uint8)
 
 
@@ -265,12 +264,8 @@ class Parque(object):
                     idx_buff_aux = idx_buff
                     idx_buff[1:NDatosCorr-1] = idx_buff_aux[0:NDatosCorr-2]
                     idx_buff[0] = k
-                #print(idx_buff)
-                #corr[k] = scipy.stats.pearsonr(vel_m_g[idx_buff], pot_m_g[idx_buff])[0]
                 corr[k] = np.dot(vel_m_u[idx_buff], pot_m_u [idx_buff]) /(np.linalg.norm(vel_m_u[idx_buff]) * np.linalg.norm(pot_m_u[idx_buff]))
-                #print(k,corr[k])
                 if corr[k] < 0.7:
-                    #print(k,corr[k])
                     if not decorr:
                         cualquiera.append(k)
                         decorr = True
@@ -278,10 +273,7 @@ class Parque(object):
                     decorr = False
             else:
                 corr[k] = corr[k-1]
-                #print('(filtrado)')
             k = k + 1
-        print(cualquiera)
-        print('Episodios:',len(cualquiera))
         return Medida(corr,vel.tiempo,'corr','corr_vel_pot',0.7,1.0,0)
 
 

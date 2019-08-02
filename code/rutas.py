@@ -75,7 +75,6 @@ def path(ncentral):
 ##############################################################################
 
 def leerArchiSCADA(nidCentral):    
-    print(nidCentral)
     archi_scada = archiSCADA(nidCentral)       
     
     f = open(archi_scada, 'r')
@@ -203,7 +202,6 @@ def leerArchiSMEC(nidCentral):
 ##############################################################################
 
 def leerArchiPRONOS(nidCentral,muestreo_mins):    
-    print(nidCentral)
     archi_pronos = archiPRONOS(nidCentral)       
     
     f = open(archi_pronos, 'r')
