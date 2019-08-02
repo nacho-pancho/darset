@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 """
 Created on Sat May 11 23:57:26 2019
@@ -5,8 +6,8 @@ Created on Sat May 11 23:57:26 2019
 
 ##############################################################################
 
-from IPython import get_ipython
-get_ipython().magic('reset -sf')
+#from IPython import get_ipython NO PORTABLE
+#get_ipython().magic('reset -sf') NO PORTABLE
 
 import rutas as r
 import prueba_plot_con_scroll as pltScroll
