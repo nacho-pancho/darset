@@ -1,22 +1,42 @@
 # -*- coding: utf-8 -*-
+#
+# Funciones de graficado
+#
+from windrose import WindroseAxes
 
-import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd 
-import datos
-from matplotlib import cm
-import datetime
-
-
-MAP_WIDTH = 1000
-BAR_HEIGHT = 50
+def rosa_de_los_vientos(self):
+    '''
+    muestra el resumen de direcciones y velocidades
+    del viento en esta medida en todo su período
+    como una rosa de los vientos
+    '''
+    vel = self.get_medida('vel')
+    dir_ = self.get_medida('dir')
+    
+    filtro = vel.filtrada() | dir_.filtrada()
+    
+    wd = dir_.muestras[filtro < 1]
+    ws = vel.muestras[filtro < 1]
+    ax = WindroseAxes.from_ax()
+    ax.bar(wd, ws, normed=True, opening=0.8, edgecolor='white')
+    ax.set_legend()
 
 def click_event_handler(event):
+    '''
+    manejo de eventos del mouse sobre una gráfica
+    utilizado para el clickplot
+    '''
     ix, iy = event.xdata, event.ydata
     print(f'x = {ix}, y={iy}')
     return (ix,iy)
 
 def clickplot(medidas):
+    '''
+    una gráfica que permite moverse en el tiempo 
+    en base a un mapa que resume todo el período en una imagen
+    en donde se resalta, para cada medida, los intervalos
+    en donde saltó una alarma por algún tipo de anomalía detectada
+    '''
     fig = plt.figure()
     tini = datetime.datetime(datetime.MAXYEAR,1,1) 
     tfin = datetime.datetime(datetime.MINYEAR,1,1) 

@@ -44,7 +44,6 @@ import filtros as f
 import datos as d
 import scipy.stats as r
 import matplotlib.pyplot as plt
-from windrose import WindroseAxes
 
 ##############################################################################
 
@@ -121,7 +120,6 @@ class Medidor(object):
         self.nombre = nombre
         self.medidas = medidas
         self.ubicacion = ubicacion 
-        #self.plot_rosa_vientos()
 
 
 
@@ -132,20 +130,6 @@ class Medidor(object):
         print(f"AVISO: medida de tipo {t} no encontrada.")
         return None
 
-
-    
-    def plot_rosa_vientos(self):
-        
-        vel = self.get_medida('vel')
-        dir_ = self.get_medida('dir')
-        
-        filtro = vel.filtrada() | dir_.filtrada()
-        
-        wd = dir_.muestras[filtro < 1]
-        ws = vel.muestras[filtro < 1]
-        ax = WindroseAxes.from_ax()
-        ax.bar(wd, ws, normed=True, opening=0.8, edgecolor='white')
-        ax.set_legend()
         
 ##############################################################################
 
