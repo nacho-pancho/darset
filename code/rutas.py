@@ -12,11 +12,8 @@ import numpy as np
 import datetime
 import copy
 import math as m
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
 import pandas as pd
 import scipy.signal as signal
-import plotGrafs as pltGrfs
 
 ##############################################################################
 

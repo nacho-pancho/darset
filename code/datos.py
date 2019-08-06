@@ -43,7 +43,6 @@ import numpy as np
 import filtros as f
 import datos as d
 import scipy.stats as r
-import matplotlib.pyplot as plt
 
 ##############################################################################
 
@@ -204,8 +203,8 @@ class Parque(object):
         vel_m_mask = vel_m[idx_mask]
         pot_m_mask = pot_m[idx_mask]
         
-        plt.figure()
-        plt.scatter(vel_m[idx_mask], pot_m[idx_mask])
+        #plt.figure()
+        #plt.scatter(vel_m[idx_mask], pot_m[idx_mask])
 
         vel_m_mask_u = r.rankdata(vel_m_mask, "average")#/len(vel_m_mask)
         pot_m_mask_u = r.rankdata(pot_m_mask, "average")#/len(pot_m_mask)        
@@ -213,13 +212,13 @@ class Parque(object):
         vel_m_mask_u = vel_m_mask_u / np.max(vel_m_mask_u)
         pot_m_mask_u = pot_m_mask_u / np.max(pot_m_mask_u)
         
-        plt.figure()        
+        #plt.figure()        
         vel_m_u = np.zeros(len(vel_m))
         pot_m_u = np.zeros(len(pot_m))
         
         vel_m_u [idx_mask] = vel_m_mask_u 
         pot_m_u [idx_mask] = pot_m_mask_u
-        plt.scatter(vel_m_mask_u, pot_m_mask_u)
+        #plt.scatter(vel_m_mask_u, pot_m_mask_u)
         
         vel_m_g = np.zeros(len(vel_m))
         pot_m_g = np.zeros(len(pot_m))
@@ -227,8 +226,8 @@ class Parque(object):
         vel_m_g [idx_mask] = r.norm.ppf(vel_m_mask_u) 
         pot_m_g [idx_mask] = r.norm.ppf(pot_m_mask_u)
 
-        plt.figure()        
-        plt.scatter(vel_m_g [idx_mask], pot_m_g [idx_mask])
+        #plt.figure()        
+        #plt.scatter(vel_m_g [idx_mask], pot_m_g [idx_mask])
          
         idx_buff = np.zeros(NDatosCorr,dtype=int)
         corr = np.zeros(len(vel.muestras))

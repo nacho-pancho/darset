@@ -13,7 +13,7 @@ import rutas as r
 #import prueba_plot_con_scroll as pltScroll
 import matplotlib.pyplot as plt
 import filtros as f
-import clickplot
+import graficas
 
 ##############################################################################
 
@@ -64,7 +64,7 @@ if __name__ == '__main__':
    
     #app = pltScroll.MyApp(meds)
     #app.MainLoop()
-    clickplot.clickplot(meds)
+    graficas.clickplot(meds)
 
 ##############################################################################
 

@@ -2,6 +2,11 @@
 #
 # Funciones de graficado
 #
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+import datetime
+
 from windrose import WindroseAxes
 
 def rosa_de_los_vientos(self):
@@ -37,6 +42,8 @@ def clickplot(medidas):
     en donde se resalta, para cada medida, los intervalos
     en donde saltó una alarma por algún tipo de anomalía detectada
     '''
+    MAP_WIDTH = 1000
+    BAR_HEIGHT = 10
     fig = plt.figure()
     tini = datetime.datetime(datetime.MAXYEAR,1,1) 
     tfin = datetime.datetime(datetime.MINYEAR,1,1) 
@@ -81,23 +88,26 @@ def clickplot(medidas):
         c_i = viridis(i/len(medidas))
         # vector con 1's donde la señal está filtrada
         # este vector es relativo a lo tiempos de la señal
-        alarm_i = medidas[i].filtrada()
-        #print(alarm_i)
+        med_i = medidas[i]
+        alarm_i = med_i.filtrada()
         row_i[:] = 0
+        t_i = med_i.tiempo
+        dt = (t_i[-1]-t_i[0])/len(t_i)
         for j in range(MAP_WIDTH):
             tmed = tini + j*t_per_pixel # tiempo t en la medida
-            if tmed >= medidas[i].tiempo[0] and tmed < medidas[i].tiempo[-1]:
-                row_i[0, j] = alarm_i[ (tmed - medidas[i].tiempo[0])/period  ]
-        #print(f"offset {i}={toffset_i}")
-        #print(f"row_{i}={row_i}")
+            if tmed < t_i[0]:
+                continue
+            if tmed > t_i[-1]:
+                continue
+            k0 = (tmed - t_i[0])/dt
+            row_i[0, j] = alarm_i[ int(k0)  ]
         col_i[:] = 0
         col_i[(i*BAR_HEIGHT):((i+1)*BAR_HEIGHT),0] = 1
         box_i[:,:] = np.dot(col_i,row_i).astype(np.bool)
-        #box_i2 = np.dot(box_i,np.ones((1,3),dtype=np.bool)).astype(np.bool)
-        print(box_i.shape)
         alarm_map[:,:,0] = alarm_map[:,:,0] + c_i[0]*box_i
         alarm_map[:,:,1] = alarm_map[:,:,1] + c_i[1]*box_i
         alarm_map[:,:,2] = alarm_map[:,:,2] + c_i[2]*box_i
+    alarm_map[alarm_map == 0] = 1
     plt.imshow(alarm_map)
     cid = fig.canvas.mpl_connect('button_press_event', click_event_handler)
     plt.show()
