@@ -65,6 +65,7 @@ if __name__ == '__main__':
     #app = pltScroll.MyApp(meds)
     #app.MainLoop()
     graficas.clickplot(meds)
+    plt.show()
 
 ##############################################################################
 
