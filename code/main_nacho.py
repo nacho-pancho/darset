@@ -44,16 +44,16 @@ if __name__ == '__main__':
     corr_dir_dir = f.corr_medidas(dir_SCADA,dir_pronos10min,filtro_total,12)
     meds.append(corr_dir_dir)
     
-    decorr = parque.decorrelacion()
-    for v in decorr.values():
-        meds.append(v)
+    #decorr = parque.decorrelacion()
+    #for v in decorr.values():
+    #    meds.append(v)
     
-    meds.append(parque.pot)
+    #meds.append(parque.pot)
 
-    meds.append(parque.cgm)
+    #meds.append(parque.cgm)
     
-    meds.append(vel_SCADA)
-    meds.append(vel_pronos10min)
+    #meds.append(vel_SCADA)
+    #meds.append(vel_pronos10min)
     
     meds.append(dir_SCADA)
     meds.append(dir_pronos10min)
