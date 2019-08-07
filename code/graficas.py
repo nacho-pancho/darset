@@ -6,8 +6,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import datetime
-
 from windrose import WindroseAxes
+
+#=================================================================================
 
 def rosa_de_los_vientos(self):
     '''
@@ -26,14 +27,58 @@ def rosa_de_los_vientos(self):
     ax.bar(wd, ws, normed=True, opening=0.8, edgecolor='white')
     ax.set_legend()
 
+#=================================================================================
+
+MAP_WIDTH = 1000
+BAR_HEIGHT = 10
+DEFAULT_WINDOW_SIZE = datetime.timedelta(days=7)
+DEFAULT_ZOOM = 1.5
+DEFAULT_TIME_DELTA = datetime.timedelta(minutes=10)
+
+clickfig = None
+tini = None
+tfin = None
+window = None
+medidas = None
+viridis = cm.get_cmap('viridis')
+
+#---------------------------------------------------------------------------------
+
+def clickplot_redraw():
+    global clickfig, window, medidas
+    plt.figure(clickfig)
+    for i in range(len(medidas)):
+        med_i = medidas[i]
+        t_i = med_i.tiempo
+        x_i = t_i[(t_i >= window[0]) and (t_i < window[1])]
+        y_i = med_i.muestras[(t_i >= tini) and (t_i < tfin)]
+        plt.subplot(len(medidas)+1,1,i)
+        plt.plot(x_i,y_i,color=)
+
+#---------------------------------------------------------------------------------
+
 def click_event_handler(event):
     '''
     manejo de eventos del mouse sobre una gráfica
     utilizado para el clickplot
     '''
+    global window
+    #
+    # capturar pos (x,y)  en la imagen
+    #
     ix, iy = event.xdata, event.ydata
     print(f'x = {ix}, y={iy}')
-    return (ix,iy)
+    #
+    # mapear a posicion temporal
+    #
+    #return (ix,iy)    
+    tcenter = tini + (ix/1000)*(tfin-tini)
+    w0 = tcenter - window_size/2
+    w1 = tcenter + window_size/2
+    window = (w0,w1)
+    clickplot_redraw()
+
+#---------------------------------------------------------------------------------
 
 def clickplot(medidas):
     '''
@@ -42,9 +87,9 @@ def clickplot(medidas):
     en donde se resalta, para cada medida, los intervalos
     en donde saltó una alarma por algún tipo de anomalía detectada
     '''
-    MAP_WIDTH = 1000
-    BAR_HEIGHT = 10
-    fig = plt.figure()
+    global clickfig, tini, tfin, window, medidas
+
+
     tini = datetime.datetime(datetime.MAXYEAR,1,1) 
     tfin = datetime.datetime(datetime.MINYEAR,1,1) 
     tipos = set()
@@ -74,13 +119,13 @@ def clickplot(medidas):
     #
     # grafica coloreada
     #
+    clickfig = plt.figure()
     ax0 = plt.subplot(len(tipos)+1,1,len(tipos))
     #
     # por cada gráfica se corresponde una tira del alarm_map de alto BAR_HEIGHT
     # esta tira es pintada con rectángulos del mismo color que la gráfica
     # en donde las alarmas están activas
     #
-    viridis = cm.get_cmap('viridis')
     col_i = np.zeros((map_h,1),dtype=np.bool)
     row_i = np.zeros((1,MAP_WIDTH),dtype=np.bool)
     box_i = np.zeros((map_h,MAP_WIDTH))
@@ -110,5 +155,11 @@ def clickplot(medidas):
     alarm_map[alarm_map == 0] = 1
     plt.imshow(alarm_map)
     cid = fig.canvas.mpl_connect('button_press_event', click_event_handler)
-    plt.show()
-    return fig
+    #
+    # ahora si, se muestran las curvas en la ventana de tiempo actual
+    #
+    window_size = DEFAULT_WINDOW_SIZE
+    window = (tini, tini+window_size)
+    clickplot_redraw()
+
+#---------------------------------------------------------------------------------
