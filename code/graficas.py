@@ -29,32 +29,76 @@ def rosa_de_los_vientos(self):
 
 #=================================================================================
 
-MAP_WIDTH = 1000
+MAP_WIDTH = 2000
 BAR_HEIGHT = 10
 DEFAULT_WINDOW_SIZE = datetime.timedelta(days=7)
-DEFAULT_ZOOM = 1.5
 DEFAULT_TIME_DELTA = datetime.timedelta(minutes=10)
+ZOOM_STEP = 1.5
 
 clickfig = None
 tini = None
 tfin = None
 window = None
+window_size = DEFAULT_WINDOW_SIZE
 medidas = None
+tipos = None
 viridis = cm.get_cmap('viridis')
+tcenter = None
+alarm_map = None
 
 #---------------------------------------------------------------------------------
 
 def clickplot_redraw():
-    global clickfig, window, medidas
-    plt.figure(clickfig)
-    for i in range(len(medidas)):
-        med_i = medidas[i]
-        t_i = med_i.tiempo
-        x_i = t_i[(t_i >= window[0]) and (t_i < window[1])]
-        y_i = med_i.muestras[(t_i >= tini) and (t_i < tfin)]
-        plt.subplot(len(medidas)+1,1,i)
-        plt.plot(x_i,y_i)
+    global window, medidas, tipos, tini, tfin
+    print("redraw")
+    plt.figure(clickfig.number)
+    print("window:",window)
 
+    legends = dict()
+    for tipo in tipos:
+        legends.update( {tipo:list()} )
+        
+    for i in range(len(medidas)):
+        med_i = medidas[i]        
+        idx_tipo = tipos.index(med_i.tipo)
+        t_i = med_i.tiempo
+        legends[med_i.tipo].append(med_i.nombre)
+        idx_i =list(map(lambda t: (t >= window[0]) and (t < window[1]), t_i))
+        x_i = list()
+        y_i = list()
+        for j in range(len(idx_i)):
+            if idx_i[j]:
+                x_i.append(t_i[j])
+                y_i.append(med_i.muestras[j])
+        print(x_i[0],x_i[-1])
+        plt.subplot(len(tipos)+1,1,idx_tipo+1)
+        c_i = viridis(i/len(medidas))
+        plt.plot(x_i,y_i,color=c_i)
+        plt.axis([window[0],window[1],np.min(y_i),np.max(y_i)])
+        plt.ylabel(med_i.tipo)
+        plt.draw()
+        
+    print(legends)
+
+    for i in range(len(tipos)):
+        plt.subplot( len(tipos)+1, 1, i+1 )
+        plt.legend( legends[ tipos[i] ], loc='upper right' )
+        plt.grid(True)
+
+    #
+    # actualizar el mapa
+    #
+    plt.subplot(len(tipos)+1,1,len(tipos)+1)
+    j0 = int((window[0]-tini)/(tfin-tini)*MAP_WIDTH)
+    j1 = int((window[1]-tini)/(tfin-tini)*MAP_WIDTH)
+    print(j0,j1)
+    fondo = np.copy(alarm_map)
+    fondo[:] = 1
+    fondo[:,j0:j1,:3] = 0
+    plt.imshow(alarm_map)
+    plt.imshow(fondo,alpha=0.25)
+    plt.draw()
+        
 #---------------------------------------------------------------------------------
 
 def click_event_handler(event):
@@ -62,19 +106,39 @@ def click_event_handler(event):
     manejo de eventos del mouse sobre una gráfica
     utilizado para el clickplot
     '''
-    global window
+    global window,tcenter
     #
     # capturar pos (x,y)  en la imagen
     #
     ix, iy = event.xdata, event.ydata
-    print(f'x = {ix}, y={iy}')
+    print(f'click: x = {ix}, y={iy}')
     #
     # mapear a posicion temporal
     #
-    #return (ix,iy)    
-    tcenter = tini + (ix/1000)*(tfin-tini)
+    tcenter = tini + (ix/MAP_WIDTH)*(tfin-tini)
     w0 = tcenter - window_size/2
     w1 = tcenter + window_size/2
+    window = (w0,w1)
+    clickplot_redraw()
+
+def scroll_event_handler(event):
+    '''
+    manejo de eventos del mouse sobre una gráfica
+    utilizado para el clickplot
+    '''
+    global window_size,window,tcenter
+    step = event.step
+    print(f'scroll: step = {step}')
+    #
+    # mapear a posicion temporal
+    #
+    window_size = window_size * (ZOOM_STEP ** step)
+    w0 = tcenter - window_size/2
+    w1 = tcenter + window_size/2
+    if w0 < tini:
+        w0 = tini
+    if w1 >= tfin:
+        w1 = tfin        
     window = (w0,w1)
     clickplot_redraw()
 
@@ -87,7 +151,7 @@ def clickplot(_medidas):
     en donde se resalta, para cada medida, los intervalos
     en donde saltó una alarma por algún tipo de anomalía detectada
     '''
-    global clickfig, tini, tfin, window, medidas
+    global clickfig, tini, tfin, window, medidas, tipos, alarm_map
     medidas = _medidas
 
     tini = datetime.datetime(datetime.MAXYEAR,1,1) 
@@ -102,6 +166,7 @@ def clickplot(_medidas):
             tfin = tfin_med
         if m.tipo not in tipos:
             tipos.add(m.tipo)
+    tipos = list(tipos)
     # un plot por tipo de gráfica
     #
     # período que abarca todas las medidas a plotear
@@ -120,7 +185,6 @@ def clickplot(_medidas):
     # grafica coloreada
     #
     clickfig = plt.figure()
-    ax0 = plt.subplot(len(tipos)+1,1,len(tipos))
     #
     # por cada gráfica se corresponde una tira del alarm_map de alto BAR_HEIGHT
     # esta tira es pintada con rectángulos del mismo color que la gráfica
@@ -153,13 +217,14 @@ def clickplot(_medidas):
         alarm_map[:,:,1] = alarm_map[:,:,1] + c_i[1]*box_i
         alarm_map[:,:,2] = alarm_map[:,:,2] + c_i[2]*box_i
     alarm_map[alarm_map == 0] = 1
-    plt.imshow(alarm_map)
-    cid = fig.canvas.mpl_connect('button_press_event', click_event_handler)
+    cid = clickfig.canvas.mpl_connect('button_press_event', click_event_handler)
+    cid = clickfig.canvas.mpl_connect('scroll_event', scroll_event_handler)
     #
     # ahora si, se muestran las curvas en la ventana de tiempo actual
     #
     window_size = DEFAULT_WINDOW_SIZE
     window = (tini, tini+window_size)
+    tcenter = tini + window_size/2
     clickplot_redraw()
 
 #---------------------------------------------------------------------------------

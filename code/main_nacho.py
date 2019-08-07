@@ -49,6 +49,7 @@ if __name__ == '__main__':
         meds.append(v)
     
     meds.append(parque.pot)
+
     meds.append(parque.cgm)
     
     meds.append(vel_SCADA)
