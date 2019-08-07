@@ -53,7 +53,7 @@ def clickplot_redraw():
         x_i = t_i[(t_i >= window[0]) and (t_i < window[1])]
         y_i = med_i.muestras[(t_i >= tini) and (t_i < tfin)]
         plt.subplot(len(medidas)+1,1,i)
-        plt.plot(x_i,y_i,color=)
+        plt.plot(x_i,y_i)
 
 #---------------------------------------------------------------------------------
 
@@ -80,7 +80,7 @@ def click_event_handler(event):
 
 #---------------------------------------------------------------------------------
 
-def clickplot(medidas):
+def clickplot(_medidas):
     '''
     una gráfica que permite moverse en el tiempo 
     en base a un mapa que resume todo el período en una imagen
@@ -88,7 +88,7 @@ def clickplot(medidas):
     en donde saltó una alarma por algún tipo de anomalía detectada
     '''
     global clickfig, tini, tfin, window, medidas
-
+    medidas = _medidas
 
     tini = datetime.datetime(datetime.MAXYEAR,1,1) 
     tfin = datetime.datetime(datetime.MINYEAR,1,1) 
