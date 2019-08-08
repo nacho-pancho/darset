@@ -137,20 +137,23 @@ def corr_medidas(x,y,filtro_total,NDatosCorr):
     x_m = x.muestras
     y_m = y.muestras
     
-    x_m_mask = x_m[idx_mask]
-    y_m_mask = y_m[idx_mask]
     
-    x_m_mask_u = r.rankdata(x_m_mask, "average")
-    y_m_mask_u = r.rankdata(y_m_mask, "average")       
-    
-    x_m_mask_u = x_m_mask_u / np.max(x_m_mask_u)
-    y_m_mask_u = y_m_mask_u / np.max(y_m_mask_u)
-           
-    x_m_u = np.zeros(len(x_m))
-    y_m_u = np.zeros(len(y_m))
-    
-    x_m_u [idx_mask] = x_m_mask_u 
-    y_m_u [idx_mask] = y_m_mask_u
+    if flg_dir_dir:
+        x_m_mask = x_m[idx_mask]
+        y_m_mask = y_m[idx_mask]
+        
+        x_m_mask_u = r.rankdata(x_m_mask, "average")
+        y_m_mask_u = r.rankdata(y_m_mask, "average")       
+        
+        x_m_mask_u = x_m_mask_u / np.max(x_m_mask_u)
+        y_m_mask_u = y_m_mask_u / np.max(y_m_mask_u)
+               
+        x_m_u = np.zeros(len(x_m))
+        y_m_u = np.zeros(len(y_m))
+        
+        x_m_u [idx_mask] = x_m_mask_u 
+        y_m_u [idx_mask] = y_m_mask_u
+        
          
     idx_buff = np.zeros(NDatosCorr,dtype=int)
     corr = np.zeros(len(x.muestras))
@@ -172,13 +175,16 @@ def corr_medidas(x,y,filtro_total,NDatosCorr):
                 idx_buff[0] = k
 
             if flg_dir_dir:
-                x_ = x_m[idx_buff]
-                y_ = y_m[idx_buff]
-                dif_sin = [m.sin(m.radians(x)) - m.sin(m.radians(y)) for x,y in zip(x_,y_) ]
-                dif_cos = [m.cos(m.radians(x)) - m.cos(m.radians(y)) for x,y in zip(x_,y_) ]
-                dif_ang = [m.atan2(s,c) for s,c in zip(dif_sin,dif_cos)]
-                dif_ang_deg = [m.degrees(k) for k in dif_ang]
-                dang = np.abs(np.mean(dif_ang_deg))/180
+                a1 = x_m[idx_buff]
+                a2 = y_m[idx_buff]
+                
+                dif_ang_deg = np.add(a1,-a2)
+                dif_ang_deg = np.abs(dif_ang_deg)
+
+                idx_mayor180 = np.where(dif_ang_deg > 180)
+                dif_ang_deg[idx_mayor180] = 360 - dif_ang_deg[idx_mayor180] 
+
+                dang = np.mean(dif_ang_deg)/180
                 corr[k] = 1 - dang
             else:     
                 corr[k] = np.dot(x_m_u[idx_buff], y_m_u [idx_buff]) / \
