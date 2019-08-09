@@ -72,6 +72,7 @@ def path(ncentral):
 ##############################################################################
 
 def leerArchiSCADA(nidCentral):    
+    print(f"Leyendo archivo de central {nidCentral}")
     archi_scada = archiSCADA(nidCentral)       
     
     f = open(archi_scada, 'r')
@@ -119,7 +120,23 @@ def leerArchiSCADA(nidCentral):
     data=np.loadtxt(archi_scada,skiprows=8)
     dt_num=data[:,0]
     tiempo=fechaNumtoDateTime(dt_num)
-    
+    #
+    # verificamos que no haya fechas repetidas
+    #
+    dt = list()
+    for i in range(len(tiempo)-1):
+        dt.append(tiempo[i+1]-tiempo[i])
+    dtmin,dtmed,dtmax = np.min(dt),np.median(dt),np.max(dt)
+    print(f"dt: min{dtmin} med={dtmed} max={dtmax}")
+    dt.append(datetime.timedelta(dt[-1]))
+    dtposta = timedelta(minutes=10)
+    dtcero = timedelta(0)
+    if dtmin == dtcero: # 
+        trep = tiempo[dt == dtcero]
+        print(f"ERROR: tiempos repetidos {trep}")
+    elif dtmax > 1.5*dtposta:
+        print(f"ERROR: tiempos faltantes!")
+
     # Leo medidas
 
     medidas = []
@@ -153,6 +170,7 @@ def leerArchiSCADA(nidCentral):
 ##############################################################################
 
 def leerArchiSMEC(nidCentral):
+    print(f"Leyendo archivo SMEC  para la central {nidCentral}")
     archi_SMEC = archiSMEC(nidCentral)
 
     # Leo muestras (todas las celdas tienen que tener un valor)
@@ -199,6 +217,7 @@ def leerArchiSMEC(nidCentral):
 ##############################################################################
 
 def leerArchiPRONOS(nidCentral,muestreo_mins):    
+    print(f"Leyendo archivo de pronósticos para la central {nidCentral}")
     archi_pronos = archiPRONOS(nidCentral)       
     
     f = open(archi_pronos, 'r')
@@ -292,7 +311,3 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
     return Medidor
 
 ##############################################################################
-
-#med_10min, med_15min = leerArchiSMEC(nidCentral)
-#leerArchiSMEC(5) 
-#♣fechaNumtoDateTime([42139])      

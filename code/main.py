@@ -9,10 +9,9 @@ Created on Sat May 11 23:57:26 2019
 #from IPython import get_ipython NO PORTABLE
 #get_ipython().magic('reset -sf') NO PORTABLE
 
-import rutas as r
-#import prueba_plot_con_scroll as pltScroll
+import archivos
 import matplotlib.pyplot as plt
-import filtros as f
+import filtros
 import graficas
 
 ##############################################################################
@@ -21,10 +20,10 @@ if __name__ == '__main__':
     plt.close('all')
     
     nidCentral = 5    
-    #med_10min, med_15min = r.leerArchiSMEC(nidCentral)
-    parque = r.leerArchiSCADA(nidCentral) 
-    medidor_pronos10min = r.leerArchiPRONOS(nidCentral,10)
-    medidor_pronos60min = r.leerArchiPRONOS(nidCentral,60)
+    #med_10min, med_15min = archivos.leerArchiSMEC(nidCentral)
+    parque = archivos.leerArchiSCADA(nidCentral) 
+    medidor_pronos10min = archivos.leerArchiPRONOS(nidCentral,10)
+    medidor_pronos60min = archivos.leerArchiPRONOS(nidCentral,60)
     
     #parque.pot_SMEC  = med_10min
     
@@ -41,7 +40,7 @@ if __name__ == '__main__':
     
     filtro_total = dir_SCADA.filtrada()
 
-    corr_dir_dir = f.corr_medidas(dir_SCADA,dir_pronos10min,filtro_total,12)
+    corr_dir_dir = filtros.corr_medidas(dir_SCADA,dir_pronos10min,filtro_total,12)
     meds.append(corr_dir_dir)
     
     #decorr = parque.decorrelacion()
