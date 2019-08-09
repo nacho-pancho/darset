@@ -48,23 +48,20 @@ if __name__ == '__main__':
     #for v in decorr.values():
     #    meds.append(v)
     
-    #meds.append(parque.pot)
+    meds.append(parque.pot)
 
-    #meds.append(parque.cgm)
+    meds.append(parque.cgm)
     
-    #meds.append(vel_SCADA)
-    #meds.append(vel_pronos10min)
+    meds.append(vel_SCADA)
+    meds.append(vel_pronos10min)
     
     meds.append(dir_SCADA)
     meds.append(dir_pronos10min)
     #meds.append(dir_pronos60min)    
     
-    #pltGrfs.plotMedidas(meds,'False','2018-10-25','2018-10-30',r.path(nidCentral),True)
     #meds.append(med_10min)
     #meds.append(med_15min)
    
-    #app = pltScroll.MyApp(meds)
-    #app.MainLoop()
     graficas.clickplot(meds)
     plt.show()
 
