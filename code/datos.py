@@ -43,6 +43,7 @@ import numpy as np
 import filtros as f
 import datos as d
 import scipy.stats as r
+import panda as pd
 
 ##############################################################################
 
@@ -67,15 +68,19 @@ class Medida(object):
     Representa una serie de tiempo asociada a una medida
     de tipo particular, por ejemplo meteorologica o de potencia
     '''
-    def __init__(self,muestras,tiempo,tipo,nombre,minval,maxval,nrep):
-        self.muestras = muestras
-        self.tiempo = tiempo
+    def __init__(self,muestras,dtini,mins_muestreo,NDatos,tipo,nombre,minval,maxval,nrep):
+        
+        self.dtini = dtini
+        self.mins_muestreo = mins_muestreo
+        self.NDatos = NDatos 
+        self.df = pd.DataFrame({'tiempo':[pd.date_range(dtini, periods=NDatos, freq='10m')],'muestras':[muestras]})
+        self.df.set_index('tiempo')    
         self.tipo = tipo # vel,dir, rad, temp, etc
         self.nombre = nombre #vel_scada, vel_dir, vel_otrogen,etc
         self.minval = minval
         self.maxval = maxval
         self.nrep = nrep
-        self.filtros = dict()
+        #self.filtros = dict()
         self.agregar_filtro('fuera_de_rango',f.filtrar_rango
                             (self.muestras,self.minval,self.maxval))
         if self.tipo != 'corr':        
@@ -85,15 +90,33 @@ class Medida(object):
 
 
     def agregar_filtro(self,nombre_f,filt):
-        self.filtros[self.nombre + '_' + nombre_f] = filt.astype(np.uint8)
-
-
+        #self.filtros[self.nombre + '_' + nombre_f] = filt.astype(np.uint8)
+        self.df[self.nombre + '_' + nombre_f] = pd.Series(filt.astype(np.uint8), index=df.index)
+    
+    def dt_minmax(self):
+        dt_ini = self.tiempo[0]
+        dt_fin = self.tiempo[-1]
+        return dt_ini,dt_fin
+    
+    def desfasar(self,Nmuestras):
+        self.dtini = self.dtini + Nmuestras * self.mins_muestreo
+        self.tiempo = [dt +  self.mins_muestreo for dt in self.tiempo] 
+        return None
+    
+    def getmuestras_dt(self,dtini,dtfin):
+        t_np = np.array(self.tiempo)
+        idx_muestras, = np.where(t_np >= dtini or t_np <= dtfin)
+        return self.muestras[idx_muestras]
+        
+        
+        
+        
+    
         
     def get_filtro(self,nombre_f):
         return self.filtros[self.nombre + '_' + nombre_f]
 
 
-    
     def get_filtros(self):
         return self.filtros
 

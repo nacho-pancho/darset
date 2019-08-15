@@ -138,21 +138,21 @@ def leerArchi(nidCentral,tipoArchi):
     #
     # verificamos que no haya fechas repetidas
     #
-    '''
+    
     dt = list()
     for i in range(len(tiempo)-1):
         dt.append(tiempo[i+1]-tiempo[i])
     dtmin,dtmed,dtmax = np.min(dt),np.median(dt),np.max(dt)
     print(f"dt: min{dtmin} med={dtmed} max={dtmax}")
-    dt.append(datetime.timedelta(dt[-1]))
-    dtposta = timedelta(minutes=10)
-    dtcero = timedelta(0)
+    #dt.append(datetime.timedelta(dt[-1]))
+    dtposta = datetime.timedelta(minutes=10)
+    dtcero = datetime.timedelta(0)
     if dtmin == dtcero: # 
         trep = tiempo[dt == dtcero]
         print(f"ERROR: tiempos repetidos {trep}")
-    elif dtmax > 1.5*dtposta:
+    elif np.abs(dtmax) > 1.001*dtposta:
         print(f"ERROR: tiempos faltantes!")
-    '''
+    
     
     # Leo medidas
 
@@ -163,12 +163,21 @@ def leerArchi(nidCentral,tipoArchi):
         if tipoDato == None:
             break
         meds = data[:,i+1]
+    
+        
         nombre = tipoDato + ident
         minmax = filtros.min_max(tipoDato,PAutorizada)
         nrep = filtros.Nrep(tipoDato)
         
-        med = datos.Medida(meds,tiempo,tipoDato,nombre,minmax[0],minmax[1],nrep)
+        med = datos.Medida(meds,tiempo,tipoDato,nombre,minmax[0],minmax[1],nrep,datetime.timedelta(minutes=10))
+ 
+        dtini_filt = datetime.datetime.strptime('2015-10-01 00:00:0.0', '%Y-%m-%d %H:%M:%S.%f')
         
+        dtfin_filt = datetime.datetime.strptime('2015-10-02 00:09:0.0', '%Y-%m-%d %H:%M:%S.%f')
+       
+        
+        med_filt = med.getmuestras_dt(dtini_filt,dtfin_filt)
+       
         if (tipoDato != 'pot' and tipoDato != 'cgm' and tipoDato != 'dis'):
             medidas.append(med)
         elif (tipoDato == 'pot'):
@@ -320,7 +329,7 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
                 
                 meds = np.asarray(meds_m) 
             
-        med = datos.Medida(meds,dt_10min,tipoDato,nombre,minmax[0],minmax[1],nrep)
+        med = datos.Medida(meds,dt_10min,tipoDato,nombre,minmax[0],minmax[1],nrep,datetime.timedelta(minutes=muestreo_mins))
         medidas.append(med)
 
     Medidor = datos.Medidor(ident,medidas,ubicacion)
