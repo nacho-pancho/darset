@@ -55,6 +55,14 @@ def archiSCADA(ncentral):
     return RUTA_DATOS +'modelado_ro/c'+ str(ncentral) +'/c'+str(ncentral)+'_series10min.sas'
 
 ##############################################################################
+    
+
+##############################################################################
+
+def archiGEN(ncentral):
+    return RUTA_DATOS +'modelado_ro/c'+ str(ncentral) +'/c'+str(ncentral)+'_series10minGen.sas'
+
+##############################################################################
 
 def archiPRONOS(ncentral):
     return RUTA_DATOS +'modelado_ro/c'+ str(ncentral) +'/c'+str(ncentral)+'_series60min_pronos.txt'
@@ -70,12 +78,19 @@ def path(ncentral):
     return RUTA_DATOS +'modelado_ro/c'+ str(ncentral) + '/'
 
 ##############################################################################
-
-def leerArchiSCADA(nidCentral):    
-    print(f"Leyendo archivo de central {nidCentral}")
-    archi_scada = archiSCADA(nidCentral)       
     
-    f = open(archi_scada, 'r')
+
+def leerArchi(nidCentral,tipoArchi):    
+    print(f"Leyendo archivo de central {nidCentral}")
+
+    if tipoArchi == 'scada':
+        archi = archiSCADA(nidCentral)
+    elif tipoArchi == 'gen':
+        archi = archiGEN(nidCentral)
+    else:
+        return None
+    
+    f = open(archi, 'r')
     
     # Leo datos de las estaciones
     
@@ -117,12 +132,13 @@ def leerArchiSCADA(nidCentral):
     f.close() 
 
     # Leo etiquetas de tiempo comunes a todos los datos
-    data=np.loadtxt(archi_scada,skiprows=8)
+    data=np.loadtxt(archi,skiprows=8)
     dt_num=data[:,0]
     tiempo=fechaNumtoDateTime(dt_num)
     #
     # verificamos que no haya fechas repetidas
     #
+    '''
     dt = list()
     for i in range(len(tiempo)-1):
         dt.append(tiempo[i+1]-tiempo[i])
@@ -136,7 +152,8 @@ def leerArchiSCADA(nidCentral):
         print(f"ERROR: tiempos repetidos {trep}")
     elif dtmax > 1.5*dtposta:
         print(f"ERROR: tiempos faltantes!")
-
+    '''
+    
     # Leo medidas
 
     medidas = []
