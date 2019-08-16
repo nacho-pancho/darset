@@ -30,7 +30,7 @@ def rosa_de_los_vientos(self):
 #=================================================================================
 
 MAP_WIDTH = 2000
-BAR_HEIGHT = 10
+BAR_HEIGHT = 30
 DEFAULT_WINDOW_SIZE = datetime.timedelta(days=7)
 DEFAULT_TIME_DELTA = datetime.timedelta(minutes=10)
 ZOOM_STEP = 1.5
