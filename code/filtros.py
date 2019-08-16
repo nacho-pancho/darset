@@ -15,6 +15,7 @@ import datos as d
 import numpy as np
 import scipy.stats as r
 import math as m
+import copy
 
 ##############################################################################
 
@@ -127,10 +128,24 @@ def filtrar_rep(v,filtro_huecos,nRep):
 
 ##############################################################################
     
-def corr_medidas(x,y,filtro_total,NDatosCorr):
+def corr_medidas(x,y,NDatosCorr,NMuestras_des):
 
     if ((x.tipo == 'dir') and (y.tipo == 'dir')):
         flg_dir_dir = True
+
+    x = x
+    
+    y = copy.copy(y)
+    
+    y_des = y.desfasar(NMuestras_des)
+
+
+    nMAX = max(x.len(),y.len()) 
+    nMIN = min(x.len(),y.len())
+    
+    filtro_total = np.ones(nMAX)
+
+    filtro_total [1:nMIN] = x.filtrada()[1:nMIN] | y.filtrada()[1:nMIN]
        
     idx_mask = np.where(filtro_total < 1)
     

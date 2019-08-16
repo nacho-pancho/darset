@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Funciones de graficado
+# Funciones d
 #
 import numpy as np
 import matplotlib.pyplot as plt
@@ -144,7 +144,7 @@ def scroll_event_handler(event):
 
 #---------------------------------------------------------------------------------
 
-def clickplot(_medidas):
+def clickplot(_medidas,figsize=(8,6)):
     '''
     una gráfica que permite moverse en el tiempo 
     en base a un mapa que resume todo el período en una imagen
@@ -184,7 +184,7 @@ def clickplot(_medidas):
     #
     # grafica coloreada
     #
-    clickfig = plt.figure()
+    clickfig = plt.figure(figsize=figsize,dpi=96)
     #
     # por cada gráfica se corresponde una tira del alarm_map de alto BAR_HEIGHT
     # esta tira es pintada con rectángulos del mismo color que la gráfica

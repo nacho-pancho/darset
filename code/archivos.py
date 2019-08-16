@@ -55,6 +55,14 @@ def archiSCADA(ncentral):
     return RUTA_DATOS +'modelado_ro/c'+ str(ncentral) +'/c'+str(ncentral)+'_series10min.sas'
 
 ##############################################################################
+    
+
+##############################################################################
+
+def archiGEN(ncentral):
+    return RUTA_DATOS +'modelado_ro/c'+ str(ncentral) +'/c'+str(ncentral)+'_series10minGen.sas'
+
+##############################################################################
 
 def archiPRONOS(ncentral):
     return RUTA_DATOS +'modelado_ro/c'+ str(ncentral) +'/c'+str(ncentral)+'_series60min_pronos.txt'
@@ -70,11 +78,19 @@ def path(ncentral):
     return RUTA_DATOS +'modelado_ro/c'+ str(ncentral) + '/'
 
 ##############################################################################
-
-def leerArchiSCADA(nidCentral):    
-    archi_scada = archiSCADA(nidCentral)       
     
-    f = open(archi_scada, 'r')
+
+def leerArchi(nidCentral,tipoArchi):    
+    print(f"Leyendo archivo de central {nidCentral}")
+
+    if tipoArchi == 'scada':
+        archi = archiSCADA(nidCentral)
+    elif tipoArchi == 'gen':
+        archi = archiGEN(nidCentral)
+    else:
+        return None
+    
+    f = open(archi, 'r')
     
     # Leo datos de las estaciones
     
@@ -116,9 +132,27 @@ def leerArchiSCADA(nidCentral):
     f.close() 
 
     # Leo etiquetas de tiempo comunes a todos los datos
-    data=np.loadtxt(archi_scada,skiprows=8)
+    data=np.loadtxt(archi,skiprows=8)
     dt_num=data[:,0]
     tiempo=fechaNumtoDateTime(dt_num)
+    #
+    # verificamos que no haya fechas repetidas
+    #
+    
+    dt = list()
+    for i in range(len(tiempo)-1):
+        dt.append(tiempo[i+1]-tiempo[i])
+    dtmin,dtmed,dtmax = np.min(dt),np.median(dt),np.max(dt)
+    print(f"dt: min{dtmin} med={dtmed} max={dtmax}")
+    #dt.append(datetime.timedelta(dt[-1]))
+    dtposta = datetime.timedelta(minutes=10)
+    dtcero = datetime.timedelta(0)
+    if dtmin == dtcero: # 
+        trep = tiempo[dt == dtcero]
+        print(f"ERROR: tiempos repetidos {trep}")
+    elif np.abs(dtmax) > 1.001*dtposta:
+        print(f"ERROR: tiempos faltantes!")
+    
     
     # Leo medidas
 
@@ -129,12 +163,21 @@ def leerArchiSCADA(nidCentral):
         if tipoDato == None:
             break
         meds = data[:,i+1]
+    
+        
         nombre = tipoDato + ident
         minmax = filtros.min_max(tipoDato,PAutorizada)
         nrep = filtros.Nrep(tipoDato)
         
-        med = datos.Medida(meds,tiempo,tipoDato,nombre,minmax[0],minmax[1],nrep)
+        med = datos.Medida(meds,tiempo,tipoDato,nombre,minmax[0],minmax[1],nrep,datetime.timedelta(minutes=10))
+ 
+        dtini_filt = datetime.datetime.strptime('2015-10-01 00:00:0.0', '%Y-%m-%d %H:%M:%S.%f')
         
+        dtfin_filt = datetime.datetime.strptime('2015-10-02 00:09:0.0', '%Y-%m-%d %H:%M:%S.%f')
+       
+        
+        med_filt = med.getmuestras_dt(dtini_filt,dtfin_filt)
+       
         if (tipoDato != 'pot' and tipoDato != 'cgm' and tipoDato != 'dis'):
             medidas.append(med)
         elif (tipoDato == 'pot'):
@@ -153,6 +196,7 @@ def leerArchiSCADA(nidCentral):
 ##############################################################################
 
 def leerArchiSMEC(nidCentral):
+    print(f"Leyendo archivo SMEC  para la central {nidCentral}")
     archi_SMEC = archiSMEC(nidCentral)
 
     # Leo muestras (todas las celdas tienen que tener un valor)
@@ -199,6 +243,7 @@ def leerArchiSMEC(nidCentral):
 ##############################################################################
 
 def leerArchiPRONOS(nidCentral,muestreo_mins):    
+    print(f"Leyendo archivo de pronósticos para la central {nidCentral}")
     archi_pronos = archiPRONOS(nidCentral)       
     
     f = open(archi_pronos, 'r')
@@ -284,7 +329,7 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
                 
                 meds = np.asarray(meds_m) 
             
-        med = datos.Medida(meds,dt_10min,tipoDato,nombre,minmax[0],minmax[1],nrep)
+        med = datos.Medida(meds,dt_10min,tipoDato,nombre,minmax[0],minmax[1],nrep,datetime.timedelta(minutes=muestreo_mins))
         medidas.append(med)
 
     Medidor = datos.Medidor(ident,medidas,ubicacion)
@@ -292,7 +337,3 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
     return Medidor
 
 ##############################################################################
-
-#med_10min, med_15min = leerArchiSMEC(nidCentral)
-#leerArchiSMEC(5) 
-#♣fechaNumtoDateTime([42139])      
