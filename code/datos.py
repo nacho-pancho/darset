@@ -87,7 +87,7 @@ class Medida(object):
     def agregar_filtro(self,nombre_f,filt):
         self.filtros[self.nombre + '_' + nombre_f] = filt.astype(np.uint8)
 
-
+    
         
     def get_filtro(self,nombre_f):
         return self.filtros[self.nombre + '_' + nombre_f]
@@ -104,6 +104,12 @@ class Medida(object):
         for f in self.filtros.values():
             filtrada = filtrada | f
         return filtrada    
+
+
+    def desfasar(self,Ndesf):
+        dt_desf = (self.tiempo[1] - self.tiempo[0]) * Ndesf
+        self.tiempo = [dt +  dt_desf for dt in self.tiempo] 
+        return None        
     
 ##############################################################################
     
