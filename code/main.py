@@ -13,6 +13,7 @@ import archivos
 import matplotlib.pyplot as plt
 import filtros
 import graficas
+import copy
 
 ##############################################################################
 
@@ -35,6 +36,9 @@ if __name__ == '__main__':
     
     vel_pronos10min = medidor_pronos10min.get_medida('vel')
     dir_pronos10min = medidor_pronos10min.get_medida('dir')
+    dir_pronos10min_desf = copy.deepcopy(dir_pronos10min)
+    dir_pronos10min_desf.nombre = dir_pronos10min_desf.nombre + '_desf'
+
     
 #    vel_pronos60min = medidor_pronos60min.get_medida('vel')
 #    dir_pronos60min = medidor_pronos60min.get_medida('dir')
@@ -43,11 +47,11 @@ if __name__ == '__main__':
 
     #corr_vel_vel_max = filtros.corrMAX_Ndesf(vel_SCADA,vel_GEN,-20,-15,True)
     
-    corr_dirSCADA_dirPronos_max = filtros.corrMAX_Ndesf(dir_SCADA,dir_pronos10min,-20,20,True)
+    corr_dirSCADA_dirPronos_max = filtros.corrMAX_Ndesf(dir_SCADA,dir_pronos10min_desf,0,20,True)
 
     #corr_dirSCADA_dirGen_max = filtros.corrMAX_Ndesf(dir_SCADA,dir_GEN,-20,-15,True) 
 
-    corr_velSCADA_velPRONOS_max = filtros.corrMAX_Ndesf(vel_SCADA,vel_pronos10min,-20,20,True)        
+    #corr_velSCADA_velPRONOS_max = filtros.corrMAX_Ndesf(vel_SCADA,vel_pronos10min,-20,20,True)        
     
         
     #meds.append(corr_dirSCADA_dirGen_max)
@@ -60,13 +64,14 @@ if __name__ == '__main__':
 
     #meds.append(parque.cgm)
     
-    meds.append(vel_SCADA)
-    meds.append(vel_pronos10min)
+    #meds.append(vel_SCADA)
+    #meds.append(vel_pronos10min)
     #meds.append(vel_GEN)
     
-    #meds.append(dir_SCADA)
+    meds.append(dir_SCADA)
     #meds.append(dir_GEN)
-    #meds.append(dir_pronos10min)
+    meds.append(dir_pronos10min)
+    meds.append(dir_pronos10min_desf)
     #meds.append(dir_pronos60min)    
     
     #meds.append(med_10min)
