@@ -231,10 +231,28 @@ def corr_medidas(x,y,NDatosCorr,NDatosDesf):
     
     idx_datos_validos = np.where(filtro_total < 1) 
     corr_prom = corr[idx_datos_validos].mean()    
-    print ('NDatosDesf: ',NDatosDesf,', corr = ',corr_prom)
+    #print ('NDatosDesf: ',NDatosDesf,', corr = ',corr_prom)
     
-    return d.Medida(corr,x.tiempo,'corr','corr_' + x.tipo + '_' + y.tipo,0.95,1.0,0),corr_prom
+    return d.Medida(corr,x.tiempo,'corr','corr_' + x.tipo + '_' + y.tipo,corr_prom * 0.99,1.0,0),corr_prom
     
+
+def corrMAX_Ndesf(x,y,NdesfMin,NdesfMax,corregirDesf):
+    Ndesf_corr_max = 0
+    corr_x_y_max = None
+    corr_max = -999999;
+    for Ndesf in range(NdesfMin,NdesfMax):
+        corr_x_y,corr = corr_medidas(x,y,3,Ndesf)
+        if (corr > corr_max):
+            corr_max = corr
+            Ndesf_corr_max = Ndesf
+            corr_x_y_max = corr_x_y
+                    
+    if corregirDesf:
+        y.desfasar(Ndesf_corr_max)
+        print ('desfasaje('+ x.nombre + ',' + y.nombre + ') = ', Ndesf_corr_max , ' muestras')        
+            
+    return corr_x_y_max
+
 
 #tipo=str_to_tipo('vel')
 #tipo2=str_to_tipo('dirgasdfgsdfg')
