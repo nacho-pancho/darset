@@ -127,18 +127,45 @@ def filtrar_rep(v,filtro_huecos,nRep):
 
 ##############################################################################
     
-def corr_medidas(x,y,filtro_total,NDatosCorr):
+def corr_medidas(x,y,NDatosCorr,NDatosDesf):
 
+    
     if ((x.tipo == 'dir') and (y.tipo == 'dir')):
         flg_dir_dir = True
-       
+    else:
+        flg_dir_dir = False    
+    
+    filtro_x = x.filtrada()
+    filtro_y = y.filtrada() 
+    
+    dtini_x = x.tiempo[0]
+    dtini_y = y.tiempo[0]
+    
+    dif_dtini = dtini_y - dtini_x
+    
+    N10min_des_yx = round((dif_dtini.total_seconds())/600)
+
+    filtro_y_des = np.ones(len(x.muestras),dtype=bool)
+
+    y_m_des = np.zeros(len(x.muestras))
+    
+    for k in range(len(x.muestras)):
+        if ((k-N10min_des_yx - NDatosDesf >= 0) and (k-N10min_des_yx - NDatosDesf < len(y.muestras))):
+            y_m_des[k] = y.muestras[k - N10min_des_yx - NDatosDesf]
+            filtro_y_des[k] = filtro_y[k - N10min_des_yx - NDatosDesf]
+        else:
+            y_m_des[k] = -99999999
+            filtro_y_des[k] = 1
+            
+    filtro_total = filtro_x | filtro_y_des
+           
     idx_mask = np.where(filtro_total < 1)
     
     x_m = x.muestras
-    y_m = y.muestras
+    y_m = y_m_des
     
     
-    if flg_dir_dir:
+    if not flg_dir_dir:
         x_m_mask = x_m[idx_mask]
         y_m_mask = y_m[idx_mask]
         
@@ -153,8 +180,8 @@ def corr_medidas(x,y,filtro_total,NDatosCorr):
         
         x_m_u [idx_mask] = x_m_mask_u 
         y_m_u [idx_mask] = y_m_mask_u
-        
-         
+
+                 
     idx_buff = np.zeros(NDatosCorr,dtype=int)
     corr = np.zeros(len(x.muestras))
     k_idx_buff = 0
@@ -162,7 +189,7 @@ def corr_medidas(x,y,filtro_total,NDatosCorr):
 
     cualquiera = list()
     decorr = False
-    while k < len(x_m):
+    while (k < len(x_m)):
         if not filtro_total[k]:
             if k_idx_buff < NDatosCorr:
                 idx_buff[k_idx_buff] = k
@@ -199,13 +226,14 @@ def corr_medidas(x,y,filtro_total,NDatosCorr):
             corr[k] = corr[k-1]
             #print('(filtrado)')
         k = k + 1
-    print(cualquiera)
-    print('Episodios:',len(cualquiera))
+    #print(cualquiera)
+    #print('Episodios:',len(cualquiera))
     
-    if flg_dir_dir:
-        return d.Medida(corr,x.tiempo,'corr','corr_dir_dir',0.7,1.0,0)
-    else:
-        return d.Medida(corr,x.tiempo,'corr','corr_vel_pot',0.7,1.0,0)
+    idx_datos_validos = np.where(filtro_total < 1) 
+    corr_prom = corr[idx_datos_validos].mean()    
+    print ('NDatosDesf: ',NDatosDesf,', corr = ',corr_prom)
+    
+    return d.Medida(corr,x.tiempo,'corr','corr_' + x.tipo + '_' + y.tipo,0.7,1.0,0)
     
 
 #tipo=str_to_tipo('vel')

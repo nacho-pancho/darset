@@ -42,8 +42,13 @@ if __name__ == '__main__':
     
     filtro_total = dir_SCADA.filtrada()
 
-    corr_dir_dir = filtros.corr_medidas(dir_SCADA,dir_pronos10min,filtro_total,12)
+    #corr_dir_dir = filtros.corr_medidas(dir_SCADA,dir_pronos10min,12,0)
     #meds.append(corr_dir_dir)
+    
+    for Ndesf in range(-20,20):
+        corr_vel_vel = filtros.corr_medidas(vel_SCADA,vel_GEN,3,Ndesf)
+        
+    meds.append(corr_vel_vel)
     
     #decorr = parque.decorrelacion()
     #for v in decorr.values():
@@ -54,7 +59,7 @@ if __name__ == '__main__':
     #meds.append(parque.cgm)
     
     meds.append(vel_SCADA)
-    meds.append(vel_pronos10min)
+    #meds.append(vel_pronos10min)
     meds.append(vel_GEN)
     
     #meds.append(dir_SCADA)
