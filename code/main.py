@@ -43,12 +43,14 @@ if __name__ == '__main__':
 
     #corr_vel_vel_max = filtros.corrMAX_Ndesf(vel_SCADA,vel_GEN,-20,-15,True)
     
-    #corr_dirSCADA_dirPronos_max = filtros.corrMAX_Ndesf(dir_SCADA,dir_pronos10min,-8,-8,True)
+    corr_dirSCADA_dirPronos_max = filtros.corrMAX_Ndesf(dir_SCADA,dir_pronos10min,-20,20,True)
 
-    corr_dirSCADA_dirGen_max = filtros.corrMAX_Ndesf(dir_SCADA,dir_GEN,-20,-15,True)        
+    #corr_dirSCADA_dirGen_max = filtros.corrMAX_Ndesf(dir_SCADA,dir_GEN,-20,-15,True) 
+
+    corr_velSCADA_velPRONOS_max = filtros.corrMAX_Ndesf(vel_SCADA,vel_pronos10min,-20,20,True)        
     
         
-    meds.append(corr_dirSCADA_dirGen_max)
+    #meds.append(corr_dirSCADA_dirGen_max)
     
     #decorr = parque.decorrelacion()
     #for v in decorr.values():
@@ -58,12 +60,12 @@ if __name__ == '__main__':
 
     #meds.append(parque.cgm)
     
-    #meds.append(vel_SCADA)
-    #meds.append(vel_pronos10min)
+    meds.append(vel_SCADA)
+    meds.append(vel_pronos10min)
     #meds.append(vel_GEN)
     
-    meds.append(dir_SCADA)
-    meds.append(dir_GEN)
+    #meds.append(dir_SCADA)
+    #meds.append(dir_GEN)
     #meds.append(dir_pronos10min)
     #meds.append(dir_pronos60min)    
     

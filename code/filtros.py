@@ -254,6 +254,14 @@ def corrMAX_Ndesf(x,y,NdesfMin,NdesfMax,corregirDesf):
     return corr_x_y_max
 
 
+def corregir_vel_altura (velRef,velAjustar):
+    
+    
+    
+    return None
+    
+
+
 #tipo=str_to_tipo('vel')
 #tipo2=str_to_tipo('dirgasdfgsdfg')
         
