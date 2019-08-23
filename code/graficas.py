@@ -74,6 +74,7 @@ def clickplot_redraw():
         plt.subplot(len(tipos)+1,1,idx_tipo+1)
         c_i = viridis(i/len(medidas))
         plt.plot(x_i,y_i,color=c_i)
+        
         plt.axis([window[0],window[1],np.min(y_i),np.max(y_i)])
         plt.ylabel(med_i.tipo)
         plt.draw()

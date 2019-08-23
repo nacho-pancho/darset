@@ -173,6 +173,10 @@ class Parque(object):
         return self._filtro_potBaja    
 
 
+    def calc_corr_medidor(self,med):
+        return None
+        
+
         
     def decorrelacion(self):
         '''
