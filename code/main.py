@@ -29,6 +29,7 @@ if __name__ == '__main__':
     
     #parque.pot_SMEC  = med_10min
     
+    pot_SCADA = parque.pot
     vel_SCADA = parque.medidores[0].get_medida('vel')
     dir_SCADA = parque.medidores[0].get_medida('dir')
     vel_GEN = parque2.medidores[0].get_medida('vel')
@@ -45,9 +46,13 @@ if __name__ == '__main__':
     
     meds = []
 
-    #corr_vel_vel_max = filtros.corrMAX_Ndesf(vel_SCADA,vel_GEN,-20,-15,True)
+    corr_vel_vel_max = filtros.corrMAX_Ndesf(vel_SCADA,vel_GEN,-20,-15,True)
+    meds.append(corr_vel_vel_max)
     
-    corr_dirSCADA_dirPronos_max = filtros.corrMAX_Ndesf(dir_SCADA,dir_pronos10min_desf,0,20,True)
+    #corr_vel_pot_max = filtros.corrMAX_Ndesf(pot_SCADA,vel_GEN,-20,-15,False)
+    #meds.append(corr_vel_pot_max)    
+    
+    #corr_dirSCADA_dirPronos_max = filtros.corrMAX_Ndesf(dir_SCADA,dir_pronos10min_desf,0,20,True)
 
     #corr_dirSCADA_dirGen_max = filtros.corrMAX_Ndesf(dir_SCADA,dir_GEN,-20,-15,True) 
 
@@ -60,18 +65,18 @@ if __name__ == '__main__':
     #for v in decorr.values():
     #    meds.append(v)
     
-    #meds.append(parque.pot)
+    #meds.append(pot_SCADA)
 
     #meds.append(parque.cgm)
     
-    #meds.append(vel_SCADA)
+    meds.append(vel_SCADA)
     #meds.append(vel_pronos10min)
-    #meds.append(vel_GEN)
+    meds.append(vel_GEN)
     
-    meds.append(dir_SCADA)
+    #meds.append(dir_SCADA)
     #meds.append(dir_GEN)
-    meds.append(dir_pronos10min)
-    meds.append(dir_pronos10min_desf)
+    #meds.append(dir_pronos10min)
+    #meds.append(dir_pronos10min_desf)
     #meds.append(dir_pronos60min)    
     
     #meds.append(med_10min)

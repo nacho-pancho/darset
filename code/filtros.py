@@ -240,16 +240,34 @@ def corrMAX_Ndesf(x,y,NdesfMin,NdesfMax,corregirDesf):
     Ndesf_corr_max = 0
     corr_x_y_max = None
     corr_max = -999999;
-    for Ndesf in range(NdesfMin,NdesfMax):
-        corr_x_y,corr = corr_medidas(x,y,3,Ndesf)
+    
+    rango = range(NdesfMin,NdesfMax)
+    
+    corr_mat = np.zeros((len(rango),len(x.muestras)))
+    
+    fila = 0
+    
+    for Ndesf in rango:
+        corr_x_y,corr = corr_medidas(x,y,24*6,Ndesf)
+
+        corr_mat[fila,:] =corr_x_y.muestras 
+        
         if (corr > corr_max):
             corr_max = corr
             Ndesf_corr_max = Ndesf
             corr_x_y_max = corr_x_y
-                    
+        
+        fila = fila  + 1
+        
+    Ndesf_opt_k = [ rango[x] for x in np.argmax(corr_mat,axis = 0)]
+    #print(Ndesf_opt_k)
+    
+    corr_x_y_max.muestras = Ndesf_opt_k
+                
     if corregirDesf:
         y.desfasar(Ndesf_corr_max)
-        print ('desfasaje('+ x.nombre + ',' + y.nombre + ') = ', Ndesf_corr_max , ' muestras')        
+
+    print ('desfasaje('+ x.nombre + ',' + y.nombre + ') = ', Ndesf_corr_max , ' muestras')        
             
     return corr_x_y_max
 
