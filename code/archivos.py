@@ -81,7 +81,7 @@ def path(ncentral):
     
 
 def leerArchi(nidCentral,tipoArchi):    
-    print(f"Leyendo archivo de central {nidCentral}")
+
 
     if tipoArchi == 'scada':
         archi = archiSCADA(nidCentral)
@@ -89,6 +89,13 @@ def leerArchi(nidCentral,tipoArchi):
         archi = archiGEN(nidCentral)
     else:
         return None
+        exit
+    
+    if not os.path.exists(archi):
+        return None
+        exit        
+  
+    print(f"Leyendo archivo de central {nidCentral}")
     
     f = open(archi, 'r')
     
@@ -161,7 +168,7 @@ def leerArchi(nidCentral,tipoArchi):
 
         tipoDato = filtros.str_to_tipo(tipos[i])
         if tipoDato == None:
-            break
+            continue
         meds = data[:,i+1]
         nombre = tipoDato + ident
         minmax = filtros.min_max(tipoDato,PAutorizada)
@@ -187,8 +194,14 @@ def leerArchi(nidCentral,tipoArchi):
 ##############################################################################
 
 def leerArchiSMEC(nidCentral):
-    print(f"Leyendo archivo SMEC  para la central {nidCentral}")
+
     archi_SMEC = archiSMEC(nidCentral)
+
+    if not os.path.exists(archi_SMEC):
+        return None,None
+        exit        
+
+    print(f"Leyendo archivo SMEC  para la central {nidCentral}")
 
     # Leo muestras (todas las celdas tienen que tener un valor)
     f = open(archi_SMEC, 'r')
@@ -234,8 +247,13 @@ def leerArchiSMEC(nidCentral):
 ##############################################################################
 
 def leerArchiPRONOS(nidCentral,muestreo_mins):    
-    print(f"Leyendo archivo de pronósticos para la central {nidCentral}")
     archi_pronos = archiPRONOS(nidCentral)       
+
+    if not os.path.exists(archi_pronos):
+        return None
+        exit
+
+    print(f"Leyendo archivo de pronósticos para la central {nidCentral}")
     
     f = open(archi_pronos, 'r')
     
@@ -284,7 +302,7 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
     cols = line.split('\t')   
     f.close() 
     dtini_str = cols[0]
-    dtini = NumtoDateTime(int(dtini_str))
+    dtini = NumtoDateTime(float(dtini_str))
 
     delta_30min = datetime.timedelta(minutes=30) # sumo 30 min para que este en fase con SCADA
     dt_ini_corr = dtini #+ delta_30min
@@ -303,9 +321,7 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
         nrep = filtros.Nrep(tipoDato)
         
         if muestreo_mins != 60:      
-            if tipoDato == 'vel':
-                meds = signal.resample_poly(meds,up=60,down=10)
-            else:            
+            if tipoDato == 'dir':
                 meds_sin = [m.sin(m.radians(k)) for k in meds ]
                 meds_cos = [m.cos(m.radians(k)) for k in meds ]
                 
@@ -319,6 +335,8 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
                         meds_m[k] = meds_m[k] + 360
                 
                 meds = np.asarray(meds_m) 
+            else:            
+                meds = signal.resample_poly(meds,up=60,down=10)        
             
         med = datos.Medida(meds,dt_10min,tipoDato,nombre,minmax[0],minmax[1],nrep)
         medidas.append(med)
@@ -328,3 +346,47 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
     return Medidor
 
 ##############################################################################
+    
+def leerArchivosCentral (nidCentral):
+        
+    '''
+    parque = leerArchi(nidCentral,'scada')
+    
+    aux = leerArchi(nidCentral,'gen')
+
+    if (aux != None):
+        parque
+    
+            
+
+    med_10min, med_15min = archivos.leerArchiSMEC(nidCentral)
+    parque = archivos.leerArchi(nidCentral,'scada')
+    #parque2 = archivos.leerArchi(nidCentral,'gen') 
+
+    medidor_pronos10min = archivos.leerArchiPRONOS(nidCentral,10)
+    #medidor_pronos60min = archivos.leerArchiPRONOS(nidCentral,60)
+    
+    #parque.pot_SMEC  = med_10min
+    
+    pot_SCADA = parque.pot
+    #vel_SCADA = parque.medidores[0].get_medida('vel')
+    #dir_SCADA = parque.medidores[0].get_medida('dir')
+    
+    rad_SCADA = parque.medidores[0].get_medida('rad')
+    tem_SCADA = parque.medidores[0].get_medida('tem')
+
+    
+    #vel_GEN = parque2.medidores[0].get_medida('vel')
+    #dir_GEN = parque2.medidores[0].get_medida('dir')
+    
+    
+    #vel_pronos10min = medidor_pronos10min.get_medida('vel')
+    #dir_pronos10min = medidor_pronos10min.get_medida('dir')
+    #dir_pronos10min_desf = copy.deepcopy(dir_pronos10min)
+
+    rad_pronos10min = medidor_pronos10min.get_medida('rad')
+    tem_pronos10min = medidor_pronos10min.get_medida('tem')
+
+    '''    
+    return None
+        

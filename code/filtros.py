@@ -39,6 +39,8 @@ def str_to_tipo(s):
         return 'dis'
     elif s.find('corr_sp') != -1:
         return 'corr_sp'
+    elif s.find('rad') != -1:
+        return 'rad'        
     else:
         return None
 
@@ -62,7 +64,9 @@ def min_max(tipo,PotAut):
     elif tipo == 'dis':
         return [0,1]
     elif tipo == 'corr_sp':
-        return [-1,1]    
+        return [-1,1]
+    elif tipo == 'rad':
+        return [0,1366]    
 
 ##############################################################################
 
@@ -274,7 +278,7 @@ def corrMAX_Ndesf(x,y,NdesfMin,NdesfMax,corregirDesf):
 
     print ('desfasaje('+ x.nombre + ',' + y.nombre + ') = ', Ndesf_corr_max , ' muestras')        
             
-    return corr_x_y_max
+    return corr_x_y_max,Ndesf_corr_max
 
 
 def corregir_vel_altura (velRef,velAjustar):

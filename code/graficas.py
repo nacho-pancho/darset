@@ -63,19 +63,24 @@ def clickplot_redraw():
         idx_tipo = tipos.index(med_i.tipo)
         t_i = med_i.tiempo
         legends[med_i.tipo].append(med_i.nombre)
-        idx_i =list(map(lambda t: (t >= window[0]) and (t < window[1]), t_i))
+        idx_i = list(map(lambda t: (t >= window[0]) and (t < window[1]), t_i))
         x_i = list()
         y_i = list()
         for j in range(len(idx_i)):
             if idx_i[j]:
                 x_i.append(t_i[j])
                 y_i.append(med_i.muestras[j])
+        
+        if len(x_i) == 0:
+            plt.draw()
+            continue
+        
         print(x_i[0],x_i[-1])
         plt.subplot(len(tipos)+1,1,idx_tipo+1)
         c_i = viridis(i/len(medidas))
         plt.plot(x_i,y_i,color=c_i)
         
-        plt.axis([window[0],window[1],np.min(y_i),np.max(y_i)])
+        plt.axis([window[0],window[1],np.min(y_i)*0.9,np.max(y_i)*1.1])
         plt.ylabel(med_i.tipo)
         plt.draw()
         
@@ -199,10 +204,11 @@ def clickplot(_medidas,figsize=(8,6)):
         # vector con 1's donde la señal está filtrada
         # este vector es relativo a lo tiempos de la señal
         med_i = medidas[i]
+        print(med_i.nombre)
         alarm_i = med_i.filtrada()
         row_i[:] = 0
         t_i = med_i.tiempo
-        dt = (t_i[-1]-t_i[0])/len(t_i)
+        dt = (t_i[-1]-t_i[0])/(len(t_i) - 1)
         for j in range(MAP_WIDTH):
             tmed = tini + j*t_per_pixel # tiempo t en la medida
             if tmed < t_i[0]:
