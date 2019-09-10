@@ -23,7 +23,7 @@ if __name__ == '__main__':
     nidCentral = 93    
     med_10min, med_15min = archivos.leerArchiSMEC(nidCentral)
     parque = archivos.leerArchi(nidCentral,'scada')
-    #parque2 = archivos.leerArchi(nidCentral,'gen') 
+    parque2 = archivos.leerArchi(nidCentral,'gen') 
 
     medidor_pronos10min = archivos.leerArchiPRONOS(nidCentral,10)
     #medidor_pronos60min = archivos.leerArchiPRONOS(nidCentral,60)
@@ -69,8 +69,8 @@ if __name__ == '__main__':
 
     #corr_velSCADA_velPRONOS_max = filtros.corrMAX_Ndesf(vel_SCADA,vel_pronos10min,-20,20,True)        
     
-    #corr_radSCADA_radPRONOS_max,Ndesf_corr_max = filtros.corrMAX_Ndesf(pot_SCADA,rad_pronos10min,-20,20,True)
-    #tem_pronos10min.desfasar(Ndesf_corr_max)     
+    corr_radSCADA_radPRONOS_max,Ndesf_corr_max = filtros.corrMAX_Ndesf(pot_SCADA,rad_pronos10min,-20,20,True)
+    corr_radSCADA_radPRONOS_max,Ndesf_corr_max = filtros.corrMAX_Ndesf(tem_SCADA,tem_pronos10min,-20,20,True)    
 
     corr_potSCADA_potSMEC_max,Ndesf_corr_max = filtros.corrMAX_Ndesf(pot_SCADA,med_10min,-20,20,True)
 
