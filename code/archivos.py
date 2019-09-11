@@ -158,9 +158,12 @@ def leerArchi(nidCentral,tipoArchi):
     if dtmin == dtcero: # 
         trep = tiempo[dt == dtcero]
         print(f"ERROR: tiempos repetidos {trep}")
+        return None
+        exit
     elif dtmax > 1.1*dtposta:
         print(f"ERROR: tiempos faltantes!")
-    
+        return None
+        exit
     
     # Leo medidas
 
