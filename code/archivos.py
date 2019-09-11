@@ -15,6 +15,7 @@ import math as m
 import pandas as pd
 import scipy.signal as signal
 
+
 ##############################################################################
 
 RUTA_DATOS = '../data/'
@@ -95,7 +96,7 @@ def leerArchi(nidCentral,tipoArchi):
         return None
         exit        
   
-    print(f"Leyendo archivo de central {nidCentral}")
+    print(f"Leyendo archivo {tipoArchi} de central {nidCentral}")
     
     f = open(archi, 'r')
     
@@ -145,21 +146,21 @@ def leerArchi(nidCentral,tipoArchi):
     #
     # verificamos que no haya fechas repetidas
     #
-    '''
+    
     dt = list()
     for i in range(len(tiempo)-1):
         dt.append(tiempo[i+1]-tiempo[i])
     dtmin,dtmed,dtmax = np.min(dt),np.median(dt),np.max(dt)
     print(f"dt: min{dtmin} med={dtmed} max={dtmax}")
-    dt.append(datetime.timedelta(dt[-1]))
-    dtposta = timedelta(minutes=10)
-    dtcero = timedelta(0)
+    dt.append(dt[-1])
+    dtposta = datetime.timedelta(minutes=10)
+    dtcero = datetime.timedelta(0)
     if dtmin == dtcero: # 
         trep = tiempo[dt == dtcero]
         print(f"ERROR: tiempos repetidos {trep}")
-    elif dtmax > 1.5*dtposta:
+    elif dtmax > 1.1*dtposta:
         print(f"ERROR: tiempos faltantes!")
-    '''
+    
     
     # Leo medidas
 
@@ -174,7 +175,7 @@ def leerArchi(nidCentral,tipoArchi):
         minmax = filtros.min_max(tipoDato,PAutorizada)
         nrep = filtros.Nrep(tipoDato)
         
-        med = datos.Medida(meds,tiempo,tipoDato,nombre,minmax[0],minmax[1],nrep)
+        med = datos.Medida(tipoArchi,meds,tiempo,tipoDato,nombre,minmax[0],minmax[1],nrep)
         
         if (tipoDato != 'pot' and tipoDato != 'cgm' and tipoDato != 'dis'):
             medidas.append(med)
@@ -228,8 +229,8 @@ def leerArchiSMEC(nidCentral):
     dtini_str = cols[0]
     dtini = datetime.datetime.strptime(dtini_str, '%d/%m/%Y') 
 
-    delta_15min = datetime.timedelta(minutes=30) # sumo 30 min para que este en fase con SCADA
-    dt_ini_corr = dtini + delta_15min
+    delta_30min = datetime.timedelta(minutes=30) # sumo 30 min para que este en fase con SCADA
+    dt_ini_corr = dtini + delta_30min
     dt_15min = fechaInitoDateTime(dt_ini_corr,ndias,15) 
     
     muestras10min = signal.resample_poly(muestras15min,up=15,down=10)
@@ -239,8 +240,8 @@ def leerArchiSMEC(nidCentral):
     minmax = filtros.min_max(tipoDato,50)
     nrep = filtros.Nrep(tipoDato)
   
-    med_10min = datos.Medida(muestras10min,dt_10min,'pot','potSMEC10m',minmax[0],minmax[1],nrep)
-    med_15min = datos.Medida(muestras15min,dt_15min,'pot','potSMEC15m',minmax[0],minmax[1],nrep)
+    med_10min = datos.Medida('SMEC',muestras10min,dt_10min,'pot','potSMEC10m',minmax[0],minmax[1],nrep)
+    med_15min = datos.Medida('SMEC',muestras15min,dt_15min,'pot','potSMEC15m',minmax[0],minmax[1],nrep)
 
     return med_10min, med_15min       
 
@@ -338,7 +339,7 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
             else:            
                 meds = signal.resample_poly(meds,up=60,down=10)        
             
-        med = datos.Medida(meds,dt_10min,tipoDato,nombre,minmax[0],minmax[1],nrep)
+        med = datos.Medida('PRONOS',meds,dt_10min,tipoDato,nombre,minmax[0],minmax[1],nrep)
         medidas.append(med)
 
     Medidor = datos.Medidor(ident,medidas,ubicacion)
@@ -349,16 +350,27 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
     
 def leerArchivosCentral (nidCentral):
         
-    '''
+    
     parque = leerArchi(nidCentral,'scada')
     
-    aux = leerArchi(nidCentral,'gen')
+    parqueGen = leerArchi(nidCentral,'gen')
+    if (parqueGen != None):
+        parque.medidores[0].agregar_meds(parqueGen.medidores[0])
+    
+    med_10min, med_15min = leerArchiSMEC(nidCentral)
+    if (med_10min != None):
+        parque.pot_SMEC = med_10min
+        
+    medidor_pronos10min = leerArchiPRONOS(nidCentral,10)    
+    if (medidor_pronos10min != None):
+        parque.medidores[0].agregar_meds(medidor_pronos10min)
+    
+    
 
-    if (aux != None):
-        parque
+    
     
             
-
+    '''
     med_10min, med_15min = archivos.leerArchiSMEC(nidCentral)
     parque = archivos.leerArchi(nidCentral,'scada')
     #parque2 = archivos.leerArchi(nidCentral,'gen') 

@@ -237,7 +237,7 @@ def corr_medidas(x,y,NDatosCorr,NDatosDesf):
     corr_prom = corr[idx_datos_validos].mean()    
     #print ('NDatosDesf: ',NDatosDesf,', corr = ',corr_prom)
     
-    return d.Medida(corr,x.tiempo,'corr','corr_' + x.tipo + '_' + y.tipo,corr_prom * 0.99,1.0,0),corr_prom
+    return d.Medida('-',corr,x.tiempo,'corr','corr_' + x.tipo + '_' + y.tipo,corr_prom * 0.99,1.0,0),corr_prom
     
 
 def corrMAX_Ndesf(x,y,NdesfMin,NdesfMax,corregirDesf):
