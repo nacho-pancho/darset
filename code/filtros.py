@@ -15,6 +15,7 @@ import datos as d
 import numpy as np
 import scipy.stats as r
 import math as m
+import archivos as arch
 
 ##############################################################################
 
@@ -145,18 +146,17 @@ def corr_medidas(x,y,NDatosCorr,NDatosDesf):
     dtini_x = x.tiempo[0]
     dtini_y = y.tiempo[0]
     
-    dif_dtini = dtini_y - dtini_x
-    
-    N10min_des_yx = round((dif_dtini.total_seconds())/600)
+    N10min_des_yx = arch.NMuestras10minEntreDts(dtini_x,dtini_y)
 
     filtro_y_des = np.ones(len(x.muestras),dtype=bool)
 
     y_m_des = np.zeros(len(x.muestras))
     
     for k in range(len(x.muestras)):
-        if ((k-N10min_des_yx - NDatosDesf >= 0) and (k-N10min_des_yx - NDatosDesf < len(y.muestras))):
-            y_m_des[k] = y.muestras[k - N10min_des_yx - NDatosDesf]
-            filtro_y_des[k] = filtro_y[k - N10min_des_yx - NDatosDesf]
+        k_y = k - N10min_des_yx - NDatosDesf 
+        if k_y in range(len(y.muestras)):
+            y_m_des[k] = y.muestras[k_y]
+            filtro_y_des[k] = filtro_y[k_y]
         else:
             y_m_des[k] = -99999999
             filtro_y_des[k] = 1
@@ -233,52 +233,57 @@ def corr_medidas(x,y,NDatosCorr,NDatosDesf):
     #print(cualquiera)
     #print('Episodios:',len(cualquiera))
     
-    idx_datos_validos = np.where(filtro_total < 1) 
-    corr_prom = corr[idx_datos_validos].mean()    
+    corr_y = np.zeros(len(y.muestras))
+    filtro_total_y = np.ones(len(y.muestras),dtype=bool)
+    for k in range(len(y.muestras)):
+        k_x = k + N10min_des_yx + NDatosDesf 
+        if k_x in range(len(x.muestras)):
+            corr_y[k] = corr[k_x]
+            filtro_total_y[k] = filtro_total[k_x]
+        else:
+            corr_y[k] = -99999999
+   
+    idx_datos_ok = np.where(filtro_total_y < 1) 
+    corr_prom = corr_y[idx_datos_ok].mean()    
     #print ('NDatosDesf: ',NDatosDesf,', corr = ',corr_prom)
     
-    return d.Medida('-',corr,x.tiempo,'corr','corr_' + x.tipo + '_' + y.tipo,corr_prom * 0.99,1.0,0),corr_prom
+    return d.Medida('corr',corr_y,list(y.tiempo),'corr','corr_' + x.tipo + '_' + y.tipo,corr_prom * 0.99,1.0,0)
+
+
+##############################################################################
     
 
-def corrMAX_Ndesf(x,y,NdesfMin,NdesfMax,corregirDesf):
-
-    Ndesf_corr_max = 0
-    corr_x_y_max = None
-    corr_max = -999999;
+def corrMAX_Ndesf(x,y,NdesfMin,NdesfMax,corregirDesf,desf_dinamico):
     
     rango = range(NdesfMin,NdesfMax)
     
-    corr_mat = np.zeros((len(rango),len(x.muestras)))
+    corr_mat = np.zeros((len(rango),len(y.muestras)))
     
-    fila = 0
-    
+    fila = 0    
     for Ndesf in rango:
-        corr_x_y,corr = corr_medidas(x,y,24*6,Ndesf)
-
+        corr_x_y = corr_medidas(x,y,24*6,Ndesf)
         corr_mat[fila,:] =corr_x_y.muestras 
-        
-        if (corr > corr_max):
-            corr_max = corr
-            Ndesf_corr_max = Ndesf
-            corr_x_y_max = corr_x_y
-        
         fila = fila  + 1
         
     Ndesf_opt_k = [ rango[x] for x in np.argmax(corr_mat,axis = 0)]
+
     #print(Ndesf_opt_k)
     
                 
     if corregirDesf:
-        y.desfasar(Ndesf_corr_max)
-        y.nombre = y.nombre + '_desf_' + str(Ndesf_corr_max)
-        Ndesf_opt_k = [ d - Ndesf_corr_max for d in Ndesf_opt_k]
+        Ndesf_P50 = np.median(Ndesf_opt_k)
+        if desf_dinamico:
+            y.desfasar_dinamico(Ndesf_opt_k)
+            y.nombre = y.nombre + '_desf_din' 
+        else:
+            y.desfasar(Ndesf_P50)
+            y.nombre = y.nombre + '_desf_' + Ndesf_P50 
+       
+        #Ndesf_opt_k = [ d - Ndesf_P50 for d in Ndesf_opt_k]
 
-
-    corr_x_y_max.muestras = Ndesf_opt_k
-
-    print ('desfasaje('+ x.nombre + ',' + y.nombre + ') = ', Ndesf_corr_max , ' muestras')        
+    print ('desfasaje('+ x.nombre + ',' + y.nombre + ') = ', Ndesf_P50 , ' muestras')        
             
-    return corr_x_y_max,Ndesf_corr_max
+    return d.Medida( 'corr',Ndesf_opt_k,y.tiempo,'Ndesf_opt_k','Ndesf_opt_k_' + x.tipo + '_' + y.tipo,-20,20,0)
 
 
 def corregir_vel_altura (velRef,velAjustar):

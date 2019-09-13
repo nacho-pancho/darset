@@ -43,6 +43,8 @@ import numpy as np
 import filtros as f
 import datos as d
 import scipy.stats as r
+import archivos as arch
+import copy
 
 ##############################################################################
 
@@ -77,9 +79,10 @@ class Medida(object):
         self.maxval = maxval
         self.nrep = nrep
         self.filtros = dict()
-        self.agregar_filtro('fuera_de_rango',f.filtrar_rango
+        if (self.tipo != 'Ndesf_opt_k'):        
+            self.agregar_filtro('fuera_de_rango',f.filtrar_rango
                             (self.muestras,self.minval,self.maxval))
-        if self.tipo != 'corr':        
+        if (self.tipo != 'corr') and (self.tipo != 'Ndesf_opt_k'):        
             self.agregar_filtro('trancada',f.filtrar_rep
                                 (self.muestras,self.get_filtro('fuera_de_rango'),self.nrep))
 
@@ -97,8 +100,20 @@ class Medida(object):
     
     def get_filtros(self):
         return self.filtros
+    
+    
+    def reset_filtros(self,NMuestras):
+        for k in self.filtros.keys():
+            self.filtros[k] = np.zeros(NMuestras, dtype=bool)
 
-
+    def reset_muestrasYTiempo(self,dtini,NMuestras):
+        self.tiempo = arch.fechaInitoDateTimeN(dtini,NMuestras)
+        self.muestras = np.full(NMuestras,-99999999)
+    
+    def reset_med (self,dtini,NMuestras):
+        self.reset_filtros(NMuestras)
+        self.reset_muestrasYTiempo(dtini,NMuestras)
+        
  
     def filtrada(self):
         filtrada = np.zeros(len(self.muestras),dtype=bool)
@@ -110,7 +125,43 @@ class Medida(object):
     def desfasar(self,Ndesf):
         dt_desf = (self.tiempo[1] - self.tiempo[0]) * Ndesf
         self.tiempo = [dt +  dt_desf for dt in self.tiempo] 
-        return None        
+        return None
+
+    def desfasar_dinamico (self,Ndesf):
+        
+        med_old = copy.deepcopy(self)
+        
+        m_old = med_old.muestras
+        f_old = med_old.get_filtros()
+        dtini_old = med_old.tiempo[0]
+
+        # Redimensiono muestras y filtros
+        dt_m = (self.tiempo[1] - self.tiempo[0])
+        dt_new = [self.tiempo[k] + Ndesf[k] * dt_m for k in range(len(med_old.tiempo))]
+        dtmin,dtmax = np.min(dt_new),np.max(dt_new)
+        
+        NMuestras = arch.NMuestras10minEntreDts(dtmin,dtmax) + 1
+
+        self.reset_med(dtmin,NMuestras)
+    
+        N10min_des = arch.NMuestras10minEntreDts(dtini_old,dtmin)
+        
+        for k_old in range(len(m_old)):
+            k_new = (k_old + Ndesf[k_old]) - N10min_des 
+            
+            #if k_new not in range(len(self.muestras)):
+                #continue
+            
+            print('(new,old): ',k_new,',',k_old)
+            self.muestras[k_new] = m_old[k_old]
+            for k in self.filtros.keys():
+                self.filtros[k][k_new] = f_old[k][k_old]
+        
+        
+        #del  med_old
+        return None
+        
+        
     
 ##############################################################################
     
@@ -272,7 +323,7 @@ class Parque(object):
             else:
                 corr[k] = corr[k-1]
             k = k + 1
-        return Medida(corr,vel.tiempo,'corr','corr_vel_pot',0.7,1.0,0)
+        return Medida(corr,list(vel.tiempo),'corr','corr_vel_pot',0.7,1.0,0)
 
 
     

@@ -31,8 +31,11 @@ def fechaNumtoDateTime(dt_num):
     return dt
 
 ##############################################################################
-    
+def NMuestras10minEntreDts(dt1,dt2):
+    dif_dtini = dt2 - dt1
+    return round((dif_dtini.total_seconds() + 1)/600)
 
+##############################################################################
 def NumtoDateTime(num):
     dtini=datetime.datetime(1900, 1,1)
     dt_datetime=dtini + datetime.timedelta(seconds=((num-2)*24*3600))
@@ -48,6 +51,16 @@ def fechaInitoDateTime(dt_ini,ndias,cant_min):
             seg = dia*24*3600 + muestra * cant_min * 60
             dt_datetime=dt_ini + datetime.timedelta(seconds=seg)
             dt.append(dt_datetime)
+    return dt
+
+##############################################################################
+
+def fechaInitoDateTimeN(dt_ini,Nmuestras10min):
+    dt = []
+    for k in range(Nmuestras10min):
+        dt_k = dt_ini + k * datetime.timedelta(seconds=10*60)
+        dt.append(dt_k)
+    #print(dt)
     return dt
 
 ##############################################################################
@@ -307,10 +320,7 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
     f.close() 
     dtini_str = cols[0]
     dtini = NumtoDateTime(float(dtini_str))
-
-    delta_30min = datetime.timedelta(minutes=30) # sumo 30 min para que este en fase con SCADA
-    dt_ini_corr = dtini #+ delta_30min
-    dt_10min = fechaInitoDateTime(dt_ini_corr,m.trunc(len(data[:,1])/24),muestreo_mins)       
+      
     
     # Leo medidas
     medidas = []
@@ -342,6 +352,10 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
             else:            
                 meds = signal.resample_poly(meds,up=60,down=10)        
             
+        delta_30min = datetime.timedelta(minutes=30) # sumo 30 min para que este en fase con SCADA
+        dt_ini_corr = dtini #+ delta_30min
+        dt_10min = fechaInitoDateTimeN ( dt_ini_corr, len(meds)) 
+
         med = datos.Medida('PRONOS',meds,dt_10min,tipoDato,nombre,minmax[0],minmax[1],nrep)
         medidas.append(med)
 
