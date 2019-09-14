@@ -155,7 +155,7 @@ class Medida(object):
         self.calcular_filtros()
         
         
-        del  med_old
+        #del  med_old
         return None
         
   

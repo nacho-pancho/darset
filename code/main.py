@@ -58,7 +58,7 @@ if __name__ == '__main__':
     
     #meds.append(corr_vel_vel_max)
     
-    corr_vel_vel_max = filtros.corrMAX_Ndesf(vel_SCADA,vel_GEN_desf,-20,-15,True,True)
+    corr_vel_vel_max = filtros.corrMAX_Ndesf(vel_SCADA,vel_GEN_desf,-20,20,True,True)
     meds.append(corr_vel_vel_max)
     
     #corr_vel_pot_max = filtros.corrMAX_Ndesf(parque.pot_SMEC,pot_SCADA,-5,5,True,True)
