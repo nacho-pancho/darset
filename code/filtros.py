@@ -191,8 +191,6 @@ def corr_medidas(x,y,NDatosCorr,NDatosDesf):
     k_idx_buff = 0
     k = 0
 
-    cualquiera = list()
-    decorr = False
     while (k < len(x_m)):
         if not filtro_total[k]:
             if k_idx_buff < NDatosCorr:
@@ -220,12 +218,7 @@ def corr_medidas(x,y,NDatosCorr,NDatosDesf):
             else:     
                 corr[k] = np.dot(x_m_u[idx_buff], y_m_u [idx_buff]) / \
                     (np.linalg.norm(x_m_u[idx_buff]) * np.linalg.norm(y_m_u[idx_buff]))
-                if corr[k] < 0.7:
-                    if not decorr:
-                        cualquiera.append(k)
-                        decorr = True
-                else:
-                    decorr = False
+
         else:
             corr[k] = corr[k-1]
             #print('(filtrado)')
@@ -247,7 +240,7 @@ def corr_medidas(x,y,NDatosCorr,NDatosDesf):
     corr_prom = corr_y[idx_datos_ok].mean()    
     #print ('NDatosDesf: ',NDatosDesf,', corr = ',corr_prom)
     
-    return d.Medida('corr',corr_y,list(y.tiempo),'corr','corr_' + x.tipo + '_' + y.tipo,corr_prom * 0.99,1.0,0)
+    return d.Medida('corr',corr_y,list(y.tiempo),'corr','corr_' + x.tipo + '_' + y.tipo,corr_prom * 0.99,1.0,0),corr_prom
 
 
 ##############################################################################
@@ -259,29 +252,36 @@ def corrMAX_Ndesf(x,y,NdesfMin,NdesfMax,corregirDesf,desf_dinamico):
     
     corr_mat = np.zeros((len(rango),len(y.muestras)))
     
+    corr_max_med = -99999999
+    Ndesf_max_med = -99999999
+    
     fila = 0    
     for Ndesf in rango:
-        corr_x_y = corr_medidas(x,y,24*6,Ndesf)
+        corr_x_y,corr = corr_medidas(x,y,24*6,Ndesf)
         corr_mat[fila,:] =corr_x_y.muestras 
         fila = fila  + 1
         
+        if corr > corr_max_med:
+            corr_max_med = corr
+            Ndesf_max_med = Ndesf
+            
+        
     Ndesf_opt_k = [ rango[x] for x in np.argmax(corr_mat,axis = 0)]
 
-    #print(Ndesf_opt_k)
+    print(Ndesf_opt_k)
     
                 
     if corregirDesf:
-        Ndesf_P50 = np.median(Ndesf_opt_k)
         if desf_dinamico:
             y.desfasar_dinamico(Ndesf_opt_k)
             y.nombre = y.nombre + '_desf_din' 
         else:
-            y.desfasar(Ndesf_P50)
-            y.nombre = y.nombre + '_desf_' + Ndesf_P50 
+            y.desfasar(Ndesf_max_med)
+            y.nombre = y.nombre + '_desf_' + str(Ndesf_max_med)
        
         #Ndesf_opt_k = [ d - Ndesf_P50 for d in Ndesf_opt_k]
 
-    print ('desfasaje('+ x.nombre + ',' + y.nombre + ') = ', Ndesf_P50 , ' muestras')        
+    print ('desfasaje('+ x.nombre + ',' + y.nombre + ') = ', Ndesf_max_med , ' muestras')        
             
     return d.Medida( 'corr',Ndesf_opt_k,y.tiempo,'Ndesf_opt_k','Ndesf_opt_k_' + x.tipo + '_' + y.tipo,-20,20,0)
 

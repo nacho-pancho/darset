@@ -64,6 +64,15 @@ def fechaInitoDateTimeN(dt_ini,Nmuestras10min):
     return dt
 
 ##############################################################################
+    
+def dt_to_dt10min(dt):
+    dtdia = datetime.datetime(dt.year, dt.month, dt.day)
+    dt10min = NMuestras10minEntreDts(dtdia,dt)*datetime.timedelta(seconds=10*60)
+    dt10min = dt10min + dtdia
+
+    return dt10min
+
+##############################################################################
 
 def archiSCADA(ncentral):
     return RUTA_DATOS +'modelado_ro/c'+ str(ncentral) +'/c'+str(ncentral)+'_series10min.sas'
@@ -177,6 +186,9 @@ def leerArchi(nidCentral,tipoArchi):
         print(f"ERROR: tiempos faltantes!")
         return None
         exit
+    
+    dtini_10min = dt_to_dt10min(tiempo[0])
+    tiempo = fechaInitoDateTimeN(dtini_10min,len(tiempo))
     
     # Leo medidas
 

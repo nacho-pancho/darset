@@ -79,14 +79,17 @@ class Medida(object):
         self.maxval = maxval
         self.nrep = nrep
         self.filtros = dict()
+        self.calcular_filtros()
+        
+
+
+    def calcular_filtros(self):
         if (self.tipo != 'Ndesf_opt_k'):        
             self.agregar_filtro('fuera_de_rango',f.filtrar_rango
                             (self.muestras,self.minval,self.maxval))
         if (self.tipo != 'corr') and (self.tipo != 'Ndesf_opt_k'):        
             self.agregar_filtro('trancada',f.filtrar_rep
                                 (self.muestras,self.get_filtro('fuera_de_rango'),self.nrep))
-
-
 
     def agregar_filtro(self,nombre_f,filt):
         self.filtros[self.nombre + '_' + nombre_f] = filt.astype(np.uint8)
@@ -103,12 +106,11 @@ class Medida(object):
     
     
     def reset_filtros(self,NMuestras):
-        for k in self.filtros.keys():
-            self.filtros[k] = np.zeros(NMuestras, dtype=bool)
+        self.filtros.clear()
 
     def reset_muestrasYTiempo(self,dtini,NMuestras):
         self.tiempo = arch.fechaInitoDateTimeN(dtini,NMuestras)
-        self.muestras = np.full(NMuestras,-99999999)
+        self.muestras = np.full(NMuestras,1.5 * self.maxval)
     
     def reset_med (self,dtini,NMuestras):
         self.reset_filtros(NMuestras)
@@ -146,23 +148,17 @@ class Medida(object):
     
         N10min_des = arch.NMuestras10minEntreDts(dtini_old,dtmin)
         
-        for k_old in range(len(m_old)):
-            k_new = (k_old + Ndesf[k_old]) - N10min_des 
-            
-            #if k_new not in range(len(self.muestras)):
-                #continue
-            
-            print('(new,old): ',k_new,',',k_old)
-            self.muestras[k_new] = m_old[k_old]
-            for k in self.filtros.keys():
-                self.filtros[k][k_new] = f_old[k][k_old]
+        k_new = [k_old + Ndesf[k_old] - N10min_des for k_old in range(len(m_old))]
+
+        self.muestras[k_new] = m_old
+        
+        self.calcular_filtros()
         
         
-        #del  med_old
+        del  med_old
         return None
         
-        
-    
+  
 ##############################################################################
     
 class Medidor(object):
@@ -213,7 +209,6 @@ class Parque(object):
         self.decorr = None
         self._filtro_cgm = None
         self._filtro_potBaja = None
-
 
 
     def filtro_cgm(self):
