@@ -191,7 +191,9 @@ def leerArchi(nidCentral,tipoArchi):
     tiempo = fechaInitoDateTimeN(dtini_10min,len(tiempo))
     
     # Leo medidas
-
+    pot = None
+    cgm = None
+    dis = None
     medidas = []
     for i in range(nSeries):
 
