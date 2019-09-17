@@ -49,8 +49,8 @@ if __name__ == '__main__':
     #dir_pronos10min = medidor_pronos10min.get_medida('dir')
     #dir_pronos10min_desf = copy.deepcopy(dir_pronos10min)
 
-    rad_pronos10min = medidor_pronos10min.get_medida('rad')
-    tem_pronos10min = medidor_pronos10min.get_medida('tem')
+    #rad_pronos10min = medidor_pronos10min.get_medida('rad')
+    #tem_pronos10min = medidor_pronos10min.get_medida('tem')
 
     
 #    vel_pronos60min = medidor_pronos60min.get_medida('vel')
@@ -60,7 +60,7 @@ if __name__ == '__main__':
     
     #meds.append(corr_vel_vel_max)
     
-    #corr_vel_vel_max = filtros.corrMAX_Ndesf(vel_SCADA,vel_GEN_desf,-20,20,True,True)
+    #corr_vel_vel_max = filtros.corrMAX_Ndesf(vel_SCADA,vel_GEN_desf,-20,5,True,True)
     #meds.append(corr_vel_vel_max)
     
     #corr_vel_pot_max = filtros.corrMAX_Ndesf(parque.pot_SMEC,pot_SCADA,-5,5,True,True)
@@ -86,10 +86,10 @@ if __name__ == '__main__':
     #    meds.append(v)
     
     meds.append(pot_SCADA)
-    #meds.append(rad_SCADA)
-    #meds.append(tem_SCADA)
+    meds.append(rad_SCADA)
+    meds.append(tem_SCADA)
     meds.append(rad_GEN)
-    #meds.append(tem_GEN)    
+    meds.append(tem_GEN)    
 
     #meds.append(rad_pronos10min)
     #meds.append(tem_pronos10min)
@@ -115,6 +115,7 @@ if __name__ == '__main__':
     #meds.append(corr_dirSCADA_dirGen_max)
     #meds.append(corr_dirSCADA_dirPronos_max)
     #meds.append(corr_velSCADA_velPRONOS_max)
+    #meds.append(corr_vel_vel_max)
     graficas.clickplot(meds)
     plt.show()
 
