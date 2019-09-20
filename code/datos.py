@@ -43,7 +43,7 @@ import numpy as np
 import filtros as f
 import datos as d
 import scipy.stats as r
-import panda as pd
+import pandas as pd
 
 ##############################################################################
 
