@@ -52,7 +52,7 @@ def fechaInitoDateTime(dt_ini,ndias,cant_min):
 ##############################################################################
 
 def archiSCADA(ncentral):
-    return RUTA_DATOS +'modelado_ro/c'+ str(ncentral) +'/c'+str(ncentral)+'_series10min.sas'
+    return RUTA_DATOS +'/c'+ str(ncentral) +'/c'+str(ncentral)+'_series10min.sas'
 
 ##############################################################################
     
@@ -60,22 +60,22 @@ def archiSCADA(ncentral):
 ##############################################################################
 
 def archiGEN(ncentral):
-    return RUTA_DATOS +'modelado_ro/c'+ str(ncentral) +'/c'+str(ncentral)+'_series10minGen.sas'
+    return RUTA_DATOS +'/c'+ str(ncentral) +'/c'+str(ncentral)+'_series10minGen.sas'
 
 ##############################################################################
 
 def archiPRONOS(ncentral):
-    return RUTA_DATOS +'modelado_ro/c'+ str(ncentral) +'/c'+str(ncentral)+'_series60min_pronos.txt'
+    return RUTA_DATOS +'/c'+ str(ncentral) +'/c'+str(ncentral)+'_series60min_pronos.txt'
 
 ##############################################################################
 
 def archiSMEC(ncentral):
-    return RUTA_DATOS +'modelado_ro/c'+ str(ncentral) + '/medidasSMEC.txt'
+    return RUTA_DATOS +'/c'+ str(ncentral) + '/medidasSMEC.txt'
 
 ##############################################################################
 
 def path(ncentral):
-    return RUTA_DATOS +'modelado_ro/c'+ str(ncentral) + '/'
+    return RUTA_DATOS +'/c'+ str(ncentral) + '/'
 
 ##############################################################################
     
