@@ -105,7 +105,6 @@ def path(ncentral):
 
 def leerArchi(nidCentral,tipoArchi):    
 
-
     if tipoArchi == 'scada':
         archi = archiSCADA(nidCentral)
     elif tipoArchi == 'gen':
@@ -118,20 +117,23 @@ def leerArchi(nidCentral,tipoArchi):
         return None
         exit        
   
-    print(f"Leyendo archivo {tipoArchi} de central {nidCentral}")
+    print(f"Leyendo archivo {tipoArchi} de central {nidCentral}: {archi}")
     
     f = open(archi, 'r')
     
     # Leo datos de las estaciones
     
     line=f.readline()
+    print(line)
     cols = line.split('\t')
     nSeries = int(cols[0])
-    
+
     line=f.readline()
+    print(line)
     cols = line.split('\t')
     meteo_utm_zona = cols[0]
     
+    print(line)
     line=f.readline()
     cols = line.split('\t')
     meteo_utm_huso = int(cols[0])    

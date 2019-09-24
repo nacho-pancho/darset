@@ -1,3 +1,3 @@
 #!/bin/bash 
-wget -c http://iie.fing.edu.uy/~nacho/data/energia/modelado_ro.zip
-unzip modelado_ro.zip
+wget -c http://iie.fing.edu.uy/~nacho/data/energia/darset_1.zip
+unzip darset_1.zip
