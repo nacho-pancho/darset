@@ -75,7 +75,7 @@ def dt_to_dt10min(dt):
 ##############################################################################
 
 def archiSCADA(ncentral):
-    return RUTA_DATOS +'modelado_ro/c'+ str(ncentral) +'/c'+str(ncentral)+'_series10min.sas'
+    return RUTA_DATOS +'/c'+ str(ncentral) +'/c'+str(ncentral)+'_series10min.sas'
 
 ##############################################################################
     
@@ -83,42 +83,44 @@ def archiSCADA(ncentral):
 ##############################################################################
 
 def archiGEN(ncentral):
-    return RUTA_DATOS +'modelado_ro/c'+ str(ncentral) +'/c'+str(ncentral)+'_series10minGen.sas'
+    return RUTA_DATOS +'/c'+ str(ncentral) +'/c'+str(ncentral)+'_series10minGen.sas'
 
 ##############################################################################
 
 def archiPRONOS(ncentral):
-    return RUTA_DATOS +'modelado_ro/c'+ str(ncentral) +'/c'+str(ncentral)+'_series60min_pronos.txt'
+    return RUTA_DATOS +'/c'+ str(ncentral) +'/c'+str(ncentral)+'_series60min_pronos.txt'
 
 ##############################################################################
 
 def archiSMEC(ncentral):
-    return RUTA_DATOS +'modelado_ro/c'+ str(ncentral) + '/medidasSMEC.txt'
+    return RUTA_DATOS +'/c'+ str(ncentral) + '/medidasSMEC.txt'
 
 ##############################################################################
 
 def path(ncentral):
-    return RUTA_DATOS +'modelado_ro/c'+ str(ncentral) + '/'
+    return RUTA_DATOS +'/c'+ str(ncentral) + '/'
 
 ##############################################################################
     
 
 def leerArchi(nidCentral,tipoArchi):    
 
+
     if tipoArchi == 'scada':
         archi = archiSCADA(nidCentral)
     elif tipoArchi == 'gen':
         archi = archiGEN(nidCentral)
     else:
+        print(f"ERROR: tipo de archivo desconocido")
         return None
-        exit
-    
-    if not os.path.exists(archi):
-        return None
-        exit        
-  
+
     print(f"Leyendo archivo {tipoArchi} de central {nidCentral}: {archi}")
-    
+
+    if not os.path.exists(archi):
+        print("ERROR: archivo no existente.")
+        return None
+
+
     f = open(archi, 'r')
     
     # Leo datos de las estaciones
