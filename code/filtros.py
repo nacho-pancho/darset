@@ -257,7 +257,7 @@ def corrMAX_Ndesf(x,y,NdesfMin,NdesfMax,corregirDesf,desf_dinamico):
     
     fila = 0    
     for Ndesf in rango:
-        corr_x_y,corr = corr_medidas(x,y,24*6,Ndesf)
+        corr_x_y,corr = corr_medidas(x,y,24*6*7,Ndesf)
         corr_mat[fila,:] =corr_x_y.muestras 
         fila = fila  + 1
         
@@ -267,7 +267,8 @@ def corrMAX_Ndesf(x,y,NdesfMin,NdesfMax,corregirDesf,desf_dinamico):
             
         
     Ndesf_opt_k = [ rango[x] for x in np.argmax(corr_mat,axis = 0)]
-
+    
+    
     print(Ndesf_opt_k)
     
                 
