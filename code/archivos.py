@@ -386,7 +386,7 @@ def leerArchivosCentral (nidCentral):
     
     parqueGen = leerArchi(nidCentral,'gen')
     if (parqueGen != None):
-        parque.medidores[0].agregar_meds(parqueGen.medidores[0])
+        parque.medidores[0].agregar_meds(parqueGen.medidores[0].medidas)
     
     med_10min, med_15min = leerArchiSMEC(nidCentral)
     if (med_10min != None):
@@ -394,7 +394,8 @@ def leerArchivosCentral (nidCentral):
         
     medidor_pronos10min = leerArchiPRONOS(nidCentral,10)    
     if (medidor_pronos10min != None):
-        parque.medidores[0].agregar_meds(medidor_pronos10min)
+        parque.medidores[0].agregar_meds(medidor_pronos10min.medidas)
+   
     
     
 
@@ -431,5 +432,5 @@ def leerArchivosCentral (nidCentral):
     tem_pronos10min = medidor_pronos10min.get_medida('tem')
 
     '''    
-    return None
+    return parque
         
