@@ -185,7 +185,15 @@ def clickplot(_medidas,figsize=(8,6)):
     #
     t_per_pixel = period * (1.0 / MAP_WIDTH)
     print(f"t_per_pixel={t_per_pixel}")
-    map_h = BAR_HEIGHT * len(medidas)
+    #
+    # cada medida tiene una cierta cantidad de filtros
+    # el mapa tiene tantas barras como filtros en total
+    #
+    nfiltros = 0
+    for m in medidas:
+        nfiltros = nfiltros + len (m.get_filtros())
+    print('Total de filtros:',nfiltros)
+    map_h = BAR_HEIGHT * nfiltros
     alarm_map = np.zeros((map_h,MAP_WIDTH,3))
     #
     # grafica coloreada
@@ -199,30 +207,40 @@ def clickplot(_medidas,figsize=(8,6)):
     col_i = np.zeros((map_h,1),dtype=np.bool)
     row_i = np.zeros((1,MAP_WIDTH),dtype=np.bool)
     box_i = np.zeros((map_h,MAP_WIDTH))
-    for i in range(len(medidas)):
-        c_i = viridis(i/len(medidas))
+    i_filtro = 0
+    i_medida = 0
+    for m in medidas:
+        c_i = viridis(i_medida/len(medidas))
         # vector con 1's donde la señal está filtrada
         # este vector es relativo a lo tiempos de la señal
-        med_i = medidas[i]
-        print(med_i.nombre)
-        alarm_i = med_i.filtrada()
-        row_i[:] = 0
-        t_i = med_i.tiempo
-        dt = (t_i[-1]-t_i[0])/(len(t_i) - 1)
-        for j in range(MAP_WIDTH):
-            tmed = tini + j*t_per_pixel # tiempo t en la medida
-            if tmed < t_i[0]:
-                continue
-            if tmed > t_i[-1]:
-                continue
-            k0 = (tmed - t_i[0])/dt
-            row_i[0, j] = alarm_i[ int(k0)  ]
-        col_i[:] = 0
-        col_i[(i*BAR_HEIGHT):((i+1)*BAR_HEIGHT),0] = 1
-        box_i[:,:] = np.dot(col_i,row_i).astype(np.bool)
-        alarm_map[:,:,0] = alarm_map[:,:,0] + c_i[0]*box_i
-        alarm_map[:,:,1] = alarm_map[:,:,1] + c_i[1]*box_i
-        alarm_map[:,:,2] = alarm_map[:,:,2] + c_i[2]*box_i
+        print(m.nombre)
+        t_i = m.tiempo
+        tfin = t_i[-1]
+        tini = t_i[0]
+        filtros = m.get_filtros()
+        dt = (tfin - tini) / (len(t_i) - 1)
+        print('medida',i_medida,' filtro', i_filtro, 'tini=',tini,'tfin=',tfin, 'dt',dt)
+        for fnom,fdata in filtros.items():
+            print('filtro:',fnom,' data:', len(fdata))
+            row_i[:] = 0
+            for j in range(MAP_WIDTH):
+                tmed = tini + j*t_per_pixel # tiempo t en la medida
+                if tmed < tini:
+                    continue
+                if tmed > tfin:
+                    continue
+                k0 = (tmed - tini)/dt
+                row_i[0, j] = fdata[int(k0)]
+            col_i[:] = 0
+            col_i[ (i_filtro*BAR_HEIGHT) : ((i_filtro+1)*BAR_HEIGHT),0 ] = 1
+            box_i[:,:] = np.dot(col_i,row_i).astype(np.bool)
+            alarm_map[:,:,0] = alarm_map[:,:,0] + c_i[0]*box_i
+            alarm_map[:,:,1] = alarm_map[:,:,1] + c_i[1]*box_i
+            alarm_map[:,:,2] = alarm_map[:,:,2] + c_i[2]*box_i
+            i_filtro = i_filtro + 1
+        # terminamos con esta medida
+        i_medida = i_medida + 1
+
     alarm_map[alarm_map == 0] = 1
     cid = clickfig.canvas.mpl_connect('button_press_event', click_event_handler)
     cid = clickfig.canvas.mpl_connect('scroll_event', scroll_event_handler)
