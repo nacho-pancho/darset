@@ -172,21 +172,32 @@ class Medidor(object):
     def __init__(self, nombre, medidas, ubicacion):
         self.nombre = nombre
         self.medidas = medidas
-        self.ubicacion = ubicacion 
+        self.ubicacion = ubicacion     
 
-
-
-    def get_medida(self,t):
+    def get_medida(self,tipo,proc):
         for m in self.medidas:
-            if m.tipo == t:
+            if (m.tipo == t) and (m.procedencia == proc):
                 return m
-        print(f"AVISO: medida de tipo {t} no encontrada.")
+        print(f"AVISO: medida de tipo {t} y procedencia {proc} no encontrada.")
         return None
 
     def agregar_meds(self,meds):
         for m in meds:
            self.medidas.append(m)
         
+
+    def calcular_filtros(self):
+        for med in self.medidas:
+            tipo_m = med.tipo
+            proc_m = med.procedencia
+            if (proc_m != 'PRONOS'):
+                if tipo in ('vel','dir','rad','temp'):
+                    med_ref = self.get_medida(tipo_m,proc_m)
+                    f.corr_medidas(med_ref,med,6,0)
+            
+            
+            
+
         
 ##############################################################################
 

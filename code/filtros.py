@@ -132,7 +132,7 @@ def filtrar_rep(v,filtro_huecos,nRep):
 
 ##############################################################################
     
-def corr_medidas(x,y,NDatosCorr,NDatosDesf):
+def corr_medidas(x,y,NDatosCorr,NDatosDesf,addFiltro_y):
 
     
     if ((x.tipo == 'dir') and (y.tipo == 'dir')):
