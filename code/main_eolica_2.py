@@ -26,4 +26,17 @@ if __name__ == '__main__':
 
     parque = archivos.leerArchivosCentral(nidCentral)
     
+    parque.calcular_filtros()
+    
+    vel_SCADA = parque.medidores[0].get_medida('vel','scada')
+    vel_pronos= parque.medidores[0].get_medida('vel','pronos')
+    
+    meds = []
+    
+    meds.append(vel_SCADA)
+    meds.append(vel_pronos)
+    
+    graficas.clickplot(meds)
+    plt.show()
+    
     

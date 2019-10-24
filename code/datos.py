@@ -176,9 +176,9 @@ class Medidor(object):
 
     def get_medida(self,tipo,proc):
         for m in self.medidas:
-            if (m.tipo == t) and (m.procedencia == proc):
+            if (m.tipo == tipo) and (m.procedencia == proc):
                 return m
-        print(f"AVISO: medida de tipo {t} y procedencia {proc} no encontrada.")
+        print(f"AVISO: medida de tipo {tipo} y procedencia {proc} no encontrada.")
         return None
 
     def agregar_meds(self,meds):
@@ -190,10 +190,17 @@ class Medidor(object):
         for med in self.medidas:
             tipo_m = med.tipo
             proc_m = med.procedencia
-            if (proc_m != 'PRONOS'):
-                if tipo in ('vel','dir','rad','temp'):
-                    med_ref = self.get_medida(tipo_m,proc_m)
-                    f.corr_medidas(med_ref,med,6,0)
+            if (proc_m != 'pronos'):
+                if tipo_m in ('vel','dir','rad','temp'):
+                    med_ref = self.get_medida(tipo_m,'pronos')
+                    f.corr_medidas(med_ref,med,6,0,True)
+                    
+    def desfasar_meds(self):
+        for med in self.medidas:
+            if med.procedencia == 'pronos':
+                if med.tipo == 'rad':
+                    med.desfasar(-18)
+    
             
             
             
@@ -239,6 +246,30 @@ class Parque(object):
         return None
         
 
+    def calcular_filtros(self):
+        
+        '''
+        Primero tengo que acomodar las series que estuvieran desfasadas
+        '''
+        
+        self.pot_SMEC.desfasar(-1)
+        
+        for med in self.medidores:
+            med.desfasar_meds()        
+        
+        
+
+        '''
+        Calcular los filtros de los medidores
+        '''
+        for med in self.medidores:
+            med.calcular_filtros()
+
+        '''
+        Calcular los filtros del parque
+        '''        
+        
+        return None
         
     def decorrelacion(self):
         '''
