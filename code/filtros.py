@@ -240,7 +240,12 @@ def corr_medidas(x,y,NDatosCorr,NDatosDesf,addFiltro_y):
     corr_prom = corr_y[idx_datos_ok].mean()    
     #print ('NDatosDesf: ',NDatosDesf,', corr = ',corr_prom)
     
-    return d.Medida('corr',corr_y,list(y.tiempo),'corr','corr_' + x.tipo + '_' + y.tipo,corr_prom * 0.99,1.0,0),corr_prom
+    if addFiltro_y:
+        nombre_f = 'corr_' + y.tipo + '_' + y.procedencia
+        y.agregar_filtro(nombre_f, corr_y > 0.7 )
+    
+    return d.Medida('corr',corr_y,list(y.tiempo),'corr','corr_' + x.tipo + '_' 
+                    + y.tipo,corr_prom * 0.99,1.0,0), corr_prom
 
 
 ##############################################################################
