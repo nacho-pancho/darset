@@ -198,7 +198,7 @@ class Medidor(object):
     def desfasar_meds(self):
         for med in self.medidas:
             if med.procedencia == 'pronos':
-                if med.tipo == 'rad':
+                if med.tipo == 'rad' or med.tipo == 'tem':
                     med.desfasar(-18)
     
             

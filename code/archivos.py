@@ -18,7 +18,7 @@ import scipy.signal as signal
 
 ##############################################################################
 
-RUTA_DATOS = '../data/'
+RUTA_DATOS = '../data/modelado_ro'
 
 ##############################################################################
 
@@ -60,7 +60,6 @@ def fechaInitoDateTimeN(dt_ini,Nmuestras10min):
     for k in range(Nmuestras10min):
         dt_k = dt_ini + k * datetime.timedelta(seconds=10*60)
         dt.append(dt_k)
-    #print(dt)
     return dt
 
 ##############################################################################
@@ -126,16 +125,13 @@ def leerArchi(nidCentral,tipoArchi):
     # Leo datos de las estaciones
     
     line=f.readline()
-    print(line)
     cols = line.split('\t')
     nSeries = int(cols[0])
 
     line=f.readline()
-    print(line)
     cols = line.split('\t')
     meteo_utm_zona = cols[0]
     
-    print(line)
     line=f.readline()
     cols = line.split('\t')
     meteo_utm_huso = int(cols[0])    

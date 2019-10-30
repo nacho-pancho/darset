@@ -76,7 +76,7 @@ def clickplot_redraw():
             continue
         
         print(x_i[0],x_i[-1])
-        plt.subplot(len(tipos)+1,1,idx_tipo+1)
+        plt.subplot(len(tipos)+2,1,idx_tipo+1)
         c_i = viridis(i/len(medidas))
         plt.plot(x_i,y_i,color=c_i)
         
@@ -87,14 +87,17 @@ def clickplot_redraw():
     print(legends)
 
     for i in range(len(tipos)):
-        plt.subplot( len(tipos)+1, 1, i+1 )
+        plt.subplot( len(tipos)+2, 1, i+1 )
         plt.legend( legends[ tipos[i] ], loc='upper right' )
         plt.grid(True)
+
+
+
 
     #
     # actualizar el mapa
     #
-    plt.subplot(len(tipos)+1,1,len(tipos)+1)
+    plt.subplot(len(tipos)+2,1,len(tipos)+2)
     j0 = int((window[0]-tini)/(tfin-tini)*MAP_WIDTH)
     j1 = int((window[1]-tini)/(tfin-tini)*MAP_WIDTH)
     print(j0,j1)
@@ -104,7 +107,22 @@ def clickplot_redraw():
     plt.imshow(alarm_map)
     plt.imshow(fondo,alpha=0.25)
     plt.draw()
-        
+    
+    
+    #
+    # actualizar la seleccion del mapa
+    #
+    plt.subplot(len(tipos)+2,1,len(tipos)+1)
+    #alarm_map_select =
+    #for t in range(tini,tfin):
+    #    j_idx = [int((t-tini)/(tfin-tini)) * MAP_WIDTH for t in range(tini,tfin)]
+    
+    #alarm_map_select = np.zeros((map_h,MAP_WIDTH,3)) 
+    
+    plt.imshow(alarm_map[:,j0:j1,:3])
+    plt.draw()
+    
+    
 #---------------------------------------------------------------------------------
 
 def click_event_handler(event):
