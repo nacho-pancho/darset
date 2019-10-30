@@ -132,7 +132,7 @@ def filtrar_rep(v,filtro_huecos,nRep):
 
 ##############################################################################
     
-def corr_medidas(x,y,NDatosCorr,NDatosDesf):
+def corr_medidas(x,y,NDatosCorr,NDatosDesf,addFiltro_y):
 
     
     if ((x.tipo == 'dir') and (y.tipo == 'dir')):
@@ -240,7 +240,12 @@ def corr_medidas(x,y,NDatosCorr,NDatosDesf):
     corr_prom = corr_y[idx_datos_ok].mean()    
     #print ('NDatosDesf: ',NDatosDesf,', corr = ',corr_prom)
     
-    return d.Medida('corr',corr_y,list(y.tiempo),'corr','corr_' + x.tipo + '_' + y.tipo,corr_prom * 0.99,1.0,0),corr_prom
+    if addFiltro_y:
+        nombre_f = 'corr_' + y.tipo + '_' + y.procedencia
+        y.agregar_filtro(nombre_f, corr_y < 0.9 )
+    
+    return d.Medida('corr',corr_y,list(y.tiempo),'corr','corr_' + x.tipo + '_' 
+                    + y.tipo,corr_prom * 0.99,1.0,0), corr_prom
 
 
 ##############################################################################
@@ -257,7 +262,7 @@ def corrMAX_Ndesf(x,y,NdesfMin,NdesfMax,corregirDesf,desf_dinamico):
     
     fila = 0    
     for Ndesf in rango:
-        corr_x_y,corr = corr_medidas(x,y,24*6,Ndesf)
+        corr_x_y,corr = corr_medidas(x,y,24*6*7,Ndesf)
         corr_mat[fila,:] =corr_x_y.muestras 
         fila = fila  + 1
         
@@ -267,7 +272,8 @@ def corrMAX_Ndesf(x,y,NdesfMin,NdesfMax,corregirDesf,desf_dinamico):
             
         
     Ndesf_opt_k = [ rango[x] for x in np.argmax(corr_mat,axis = 0)]
-
+    
+    
     print(Ndesf_opt_k)
     
                 

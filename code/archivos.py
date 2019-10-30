@@ -274,8 +274,8 @@ def leerArchiSMEC(nidCentral):
     minmax = filtros.min_max(tipoDato,50)
     nrep = filtros.Nrep(tipoDato)
   
-    med_10min = datos.Medida('SMEC',muestras10min,dt_10min,'pot','potSMEC10m',minmax[0],minmax[1],nrep)
-    med_15min = datos.Medida('SMEC',muestras15min,dt_15min,'pot','potSMEC15m',minmax[0],minmax[1],nrep)
+    med_10min = datos.Medida('smec',muestras10min,dt_10min,'pot','potSMEC10m',minmax[0],minmax[1],nrep)
+    med_15min = datos.Medida('smec',muestras15min,dt_15min,'pot','potSMEC15m',minmax[0],minmax[1],nrep)
 
     return med_10min, med_15min       
 
@@ -374,7 +374,7 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
         dt_ini_corr = dtini #+ delta_30min
         dt_10min = fechaInitoDateTimeN ( dt_ini_corr, len(meds)) 
 
-        med = datos.Medida('PRONOS',meds,dt_10min,tipoDato,nombre,minmax[0],minmax[1],nrep)
+        med = datos.Medida('pronos',meds,dt_10min,tipoDato,nombre,minmax[0],minmax[1],nrep)
         medidas.append(med)
 
     Medidor = datos.Medidor(ident,medidas,ubicacion)
@@ -390,7 +390,7 @@ def leerArchivosCentral (nidCentral):
     
     parqueGen = leerArchi(nidCentral,'gen')
     if (parqueGen != None):
-        parque.medidores[0].agregar_meds(parqueGen.medidores[0])
+        parque.medidores[0].agregar_meds(parqueGen.medidores[0].medidas)
     
     med_10min, med_15min = leerArchiSMEC(nidCentral)
     if (med_10min != None):
@@ -398,7 +398,8 @@ def leerArchivosCentral (nidCentral):
         
     medidor_pronos10min = leerArchiPRONOS(nidCentral,10)    
     if (medidor_pronos10min != None):
-        parque.medidores[0].agregar_meds(medidor_pronos10min)
+        parque.medidores[0].agregar_meds(medidor_pronos10min.medidas)
+   
     
     
 
@@ -435,5 +436,5 @@ def leerArchivosCentral (nidCentral):
     tem_pronos10min = medidor_pronos10min.get_medida('tem')
 
     '''    
-    return None
+    return parque
         
