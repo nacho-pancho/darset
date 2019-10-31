@@ -67,7 +67,7 @@ def min_max(tipo,PotAut):
     elif tipo == 'corr_sp':
         return [-1,1]
     elif tipo == 'rad':
-        return [0,1366]    
+        return [-10,1366]    
 
 ##############################################################################
 
@@ -241,7 +241,7 @@ def corr_medidas(x,y,NDatosCorr,NDatosDesf,addFiltro_y):
     #print ('NDatosDesf: ',NDatosDesf,', corr = ',corr_prom)
     
     if addFiltro_y:
-        nombre_f = 'corr_' + y.tipo + '_' + y.procedencia
+        nombre_f = 'corr_' + x.tipo + '_' + x.procedencia
         y.agregar_filtro(nombre_f, corr_y < 0.9 )
     
     return d.Medida('corr',corr_y,list(y.tiempo),'corr','corr_' + x.tipo + '_' 

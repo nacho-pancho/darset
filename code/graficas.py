@@ -29,9 +29,10 @@ def rosa_de_los_vientos(self):
 
 #=================================================================================
 
-MAP_WIDTH = 2000
-BAR_HEIGHT = 30
-DEFAULT_WINDOW_SIZE = datetime.timedelta(days=7)
+MAP_WIDTH = 5000
+MAP_WIDTH_ZOOM = 5000
+BAR_HEIGHT = 100
+DEFAULT_WINDOW_SIZE = datetime.timedelta(days=1)
 DEFAULT_TIME_DELTA = datetime.timedelta(minutes=10)
 ZOOM_STEP = 1.5
 
@@ -45,14 +46,16 @@ tipos = None
 viridis = cm.get_cmap('viridis')
 tcenter = None
 alarm_map = None
+alarm_map_zoom = None
+map_h = None
 
 #---------------------------------------------------------------------------------
 
 def clickplot_redraw():
     global window, medidas, tipos, tini, tfin
-    print("redraw")
+    #print("redraw")
     plt.figure(clickfig.number)
-    print("window:",window)
+    #print("window:",window)
 
     legends = dict()
     for tipo in tipos:
@@ -75,7 +78,7 @@ def clickplot_redraw():
             plt.draw()
             continue
         
-        print(x_i[0],x_i[-1])
+        #print(x_i[0],x_i[-1])
         plt.subplot(len(tipos)+2,1,idx_tipo+1)
         c_i = viridis(i/len(medidas))
         plt.plot(x_i,y_i,color=c_i)
@@ -84,7 +87,7 @@ def clickplot_redraw():
         plt.ylabel(med_i.tipo)
         plt.draw()
         
-    print(legends)
+    #print(legends)
 
     for i in range(len(tipos)):
         plt.subplot( len(tipos)+2, 1, i+1 )
@@ -100,7 +103,7 @@ def clickplot_redraw():
     plt.subplot(len(tipos)+2,1,len(tipos)+2)
     j0 = int((window[0]-tini)/(tfin-tini)*MAP_WIDTH)
     j1 = int((window[1]-tini)/(tfin-tini)*MAP_WIDTH)
-    print(j0,j1)
+    #print(j0,j1)
     fondo = np.copy(alarm_map)
     fondo[:] = 1
     fondo[:,j0:j1,:3] = 0
@@ -110,16 +113,12 @@ def clickplot_redraw():
     
     
     #
-    # actualizar la seleccion del mapa
+    # actualizar el zoom del mapa
     #
     plt.subplot(len(tipos)+2,1,len(tipos)+1)
-    #alarm_map_select =
-    #for t in range(tini,tfin):
-    #    j_idx = [int((t-tini)/(tfin-tini)) * MAP_WIDTH for t in range(tini,tfin)]
+    alarm_map_zoom = create_alarm_map (map_h, MAP_WIDTH_ZOOM, medidas,window[0],window[1])
     
-    #alarm_map_select = np.zeros((map_h,MAP_WIDTH,3)) 
-    
-    plt.imshow(alarm_map[:,j0:j1,:3])
+    plt.imshow(alarm_map_zoom)
     plt.draw()
     
     
@@ -135,7 +134,7 @@ def click_event_handler(event):
     # capturar pos (x,y)  en la imagen
     #
     ix, iy = event.xdata, event.ydata
-    print(f'click: x = {ix}, y={iy}')
+    #print(f'click: x = {ix}, y={iy}')
     #
     # mapear a posicion temporal
     #
@@ -152,7 +151,7 @@ def scroll_event_handler(event):
     '''
     global window_size,window,tcenter
     step = event.step
-    print(f'scroll: step = {step}')
+    #print(f'scroll: step = {step}')
     #
     # mapear a posicion temporal
     #
@@ -175,7 +174,8 @@ def clickplot(_medidas,figsize=(8,6)):
     en donde se resalta, para cada medida, los intervalos
     en donde saltó una alarma por algún tipo de anomalía detectada
     '''
-    global clickfig, tini, tfin, window, medidas, tipos, alarm_map
+    global clickfig, tini, tfin, window, medidas, tipos, alarm_map,\
+    map_h, alarm_map_zoom
     medidas = _medidas
 
     tini = datetime.datetime(datetime.MAXYEAR,1,1) 
@@ -195,33 +195,38 @@ def clickplot(_medidas,figsize=(8,6)):
     #
     # período que abarca todas las medidas a plotear
     #
-    period = tfin - tini
-    print(f"tini={tini} tfin={tfin} period={period}")
-    #
-    # el mapa de alarma tiene MAP_WIDTH pixels de ancho
-    # pixels_per_t indica a cuántos pasos de tiempo corresponde 1 pixel
-    #
-    t_per_pixel = period * (1.0 / MAP_WIDTH)
-    print(f"t_per_pixel={t_per_pixel}")
-    #
-    # cada medida tiene una cierta cantidad de filtros
-    # el mapa tiene tantas barras como filtros en total
-    #
+    
+    clickfig = plt.figure(figsize=figsize,dpi=96)
     nfiltros = 0
     for m in medidas:
         nfiltros = nfiltros + len (m.get_filtros())
-    print('Total de filtros:',nfiltros)
+
     map_h = BAR_HEIGHT * nfiltros
-    alarm_map = np.zeros((map_h,MAP_WIDTH,3))
+    alarm_map = create_alarm_map (map_h, MAP_WIDTH, medidas,tini,tfin)
+    
+    alarm_map_zoom = create_alarm_map (map_h, MAP_WIDTH_ZOOM, medidas,tini,tfin)
+    
+    cid = clickfig.canvas.mpl_connect('button_press_event', click_event_handler)
+    cid = clickfig.canvas.mpl_connect('scroll_event', scroll_event_handler)
     #
-    # grafica coloreada
-    #
-    clickfig = plt.figure(figsize=figsize,dpi=96)
-    #
-    # por cada gráfica se corresponde una tira del alarm_map de alto BAR_HEIGHT
-    # esta tira es pintada con rectángulos del mismo color que la gráfica
-    # en donde las alarmas están activas
-    #
+    # ahora si, se muestran las curvas en la ventana de tiempo actual
+    #2000
+    window_size = DEFAULT_WINDOW_SIZE
+    window = (tini, tini+window_size)
+    tcenter = tini + window_size/2
+    clickplot_redraw()
+
+#---------------------------------------------------------------------------------
+
+def create_alarm_map (map_h,map_width, medidas,tini_z,tfin_z):
+
+    alarm_map = np.zeros((map_h,map_width,3))
+    # el mapa de alarma tiene MAP_WIDTH pixels de ancho
+    # pixels_per_t indica a cuántos pasos de tiempo corresponde 1 pixel   
+    period = tfin_z - tini_z
+    map_h, MAP_WIDTH, z  = alarm_map.shape
+    t_per_pixel = period * (1.0 / MAP_WIDTH) 
+    
     col_i = np.zeros((map_h,1),dtype=np.bool)
     row_i = np.zeros((1,MAP_WIDTH),dtype=np.bool)
     box_i = np.zeros((map_h,MAP_WIDTH))
@@ -231,18 +236,18 @@ def clickplot(_medidas,figsize=(8,6)):
         c_i = viridis(i_medida/len(medidas))
         # vector con 1's donde la señal está filtrada
         # este vector es relativo a lo tiempos de la señal
-        print(m.nombre)
+        #print(m.nombre)
         t_i = m.tiempo
         tfin = t_i[-1]
         tini = t_i[0]
         filtros = m.get_filtros()
         dt = (tfin - tini) / (len(t_i) - 1)
-        print('medida',i_medida,' filtro', i_filtro, 'tini=',tini,'tfin=',tfin, 'dt',dt)
+        #print('medida',i_medida,' filtro', i_filtro, 'tini=',tini,'tfin=',tfin, 'dt',dt)
         for fnom,fdata in filtros.items():
             print('filtro:',fnom,' data:', len(fdata))
             row_i[:] = 0
             for j in range(MAP_WIDTH):
-                tmed = tini + j*t_per_pixel # tiempo t en la medida
+                tmed = tini_z + j*t_per_pixel # tiempo t en la medida
                 if tmed < tini:
                     continue
                 if tmed > tfin:
@@ -260,14 +265,5 @@ def clickplot(_medidas,figsize=(8,6)):
         i_medida = i_medida + 1
 
     alarm_map[alarm_map == 0] = 1
-    cid = clickfig.canvas.mpl_connect('button_press_event', click_event_handler)
-    cid = clickfig.canvas.mpl_connect('scroll_event', scroll_event_handler)
-    #
-    # ahora si, se muestran las curvas en la ventana de tiempo actual
-    #
-    window_size = DEFAULT_WINDOW_SIZE
-    window = (tini, tini+window_size)
-    tcenter = tini + window_size/2
-    clickplot_redraw()
-
-#---------------------------------------------------------------------------------
+    
+    return alarm_map

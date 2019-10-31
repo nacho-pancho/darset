@@ -252,7 +252,8 @@ class Parque(object):
         Primero tengo que acomodar las series que estuvieran desfasadas
         '''
         
-        self.pot_SMEC.desfasar(-1)
+        if self.pot_SMEC != None:     
+            self.pot_SMEC.desfasar(-1)
         
         for med in self.medidores:
             med.desfasar_meds()        
