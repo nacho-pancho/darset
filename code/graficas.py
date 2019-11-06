@@ -29,8 +29,8 @@ def rosa_de_los_vientos(self):
 
 #=================================================================================
 
-MAP_WIDTH = 5000
-MAP_WIDTH_ZOOM = 5000
+MAP_WIDTH = 15000
+MAP_WIDTH_ZOOM = 15000
 BAR_HEIGHT = 100
 DEFAULT_WINDOW_SIZE = datetime.timedelta(days=1)
 DEFAULT_TIME_DELTA = datetime.timedelta(minutes=10)
@@ -115,8 +115,9 @@ def clickplot_redraw():
     #
     # actualizar el zoom del mapa
     #
+    
     plt.subplot(len(tipos)+2,1,len(tipos)+1)
-    alarm_map_zoom = create_alarm_map (map_h, MAP_WIDTH_ZOOM, medidas,window[0],window[1])
+    alarm_map_zoom = create_alarm_map (map_h, MAP_WIDTH_ZOOM, medidas, window[0], window[1])
     
     plt.imshow(alarm_map_zoom)
     plt.draw()

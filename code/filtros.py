@@ -16,6 +16,7 @@ import numpy as np
 import scipy.stats as r
 import math as m
 import archivos as arch
+import graficas
 
 ##############################################################################
 
@@ -251,7 +252,7 @@ def corr_medidas(x,y,NDatosCorr,NDatosDesf,addFiltro_y):
 ##############################################################################
     
 
-def corrMAX_Ndesf(x,y,NdesfMin,NdesfMax,corregirDesf,desf_dinamico):
+def corrMAX_Ndesf(x,y,NdesfMin,NdesfMax,corregirDesf,desf_dinamico,flg_graficar):
     
     rango = range(NdesfMin,NdesfMax)
     
@@ -262,7 +263,7 @@ def corrMAX_Ndesf(x,y,NdesfMin,NdesfMax,corregirDesf,desf_dinamico):
     
     fila = 0    
     for Ndesf in rango:
-        corr_x_y,corr = corr_medidas(x,y,24*6*7,Ndesf)
+        corr_x_y,corr = corr_medidas(x,y,24*6*7,Ndesf,False)
         corr_mat[fila,:] =corr_x_y.muestras 
         fila = fila  + 1
         
@@ -287,9 +288,24 @@ def corrMAX_Ndesf(x,y,NdesfMin,NdesfMax,corregirDesf,desf_dinamico):
        
         #Ndesf_opt_k = [ d - Ndesf_P50 for d in Ndesf_opt_k]
 
-    print ('desfasaje('+ x.nombre + ',' + y.nombre + ') = ', Ndesf_max_med , ' muestras')        
-            
-    return d.Medida( 'corr',Ndesf_opt_k,y.tiempo,'Ndesf_opt_k','Ndesf_opt_k_' + x.tipo + '_' + y.tipo,-20,20,0)
+    print ('desfasaje('+ x.nombre + ',' + y.nombre + ') = ', Ndesf_max_med , ' muestras')   
+
+    print(corr_mat)     
+    
+    Ndesf_opt_k = d.Medida( 'corr',Ndesf_opt_k,y.tiempo,'Ndesf_opt_k','Ndesf_opt_k_' + x.tipo + '_' + y.tipo,-NdesfMin,NdesfMax,0)
+    
+    '''
+    if flg_graficar:
+        meds = []
+        meds.append(x)
+        meds.append(y)
+        meds.append(Ndesf_opt_k)
+        
+        graficas.clickplot(meds)
+    
+    '''    
+    
+    return Ndesf_opt_k
 
 
 def corregir_vel_altura (velRef,velAjustar):

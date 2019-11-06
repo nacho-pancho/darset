@@ -186,7 +186,8 @@ class Medidor(object):
            self.medidas.append(m)
         
 
-    def calcular_filtros(self):
+    def calcular_filtros(self):            
+
         for med in self.medidas:
             tipo_m = med.tipo
             proc_m = med.procedencia
@@ -196,13 +197,19 @@ class Medidor(object):
                     f.corr_medidas(med_ref,med,6,0,True)
                     
     def desfasar_meds(self):
+            
+        '''
+        Primero tengo que arreglar las meds pronos para que queden en fase con el scada
+        '''
         for med in self.medidas:
-            if med.procedencia == 'pronos':
-                if med.tipo == 'rad' or med.tipo == 'tem':
+            tipo_m = med.tipo
+            proc_m = med.procedencia
+            if proc_m == 'pronos':
+                if tipo_m =='rad':
+                    med_ref = self.get_medida(tipo_m,'scada')
                     med.desfasar(-18)
-    
-            
-            
+                    f.corrMAX_Ndesf(med_ref,med,-5,5,True,True,True)
+     
             
 
         
@@ -257,8 +264,7 @@ class Parque(object):
         
         for med in self.medidores:
             med.desfasar_meds()        
-        
-        
+
 
         '''
         Calcular los filtros de los medidores
