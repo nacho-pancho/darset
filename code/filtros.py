@@ -17,6 +17,12 @@ import scipy.stats as r
 import math as m
 import archivos as arch
 import graficas
+import pvlib as pv
+from pyproj import Proj
+import pandas as pd
+
+
+
 
 ##############################################################################
 
@@ -87,6 +93,41 @@ def filtrar_rango(v,min_v,max_v):
     for i in range(len(v)):
         if v[i]>max_v or v[i]<min_v:
             filtro[i] = True    
+    return filtro 
+        
+##############################################################################
+    
+
+def filtrar_rad (med,ubicacion):
+
+    zona = ubicacion.zona
+    huso = ubicacion.huso
+    x = ubicacion.x
+    y = ubicacion.y
+
+    zona_ = str(huso) + zona
+
+    myProj = Proj(proj='utm', ellps='WGS84', zone = zona_, south=True)
+    lat,long = myProj(x,y,inverse=True)
+
+    loc_pv = pv.location.Location(lat,long)
+
+
+    times = pd.DatetimeIndex(med.tiempo[0], periods=3, freq='10min')
+    
+    print(times)
+    
+    cs = tus.get_clearsky(times)  # ineichen with climatology table by default
+    
+    In [12]: cs.plot();
+    
+    In [13]: plt.ylabel('Irradiance $W/m^2$');
+    
+    In [14]: plt.title('Ineichen, climatological turbidity');
+
+    
+    filtro = numpy.zeros(len(v), dtype=bool)
+
     return filtro 
         
 ##############################################################################
@@ -292,7 +333,7 @@ def corrMAX_Ndesf(x,y,NdesfMin,NdesfMax,corregirDesf,desf_dinamico,flg_graficar)
 
     print(corr_mat)     
     
-    Ndesf_opt_k = d.Medida( 'corr',Ndesf_opt_k,y.tiempo,'Ndesf_opt_k','Ndesf_opt_k_' + x.tipo + '_' + y.tipo,-NdesfMin,NdesfMax,0)
+    Ndesf_opt_k = d.Medida( 'corr', Ndesf_opt_k,y.tiempo,'Ndesf_opt_k','Ndesf_opt_k_' + x.tipo + '_' + y.tipo,-NdesfMin,NdesfMax,0)
     
     '''
     if flg_graficar:

@@ -90,7 +90,7 @@ class Medida(object):
         if (self.tipo != 'corr') and (self.tipo != 'Ndesf_opt_k'):        
             self.agregar_filtro('trancada',f.filtrar_rep
                                 (self.muestras,self.get_filtro('fuera_de_rango'),self.nrep))
-
+            
     def agregar_filtro(self,nombre_f,filt):
         self.filtros[self.nombre + '_' + nombre_f] = filt.astype(np.uint8)
 
@@ -188,6 +188,20 @@ class Medidor(object):
 
     def calcular_filtros(self):            
 
+        
+        
+        for med in self.medidas: 
+            if (med.tipo == 'rad'):
+                med.agregar_filtro('rad_sup_maxGHI',f.filtrar_rad(med,self.ubicacion))
+
+                
+        '''        
+        if (self.tipo != 'rad'):        
+            self.agregar_filtro('trancada',f.filtrar_rep
+                                (self.muestras,self.get_filtro('fuera_de_rango'),self.nrep))    
+        
+        '''
+        
         for med in self.medidas:
             tipo_m = med.tipo
             proc_m = med.procedencia
@@ -262,9 +276,10 @@ class Parque(object):
         if self.pot_SMEC != None:     
             self.pot_SMEC.desfasar(-1)
         
+        '''
         for med in self.medidores:
             med.desfasar_meds()        
-
+        '''
 
         '''
         Calcular los filtros de los medidores
