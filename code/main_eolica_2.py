@@ -22,7 +22,7 @@ if __name__ == '__main__':
     
     plt.close('all')
     
-    nidCentral = 5    
+    nidCentral = 32    
 
     parque = archivos.leerArchivosCentral(nidCentral)
     
@@ -30,11 +30,21 @@ if __name__ == '__main__':
     
     vel_SCADA = parque.medidores[0].get_medida('vel','scada')
     vel_pronos= parque.medidores[0].get_medida('vel','pronos')
+    vel_gen= parque.medidores[0].get_medida('vel','gen')
+    
+    dir_SCADA = parque.medidores[0].get_medida('dir','scada')
+    dir_pronos= parque.medidores[0].get_medida('dir','pronos')
+    dir_gen= parque.medidores[0].get_medida('dir','gen')
     
     meds = []
     
     meds.append(vel_SCADA)
     meds.append(vel_pronos)
+    meds.append(vel_gen)
+    
+    meds.append(dir_SCADA)
+    meds.append(dir_pronos)
+    meds.append(dir_gen)
     
     graficas.clickplot(meds)
     plt.show()

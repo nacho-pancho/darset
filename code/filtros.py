@@ -47,8 +47,12 @@ def str_to_tipo(s):
         return 'dis'
     elif s.find('corr_sp') != -1:
         return 'corr_sp'
+    elif s.find('rad_max') != -1:
+        return 'rad_max'
     elif s.find('rad') != -1:
-        return 'rad'        
+        return 'rad'
+    elif s.find('ro') != -1:
+        return 'ro'        
     else:
         return None
 
@@ -73,8 +77,10 @@ def min_max(tipo,PotAut):
         return [0,1]
     elif tipo == 'corr_sp':
         return [-1,1]
-    elif tipo == 'rad':
-        return [-10,1366]    
+    elif tipo == 'rad' or tipo == 'rad_max':
+        return [-10,1400] 
+    elif tipo == 'ro':
+        return [1.05,1.3]
 
 ##############################################################################
 
@@ -97,9 +103,10 @@ def filtrar_rango(v,min_v,max_v):
         
 ##############################################################################
     
-
+'''
 def filtrar_rad (med,ubicacion):
 
+    
     zona = ubicacion.zona
     huso = ubicacion.huso
     x = ubicacion.x
@@ -129,7 +136,8 @@ def filtrar_rad (med,ubicacion):
     filtro = numpy.zeros(len(v), dtype=bool)
 
     return filtro 
-        
+
+'''        
 ##############################################################################
 
 def filtrar_rep(v,filtro_huecos,nRep):

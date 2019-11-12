@@ -48,11 +48,20 @@ tcenter = None
 alarm_map = None
 alarm_map_zoom = None
 map_h = None
+imprimir_map_zoom = False
 
 #---------------------------------------------------------------------------------
 
 def clickplot_redraw():
-    global window, medidas, tipos, tini, tfin
+    global window, medidas, tipos, tini, tfin, imprimir_map_zoom
+    
+    
+    if imprimir_map_zoom:
+        NGrafs = len(tipos)+2
+    else:
+        NGrafs = len(tipos)+1
+    
+    
     #print("redraw")
     plt.figure(clickfig.number)
     #print("window:",window)
@@ -79,7 +88,7 @@ def clickplot_redraw():
             continue
         
         #print(x_i[0],x_i[-1])
-        plt.subplot(len(tipos)+2,1,idx_tipo+1)
+        plt.subplot(NGrafs,1,idx_tipo+1)
         c_i = viridis(i/len(medidas))
         plt.plot(x_i,y_i,color=c_i)
         
@@ -90,7 +99,7 @@ def clickplot_redraw():
     #print(legends)
 
     for i in range(len(tipos)):
-        plt.subplot( len(tipos)+2, 1, i+1 )
+        plt.subplot( NGrafs, 1, i+1 )
         plt.legend( legends[ tipos[i] ], loc='upper right' )
         plt.grid(True)
 
@@ -100,7 +109,7 @@ def clickplot_redraw():
     #
     # actualizar el mapa
     #
-    plt.subplot(len(tipos)+2,1,len(tipos)+2)
+    plt.subplot(NGrafs,1,NGrafs)
     j0 = int((window[0]-tini)/(tfin-tini)*MAP_WIDTH)
     j1 = int((window[1]-tini)/(tfin-tini)*MAP_WIDTH)
     #print(j0,j1)
@@ -116,11 +125,13 @@ def clickplot_redraw():
     # actualizar el zoom del mapa
     #
     
-    plt.subplot(len(tipos)+2,1,len(tipos)+1)
-    alarm_map_zoom = create_alarm_map (map_h, MAP_WIDTH_ZOOM, medidas, window[0], window[1])
-    
-    plt.imshow(alarm_map_zoom)
-    plt.draw()
+    if imprimir_map_zoom:
+        plt.subplot(NGrafs, 1, NGrafs-1)
+        alarm_map_zoom = create_alarm_map (map_h, MAP_WIDTH_ZOOM, medidas, window[0], window[1])
+        
+        plt.imshow(alarm_map_zoom)
+        plt.draw()
+        
     
     
 #---------------------------------------------------------------------------------
@@ -205,7 +216,8 @@ def clickplot(_medidas,figsize=(8,6)):
     map_h = BAR_HEIGHT * nfiltros
     alarm_map = create_alarm_map (map_h, MAP_WIDTH, medidas,tini,tfin)
     
-    alarm_map_zoom = create_alarm_map (map_h, MAP_WIDTH_ZOOM, medidas,tini,tfin)
+    if imprimir_map_zoom:
+        alarm_map_zoom = create_alarm_map (map_h, MAP_WIDTH_ZOOM, medidas,tini,tfin)
     
     cid = clickfig.canvas.mpl_connect('button_press_event', click_event_handler)
     cid = clickfig.canvas.mpl_connect('scroll_event', scroll_event_handler)
