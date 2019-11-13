@@ -291,6 +291,7 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
     # Leo datos de las estaciones
     
     line=f.readline()
+    print(line)
     cols = line.split('\t')
     nSeries = int(cols[0])
     

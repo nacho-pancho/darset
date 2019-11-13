@@ -32,7 +32,7 @@ def rosa_de_los_vientos(self):
 MAP_WIDTH = 15000
 MAP_WIDTH_ZOOM = 15000
 BAR_HEIGHT = 100
-DEFAULT_WINDOW_SIZE = datetime.timedelta(days=1)
+DEFAULT_WINDOW_SIZE = datetime.timedelta(days=7)
 DEFAULT_TIME_DELTA = datetime.timedelta(minutes=10)
 ZOOM_STEP = 1.5
 
@@ -61,6 +61,9 @@ def clickplot_redraw():
     else:
         NGrafs = len(tipos)+1
     
+
+    min_ejes = np.full(NGrafs,99999999)
+    max_ejes = np.full(NGrafs,-99999999)
     
     #print("redraw")
     plt.figure(clickfig.number)
@@ -92,7 +95,15 @@ def clickplot_redraw():
         c_i = viridis(i/len(medidas))
         plt.plot(x_i,y_i,color=c_i)
         
-        plt.axis([window[0],window[1],np.min(y_i)*0.9,np.max(y_i)*1.1])
+        min_yi = np.min(y_i)
+        if  (min_yi > -1000) & (min_yi < min_ejes[idx_tipo]):
+            min_ejes[idx_tipo] =  min_yi
+        
+        max_yi = np.max(y_i) 
+        if (max_yi < 1000) & (max_yi > max_ejes[idx_tipo]):
+            max_ejes[idx_tipo] =  max_yi           
+        
+        plt.axis([window[0],window[1],min_ejes[idx_tipo]*0.9,max_ejes[idx_tipo]*1.1])
         plt.ylabel(med_i.tipo)
         plt.draw()
         

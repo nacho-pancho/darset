@@ -219,10 +219,10 @@ class Medidor(object):
             tipo_m = med.tipo
             proc_m = med.procedencia
             if proc_m == 'pronos':
-                if tipo_m =='rad':
-                    med_ref = self.get_medida(tipo_m,'scada')
+                #if tipo_m =='rad':
+                    #med_ref = self.get_medida(tipo_m,'scada')
                     med.desfasar(-18)
-                    f.corrMAX_Ndesf(med_ref,med,-5,5,True,True,True)
+                    #f.corrMAX_Ndesf(med_ref,med,-5,5,True,True,True)
      
             
 
@@ -276,10 +276,10 @@ class Parque(object):
         if self.pot_SMEC != None:     
             self.pot_SMEC.desfasar(-1)
         
-        '''
+        
         for med in self.medidores:
             med.desfasar_meds()        
-        '''
+        
 
         '''
         Calcular los filtros de los medidores

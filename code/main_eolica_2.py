@@ -36,6 +36,8 @@ if __name__ == '__main__':
     dir_pronos= parque.medidores[0].get_medida('dir','pronos')
     dir_gen= parque.medidores[0].get_medida('dir','gen')
     
+    pot_scada = parque.pot
+    
     meds = []
     
     meds.append(vel_SCADA)
@@ -45,6 +47,8 @@ if __name__ == '__main__':
     meds.append(dir_SCADA)
     meds.append(dir_pronos)
     meds.append(dir_gen)
+    
+    meds.append(pot_scada)
     
     graficas.clickplot(meds)
     plt.show()
