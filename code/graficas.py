@@ -67,7 +67,7 @@ def clickplot_redraw():
     
     #print("redraw")
     plt.figure(clickfig.number)
-    #print("window:",window)
+    #print("window:",window)archivos
 
     legends = dict()
     for tipo in tipos:

@@ -163,7 +163,7 @@ class Medida(object):
     
 class Medidor(object):
     '''
-    Genera una o varias Medidas en determinados
+    Genera una o varias Medid/as en determinados
     instantes de tiempo
     @see Medida
     '''
@@ -189,12 +189,12 @@ class Medidor(object):
     def calcular_filtros(self):            
 
         
-        '''
+        
         for med in self.medidas: 
             if (med.tipo == 'rad'):
                 med.agregar_filtro('rad_sup_maxGHI',f.filtrar_rad(med,self.ubicacion))
 
-        '''        
+               
         '''        
         if (self.tipo != 'rad'):        
             self.agregar_filtro('trancada',f.filtrar_rep

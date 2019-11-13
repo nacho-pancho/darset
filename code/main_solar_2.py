@@ -49,6 +49,7 @@ if __name__ == '__main__':
     meds.append(pot_scada)
     meds.append(pot_smec)
     
+    '''
     graficas.clickplot(meds)
     plt.show()
-    
+    '''

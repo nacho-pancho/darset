@@ -20,6 +20,7 @@ import graficas
 import pvlib as pv
 from pyproj import Proj
 import pandas as pd
+import matplotlib.pyplot as plt
 
 
 
@@ -103,7 +104,7 @@ def filtrar_rango(v,min_v,max_v):
         
 ##############################################################################
     
-'''
+
 def filtrar_rad (med,ubicacion):
 
     
@@ -116,28 +117,34 @@ def filtrar_rad (med,ubicacion):
 
     myProj = Proj(proj='utm', ellps='WGS84', zone = zona_, south=True)
     lat,long = myProj(x,y,inverse=True)
-
-    loc_pv = pv.location.Location(lat,long)
-
-
-    times = pd.DatetimeIndex(med.tiempo[0], periods=3, freq='10min')
     
+    print(f'Latitud = {lat}, Longitud = {long}')
+
+    loc_pv = pv.location.Location(lat,long)   
+    
+    times = pd.DatetimeIndex(start = med.tiempo[0], periods=len(med.muestras), freq='10min')
+    
+    df_med = pd.DataFrame(med.muestras, index = times, columns =['rad']) 
     print(times)
     
-    cs = tus.get_clearsky(times)  # ineichen with climatology table by default
-    
-    In [12]: cs.plot();
-    
-    In [13]: plt.ylabel('Irradiance $W/m^2$');
-    
-    In [14]: plt.title('Ineichen, climatological turbidity');
+    ax = df_med.plot()
 
+
+    cs = loc_pv.get_clearsky(times)  # ineichen with climatology table by default
     
-    filtro = numpy.zeros(len(v), dtype=bool)
+    df_ghi = cs['ghi']
+
+    df_ghi.plot(ax=ax)
+    
+    plt.ylabel('Irradiance $W/m^2$');
+    
+    plt.title('Ineichen, climatological turbidity');
+
+    filtro = numpy.zeros(len(med.muestras), dtype=bool)
 
     return filtro 
 
-'''        
+     
 ##############################################################################
 
 def filtrar_rep(v,filtro_huecos,nRep):
