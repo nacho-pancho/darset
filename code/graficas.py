@@ -29,9 +29,9 @@ def rosa_de_los_vientos(self):
 
 #=================================================================================
 
-MAP_WIDTH = 15000
-MAP_WIDTH_ZOOM = 15000
-BAR_HEIGHT = 100
+MAP_WIDTH = 1200
+MAP_WIDTH_ZOOM = 1200
+BAR_HEIGHT = 5
 DEFAULT_WINDOW_SIZE = datetime.timedelta(days=7)
 DEFAULT_TIME_DELTA = datetime.timedelta(minutes=10)
 ZOOM_STEP = 1.5
@@ -53,10 +53,10 @@ imprimir_map_zoom = False
 #---------------------------------------------------------------------------------
 
 def clickplot_redraw():
+    print('redraw')
     global window, medidas, tipos, tini, tfin, imprimir_map_zoom
     
-    
-    if imprimir_map_zoom:
+    if 1: #imprimir_map_zoom:
         NGrafs = len(tipos)+2
     else:
         NGrafs = len(tipos)+1
@@ -65,15 +65,18 @@ def clickplot_redraw():
     min_ejes = np.full(NGrafs,99999999)
     max_ejes = np.full(NGrafs,-99999999)
     
-    #print("redraw")
+    print('figure')
     plt.figure(clickfig.number)
     #print("window:",window)archivos
 
+    print('leyendas')
     legends = dict()
     for tipo in tipos:
         legends.update( {tipo:list()} )
         
+        
     for i in range(len(medidas)):
+        print('medida',i)
         med_i = medidas[i]        
         idx_tipo = tipos.index(med_i.tipo)
         t_i = med_i.tiempo
@@ -107,42 +110,41 @@ def clickplot_redraw():
         plt.ylabel(med_i.tipo)
         plt.draw()
         
-    #print(legends)
+    print('leyendas')
 
     for i in range(len(tipos)):
         plt.subplot( NGrafs, 1, i+1 )
         plt.legend( legends[ tipos[i] ], loc='upper right' )
         plt.grid(True)
 
-
-
-
     #
     # actualizar el mapa
     #
+    print('mapa gral')
     plt.subplot(NGrafs,1,NGrafs)
     j0 = int((window[0]-tini)/(tfin-tini)*MAP_WIDTH)
     j1 = int((window[1]-tini)/(tfin-tini)*MAP_WIDTH)
-    #print(j0,j1)
     fondo = np.copy(alarm_map)
     fondo[:] = 1
     fondo[:,j0:j1,:3] = 0
     plt.imshow(alarm_map)
     plt.imshow(fondo,alpha=0.25)
+    plt.gca().get_xaxis().set_visible(False)
+    plt.gca().get_yaxis().set_visible(False)
     plt.draw()
-    
     
     #
     # actualizar el zoom del mapa
-    #
-    
-    if imprimir_map_zoom:
+    #    
+    if 1: #if imprimir_map_zoom:
+        print('mapa zoom')
         plt.subplot(NGrafs, 1, NGrafs-1)
-        alarm_map_zoom = create_alarm_map (map_h, MAP_WIDTH_ZOOM, medidas, window[0], window[1])
-        
+        alarm_map_zoom = create_alarm_map (map_h, MAP_WIDTH_ZOOM, medidas, window[0], window[1])        
         plt.imshow(alarm_map_zoom)
+        plt.gca().get_xaxis().set_visible(False)
+        plt.gca().get_yaxis().set_visible(False)
         plt.draw()
-        
+    print('listo')    
     
     
 #---------------------------------------------------------------------------------
@@ -153,6 +155,7 @@ def click_event_handler(event):
     utilizado para el clickplot
     '''
     global window,tcenter
+    print('click')
     #
     # capturar pos (x,y)  en la imagen
     #
@@ -167,11 +170,13 @@ def click_event_handler(event):
     window = (w0,w1)
     clickplot_redraw()
 
+
 def scroll_event_handler(event):
     '''
     manejo de eventos del mouse sobre una gráfica
     utilizado para el clickplot
     '''
+    print('scroll')
     global window_size,window,tcenter
     step = event.step
     #print(f'scroll: step = {step}')

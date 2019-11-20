@@ -18,7 +18,7 @@ import scipy.signal as signal
 
 ##############################################################################
 
-RUTA_DATOS = '../data/modelado_ro'
+RUTA_DATOS = '../data/'
 
 ##############################################################################
 
@@ -101,10 +101,13 @@ def path(ncentral):
 
 ##############################################################################
     
+def leerCampo(file):
+    line = file.readline().strip()
+    cols = line.split('\t')
+    print('Campo',cols[1:],'Valor',cols[0])
+    return cols[0]    
 
 def leerArchi(nidCentral,tipoArchi):    
-
-
     if tipoArchi == 'scada':
         archi = archiSCADA(nidCentral)
     elif tipoArchi == 'gen':
@@ -113,54 +116,55 @@ def leerArchi(nidCentral,tipoArchi):
         print(f"ERROR: tipo de archivo desconocido")
         return None
 
-    print(f"Leyendo archivo {tipoArchi} de central {nidCentral}: {archi}")
+    print(f"LEYENDO ARCHIVO {tipoArchi} DE CENTRAL {nidCentral}: {archi}")
 
     if not os.path.exists(archi):
         print("ERROR: archivo no existente.")
         return None
 
-
     f = open(archi, 'r')
-    
-    # Leo datos de las estaciones
-    
-    line=f.readline()
+    print('LEYENDO ENCABEZADO:')
+    line=f.readline().strip()
     cols = line.split('\t')
     nSeries = int(cols[0])
-
-    line=f.readline()
+    print('\tnum de series',nSeries)
+    
+    line=f.readline().strip()
     cols = line.split('\t')
     meteo_utm_zona = cols[0]
     
-    line=f.readline()
+    line=f.readline().strip()
     cols = line.split('\t')
-    meteo_utm_huso = int(cols[0])    
+    meteo_utm_huso = int(cols[0])  
     
-    line=f.readline()
+    line=f.readline().strip()
     cols = line.split('\t')
     meteo_utm_xe = float(cols[0])
 
-    line=f.readline()
+    line=f.readline().strip()
     cols = line.split('\t')
     meteo_utm_yn = float(cols[0])
+    print('\tzona horaria:',meteo_utm_zona,meteo_utm_huso,meteo_utm_xe,meteo_utm_yn)
     
-    line=f.readline()
+    line=f.readline().strip()
     cols = line.split('\t')
     ident = cols[0]
 
     ubicacion = datos.Ubicacion(meteo_utm_zona,meteo_utm_huso,meteo_utm_xe,meteo_utm_yn,ident)
     
-    line=f.readline()
+    line=f.readline().strip()
     cols = line.split('\t')
     PAutorizada = float(cols[0])
-
-    line=f.readline()
+    print('\tpotencia autorizada:',PAutorizada)
+    
+    line=f.readline().strip()
     tipos = line.split('\t')
     seg = np.arange(1,nSeries+1,1,dtype=np.int)
-    tipos = [ tipos[i] for i in seg]
-    
+    #tipos = tipos[1:]
+    print('\ttipos',tipos)    
     f.close() 
-
+    
+    print('LEYENDO DATOS')
     # Leo etiquetas de tiempo comunes a todos los datos
     data=np.loadtxt(archi,skiprows=8)
     dt_num=data[:,0]
@@ -168,12 +172,12 @@ def leerArchi(nidCentral,tipoArchi):
     #
     # verificamos que no haya fechas repetidas
     #
-    
+    print('\tVerificando fechas repetidas')
     dt = list()
     for i in range(len(tiempo)-1):
         dt.append(tiempo[i+1]-tiempo[i])
     dtmin,dtmed,dtmax = np.min(dt),np.median(dt),np.max(dt)
-    print(f"dt: min{dtmin} med={dtmed} max={dtmax}")
+    print(f"\tdt: min{dtmin} med={dtmed} max={dtmax}")
     dt.append(dt[-1])
     dtposta = datetime.timedelta(minutes=10)
     dtcero = datetime.timedelta(0)
@@ -187,16 +191,17 @@ def leerArchi(nidCentral,tipoArchi):
         return None
         exit
     
+    print('\tconvirtiendo etiquetas de  tiempo a DateTime')
     dtini_10min = dt_to_dt10min(tiempo[0])
     tiempo = fechaInitoDateTimeN(dtini_10min,len(tiempo))
     
-    # Leo medidas
+    print('\tLeyendo medidas')
     pot = None
     cgm = None
     dis = None
     medidas = []
     for i in range(nSeries):
-
+        print('\t\tmedida',i,'tipo',tipos[i])
         tipoDato = filtros.str_to_tipo(tipos[i])
         if tipoDato == None:
             continue
@@ -215,11 +220,12 @@ def leerArchi(nidCentral,tipoArchi):
             cgm=copy.copy(med) 
         elif (tipoDato == 'dis'):
             dis=copy.copy(med) 
-
+    
+    print('CREANDO MEDIDOR')
     Medidor = datos.Medidor(ident,medidas,ubicacion)
-    
+    print('CREANDO PARQUE')
     parque = datos.Parque(Medidor,cgm,pot,dis)
-    
+    print('LECTURA TERMINADA\n')
     return parque
 
 ##############################################################################
