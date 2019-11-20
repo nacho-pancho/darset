@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import datetime
 from windrose import WindroseAxes
+import time
+from PIL import Image,ImageDraw,ImageFont
 
 #=================================================================================
 
@@ -29,9 +31,9 @@ def rosa_de_los_vientos(self):
 
 #=================================================================================
 
-MAP_WIDTH = 1200
-MAP_WIDTH_ZOOM = 1200
-BAR_HEIGHT = 5
+MAP_WIDTH = 2000
+MAP_WIDTH_ZOOM = 2000
+BAR_HEIGHT = 14
 DEFAULT_WINDOW_SIZE = datetime.timedelta(days=7)
 DEFAULT_TIME_DELTA = datetime.timedelta(minutes=10)
 ZOOM_STEP = 1.5
@@ -54,6 +56,7 @@ imprimir_map_zoom = False
 
 def clickplot_redraw():
     print('redraw')
+    t0 = time.time()
     global window, medidas, tipos, tini, tfin, imprimir_map_zoom
     
     if 1: #imprimir_map_zoom:
@@ -65,52 +68,65 @@ def clickplot_redraw():
     min_ejes = np.full(NGrafs,99999999)
     max_ejes = np.full(NGrafs,-99999999)
     
-    print('figure')
+    print('figure',time.time()-t0)
+    t0 = time.time()
     plt.figure(clickfig.number)
     #print("window:",window)archivos
 
-    print('leyendas')
+    print('leyendas',time.time()-t0)
+    t0 = time.time()
     legends = dict()
     for tipo in tipos:
         legends.update( {tipo:list()} )
         
         
+    print('medidas',time.time()-t0)
+    t0 = time.time()
     for i in range(len(medidas)):
-        print('medida',i)
-        med_i = medidas[i]        
+        med_i = medidas[i]  
+        
         idx_tipo = tipos.index(med_i.tipo)
         t_i = med_i.tiempo
+        print(len(t_i))
         legends[med_i.tipo].append(med_i.nombre)
-        idx_i = list(map(lambda t: (t >= window[0]) and (t < window[1]), t_i))
-        x_i = list()
-        y_i = list()
-        for j in range(len(idx_i)):
-            if idx_i[j]:
-                x_i.append(t_i[j])
-                y_i.append(med_i.muestras[j])
-        
-        if len(x_i) == 0:
-            plt.draw()
-            continue
-        
+        if 1:
+            idx_i = list(map(lambda t: (t >= window[0]) and (t < window[1]), t_i))
+            x_i = list()
+            y_i = list()
+            for j in range(len(idx_i)):
+                if idx_i[j]:
+                    x_i.append(t_i[j])
+                    y_i.append(med_i.muestras[j])
+        else:
+            x_i = list()
+            y_i = list()
+            w0,w1 = window[0],window[1]
+            for j in range(len(t_i)):
+                t = t_i[j]
+                if (t >= w0) and (t < w1):
+                    x_i.append(t)
+                    y_i.append(med_i.muestras[j])
+        #    filtrados = filter(lambda t:lambda t: (t[0] >= window[0]) and (t[0] < window[1]), zip(t_i,med_i.muestras) )
+        #    x_i,y_i = zip(*filtrados)
         #print(x_i[0],x_i[-1])
         plt.subplot(NGrafs,1,idx_tipo+1)
         c_i = viridis(i/len(medidas))
         plt.plot(x_i,y_i,color=c_i)
         
         min_yi = np.min(y_i)
-        if  (min_yi > -1000) & (min_yi < min_ejes[idx_tipo]):
+        if  (min_yi >= med_i.minval) & (min_yi < min_ejes[idx_tipo]):
             min_ejes[idx_tipo] =  min_yi
         
         max_yi = np.max(y_i) 
-        if (max_yi < 1000) & (max_yi > max_ejes[idx_tipo]):
+        if (max_yi <= med_i.maxval) & (max_yi > max_ejes[idx_tipo]):
             max_ejes[idx_tipo] =  max_yi           
         
         plt.axis([window[0],window[1],min_ejes[idx_tipo]*0.9,max_ejes[idx_tipo]*1.1])
         plt.ylabel(med_i.tipo)
         plt.draw()
         
-    print('leyendas')
+    print('leyendas',time.time()-t0)
+    t0 = time.time()
 
     for i in range(len(tipos)):
         plt.subplot( NGrafs, 1, i+1 )
@@ -120,15 +136,16 @@ def clickplot_redraw():
     #
     # actualizar el mapa
     #
-    print('mapa gral')
+    print('mapa gral',time.time()-t0)
+    t0 = time.time()
     plt.subplot(NGrafs,1,NGrafs)
     j0 = int((window[0]-tini)/(tfin-tini)*MAP_WIDTH)
     j1 = int((window[1]-tini)/(tfin-tini)*MAP_WIDTH)
     fondo = np.copy(alarm_map)
     fondo[:] = 1
     fondo[:,j0:j1,:3] = 0
-    plt.imshow(alarm_map)
-    plt.imshow(fondo,alpha=0.25)
+    plt.imshow(alarm_map,aspect='auto')
+    plt.imshow(fondo,alpha=0.25,aspect='auto')
     plt.gca().get_xaxis().set_visible(False)
     plt.gca().get_yaxis().set_visible(False)
     plt.draw()
@@ -137,15 +154,18 @@ def clickplot_redraw():
     # actualizar el zoom del mapa
     #    
     if 1: #if imprimir_map_zoom:
-        print('mapa zoom')
+        print('mapa zoom',time.time()-t0)
+        t0 = time.time()
         plt.subplot(NGrafs, 1, NGrafs-1)
         alarm_map_zoom = create_alarm_map (map_h, MAP_WIDTH_ZOOM, medidas, window[0], window[1])        
-        plt.imshow(alarm_map_zoom)
+        plt.imshow(alarm_map_zoom,aspect='auto')
         plt.gca().get_xaxis().set_visible(False)
         plt.gca().get_yaxis().set_visible(False)
         plt.draw()
     plt.tight_layout(pad=1.5)
-    print('listo')    
+    print('listo',time.time()-t0)
+        
+
     
     
 #---------------------------------------------------------------------------------
@@ -294,6 +314,19 @@ def create_alarm_map (map_h,map_width, medidas,tini_z,tfin_z):
         # terminamos con esta medida
         i_medida = i_medida + 1
 
-    alarm_map[alarm_map == 0] = 1
+    alarm_map[alarm_map == 0] = 1    
+    alarm_img = Image.fromarray(np.uint8(alarm_map*255))
+    draw = ImageDraw.Draw(alarm_img)
+    font = ImageFont.truetype("FreeMonoBold.ttf",10)
+    i = 0
+    draw.rectangle([0,0,100,map_h],fill=(0,0,0))
+    for m in medidas:        
+        filtros = m.get_filtros()
+        for fnom,fdata in filtros.items():
+            draw.text((10,BAR_HEIGHT*i),fnom,font=font)    
+            i = i + 1
+    #alarm_uint8 = np.uint8(alarm_map*255)
+    #alarm_overlay = np.uint8(np.array(alarm_img))
+    #return (1.0/255.0)*np.float32( np.bitwise_xor(alarm_uint8, alarm_overlay) )
+    return (1.0/255.0)*np.float32(np.array(alarm_img))
     
-    return alarm_map

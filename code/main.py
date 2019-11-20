@@ -27,15 +27,15 @@ if __name__ == '__main__':
     
     rad_SCADA = parque.medidores[0].get_medida('rad','scada')
     tem_SCADA = parque.medidores[0].get_medida('tem','scada')
-    rad_GEN = parque2.medidores[0].get_medida('rad','gen')
-    tem_GEN = parque2.medidores[0].get_medida('tem','gen')
+    #rad_GEN = parque2.medidores[0].get_medida('rad','gen')
+    #tem_GEN = parque2.medidores[0].get_medida('tem','gen')
 
     meds = []
     meds.append(pot_SCADA)
     meds.append(rad_SCADA)
     meds.append(tem_SCADA)
-    meds.append(rad_GEN)
-    meds.append(tem_GEN)    
+    #meds.append(rad_GEN)
+    #meds.append(tem_GEN)    
     graficas.clickplot(meds)
     plt.show()
 
