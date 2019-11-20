@@ -144,6 +144,7 @@ def clickplot_redraw():
         plt.gca().get_xaxis().set_visible(False)
         plt.gca().get_yaxis().set_visible(False)
         plt.draw()
+    plt.tight_layout(pad=1.5)
     print('listo')    
     
     
