@@ -106,8 +106,8 @@ def filtrar_rango(v,min_v,max_v):
     
 
 def filtrar_rad (med,ubicacion):
-
     
+    '''    
     zona = ubicacion.zona
     huso = ubicacion.huso
     x = ubicacion.x
@@ -141,8 +141,10 @@ def filtrar_rad (med,ubicacion):
     plt.title('Ineichen, climatological turbidity');
 
     filtro = numpy.zeros(len(med.muestras), dtype=bool)
-
     return filtro 
+    ''' 
+    return None
+ 
 
      
 ##############################################################################

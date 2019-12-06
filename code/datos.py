@@ -189,12 +189,13 @@ class Medidor(object):
     def calcular_filtros(self):            
 
         
-        
+        '''
         for med in self.medidas: 
             if (med.tipo == 'rad'):
                 med.agregar_filtro('rad_sup_maxGHI',f.filtrar_rad(med,self.ubicacion))
 
-               
+        '''
+        
         '''        
         if (self.tipo != 'rad'):        
             self.agregar_filtro('trancada',f.filtrar_rep
@@ -206,7 +207,7 @@ class Medidor(object):
             tipo_m = med.tipo
             proc_m = med.procedencia
             if (proc_m != 'pronos'):
-                if tipo_m in ('vel','dir','rad','temp'):
+                if tipo_m in ('vel','dir','rad','tem'):
                     med_ref = self.get_medida(tipo_m,'pronos')
                     f.corr_medidas(med_ref,med,6,0,True)
                     

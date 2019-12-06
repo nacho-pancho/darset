@@ -22,7 +22,7 @@ if __name__ == '__main__':
     
     plt.close('all')
     
-    nidCentral = 32    
+    nidCentral = 7    
 
     parque = archivos.leerArchivosCentral(nidCentral)
     
