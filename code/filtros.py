@@ -228,10 +228,9 @@ def corr_medidas(x,y,NDatosCorr,NDatosDesf,addFiltro_y):
     y_m = y_m_des
     
     
-    if not flg_dir_dir:
+    if not flg_dir_dir and np.sum(idx_mask)>0:
         x_m_mask = x_m[idx_mask]
         y_m_mask = y_m[idx_mask]
-        
         x_m_mask_u = r.rankdata(x_m_mask, "average")
         y_m_mask_u = r.rankdata(y_m_mask, "average")       
         

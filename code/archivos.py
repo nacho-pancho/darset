@@ -87,7 +87,7 @@ def archiGEN(ncentral):
 ##############################################################################
 
 def archiPRONOS(ncentral):
-    return RUTA_DATOS +'/c'+ str(ncentral) +'/c'+str(ncentral)+'_series60min_pronos.txt'
+    return RUTA_DATOS +'/c'+ str(ncentral) +'/c'+str(ncentral)+'_series60min_pronos.sas'
 
 ##############################################################################
 
@@ -103,9 +103,11 @@ def path(ncentral):
     
 def leerCampo(file):
     line = file.readline().strip()
-    cols = line.split('\t')
+    cols = line.split()
     print('Campo',cols[1:],'Valor',cols[0])
     return cols[0]    
+
+##############################################################################
 
 def leerArchi(nidCentral,tipoArchi):    
     if tipoArchi == 'scada':
@@ -125,40 +127,40 @@ def leerArchi(nidCentral,tipoArchi):
     f = open(archi, 'r')
     print('LEYENDO ENCABEZADO:')
     line=f.readline().strip()
-    cols = line.split('\t')
+    cols = line.split()
     nSeries = int(cols[0])
     print('\tnum de series',nSeries)
     
     line=f.readline().strip()
-    cols = line.split('\t')
+    cols = line.split()
     meteo_utm_zona = cols[0]
     
     line=f.readline().strip()
-    cols = line.split('\t')
+    cols = line.split()
     meteo_utm_huso = int(cols[0])  
     
     line=f.readline().strip()
-    cols = line.split('\t')
+    cols = line.split()
     meteo_utm_xe = float(cols[0])
 
     line=f.readline().strip()
-    cols = line.split('\t')
+    cols = line.split()
     meteo_utm_yn = float(cols[0])
     print('\tzona horaria:',meteo_utm_zona,meteo_utm_huso,meteo_utm_xe,meteo_utm_yn)
     
     line=f.readline().strip()
-    cols = line.split('\t')
+    cols = line.split()
     ident = cols[0]
 
     ubicacion = datos.Ubicacion(meteo_utm_zona,meteo_utm_huso,meteo_utm_xe,meteo_utm_yn,ident)
     
     line=f.readline().strip()
-    cols = line.split('\t')
+    cols = line.split()
     PAutorizada = float(cols[0])
     print('\tpotencia autorizada:',PAutorizada)
     
     line=f.readline().strip()
-    tipos = line.split('\t')
+    tipos = line.split()
     seg = np.arange(1,nSeries+1,1,dtype=np.int)
     #tipos = tipos[1:]
     print('\ttipos',tipos)    
@@ -247,7 +249,7 @@ def leerArchiSMEC(nidCentral):
     lines=f.readlines()
     result=[]
     for x in lines:
-        result.append(x.split('\t')[1:-1])
+        result.append(x.split()[1:-1])
         
     f.close()    
 
@@ -261,7 +263,7 @@ def leerArchiSMEC(nidCentral):
     line=f.readline()
     line=f.readline()
     f.close() 
-    cols = line.split('\t')    
+    cols = line.split()    
     dtini_str = cols[0]
     dtini = datetime.datetime.strptime(dtini_str, '%d/%m/%Y') 
 
@@ -298,46 +300,46 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
     
     line=f.readline()
     print(line)
-    cols = line.split('\t')
+    cols = line.split()
     nSeries = int(cols[0])
     
     line=f.readline()
-    cols = line.split('\t')
+    cols = line.split()
     meteo_utm_zona = cols[0]
     
     line=f.readline()
-    cols = line.split('\t')
+    cols = line.split()
     meteo_utm_huso = int(cols[0])    
     
     line=f.readline()
-    cols = line.split('\t')
+    cols = line.split()
     meteo_utm_xe = float(cols[0])
 
     line=f.readline()
-    cols = line.split('\t')
+    cols = line.split()
     meteo_utm_yn = float(cols[0])
     
     line=f.readline()
-    cols = line.split('\t')
+    cols = line.split()
     ident = cols[0]
 
     ubicacion = datos.Ubicacion(meteo_utm_zona,meteo_utm_huso,meteo_utm_xe,meteo_utm_yn,ident)
     
     line=f.readline()
-    cols = line.split('\t')
+    cols = line.split()
     PAutorizada = float(cols[0])
 
     line=f.readline()
-    tipos = line.split('\t')
-    seg = np.arange(1,nSeries+1,1,dtype=np.int)
-    tipos = [ tipos[i] for i in seg]
+    tipos = line.split()
+    #seg = np.arange(1,nSeries+1,1,dtype=np.int)
+    tipos = [ tipos[i] for i in range(nSeries)]
         
 
     # Leo etiquetas de tiempo comunes a todos los datos
     data=np.loadtxt(archi_pronos,skiprows=8)
 
     line=f.readline()
-    cols = line.split('\t')   
+    cols = line.split()   
     f.close() 
     dtini_str = cols[0]
     dtini = NumtoDateTime(float(dtini_str))
@@ -394,50 +396,18 @@ def leerArchivosCentral (nidCentral):
     parqueGen = leerArchi(nidCentral,'gen')
     if (parqueGen != None):
         parque.medidores[0].agregar_meds(parqueGen.medidores[0].medidas)
+    else:
+        print("AVISO: No hay archivo GEN para esta central.")
     
     med_10min, med_15min = leerArchiSMEC(nidCentral)
     if (med_10min != None):
         parque.pot_SMEC = med_10min
-        
+    else:
+        print("AVISO: No hay archivo SMEC para esta central.")
     medidor_pronos10min = leerArchiPRONOS(nidCentral,10)    
     if (medidor_pronos10min != None):
         parque.medidores[0].agregar_meds(medidor_pronos10min.medidas)
-   
-    
-    
-
-    
-    
-            
-    '''
-    med_10min, med_15min = archivos.leerArchiSMEC(nidCentral)
-    parque = archivos.leerArchi(nidCentral,'scada')
-    #parque2 = archivos.leerArchi(nidCentral,'gen') 
-
-    medidor_pronos10min = archivos.leerArchiPRONOS(nidCentral,10)
-    #medidor_pronos60min = archivos.leerArchiPRONOS(nidCentral,60)
-    
-    #parque.pot_SMEC  = med_10min
-    
-    pot_SCADA = parque.pot
-    #vel_SCADA = parque.medidores[0].get_medida('vel')
-    #dir_SCADA = parque.medidores[0].get_medida('dir')
-    
-    rad_SCADA = parque.medidores[0].get_medida('rad')
-    tem_SCADA = parque.medidores[0].get_medida('tem')
-
-    
-    #vel_GEN = parque2.medidores[0].get_medida('vel')
-    #dir_GEN = parque2.medidores[0].get_medida('dir')
-    
-    
-    #vel_pronos10min = medidor_pronos10min.get_medida('vel')
-    #dir_pronos10min = medidor_pronos10min.get_medida('dir')
-    #dir_pronos10min_desf = copy.deepcopy(dir_pronos10min)
-
-    rad_pronos10min = medidor_pronos10min.get_medida('rad')
-    tem_pronos10min = medidor_pronos10min.get_medida('tem')
-
-    '''    
+    else:
+        print("AVISO: No hay archivo PRONOS para esta central.")
     return parque
         
