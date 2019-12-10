@@ -26,8 +26,12 @@ if __name__ == '__main__':
     nidCentral = 7    
 
     parque = archivos.leerArchivosCentral(nidCentral)
-    filtros = parque.get_filtros()
+    medidor = parque.medidores[0]
+    filtros = medidor.get_filtros()
+    med1 = medidor.get_medida('vel','pronos')
+    med2 = parque.pot
 
+    '''
     vel_SCADA = parque.medidores[0].get_medida('vel','scada')
     vel_pronos= parque.medidores[0].get_medida('vel','pronos')
 
@@ -50,6 +54,6 @@ if __name__ == '__main__':
 
     graficas.clickplot(meds)
     plt.show()
-
+    '''
 
     

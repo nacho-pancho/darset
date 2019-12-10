@@ -239,19 +239,7 @@ class Parque(object):
         self.pot_SMEC = None
         self.dis = dis
         self.decorr = None
-        self._filtro_cgm = None
-        self._filtro_potBaja = None
         self.filtros = None
-
-    def filtro_cgm(self):
-        if self._filtro_cgm == None:
-            self._filtro_cgm = np.abs(self.pot.muestras - self.cgm.muestras) < (self.cgm.maxval * 0.1)                 
-        return self._filtro_cgm
-
-    def filtro_potBaja(self):
-        if self._filtro_potBaja == None:
-            self._filtro_potBaja = np.abs(self.pot.muestras) < (self.cgm.maxval * 0.05)                 
-        return self._filtro_potBaja    
 
 
     def calc_corr_medidor(self,med):
@@ -283,6 +271,9 @@ class Parque(object):
         '''
         Calcular los filtros del parque
         '''
+        self.filtros['cgm'] = np.abs(self.pot.muestras - self.cgm.muestras) < (self.cgm.maxval * 0.05)
+        self.filtros['pot_baja'] = np.abs(self.pot.muestras) < (self.cgm.maxval * 0.05)
+
         return None
 
 
@@ -327,14 +318,12 @@ class Parque(object):
         vel_m_mask_u = vel_m_mask_u / np.max(vel_m_mask_u)
         pot_m_mask_u = pot_m_mask_u / np.max(pot_m_mask_u)
         
-        #plt.figure()        
         vel_m_u = np.zeros(len(vel_m))
         pot_m_u = np.zeros(len(pot_m))
         
         vel_m_u [idx_mask] = vel_m_mask_u 
         pot_m_u [idx_mask] = pot_m_mask_u
-        #plt.scatter(vel_m_mask_u, pot_m_mask_u)
-        
+
         vel_m_g = np.zeros(len(vel_m))
         pot_m_g = np.zeros(len(pot_m))
         
