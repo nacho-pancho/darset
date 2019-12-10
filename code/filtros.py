@@ -17,8 +17,8 @@ import scipy.stats as r
 import math as m
 import archivos as arch
 import graficas
-import pvlib as pv
-from pyproj import Proj
+#import pvlib as pv
+#from pyproj import Proj
 import pandas as pd
 import matplotlib.pyplot as plt
 

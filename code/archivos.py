@@ -404,6 +404,7 @@ def leerArchivosCentral (nidCentral):
         parque.pot_SMEC = med_10min
     else:
         print("AVISO: No hay archivo SMEC para esta central.")
+
     medidor_pronos10min = leerArchiPRONOS(nidCentral,10)    
     if (medidor_pronos10min != None):
         parque.medidores[0].agregar_meds(medidor_pronos10min.medidas)
