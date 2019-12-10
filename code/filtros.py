@@ -11,16 +11,10 @@ Created on Thu May  2 14:55:56 2019
 ##############################################################################
 
 import numpy
-import datos as d
+import datos
 import numpy as np
-import scipy.stats as r
-import math as m
+import scipy.stats as stats
 import archivos as arch
-import graficas
-#import pvlib as pv
-#from pyproj import Proj
-import pandas as pd
-import matplotlib.pyplot as plt
 
 
 
@@ -58,10 +52,10 @@ def str_to_tipo(s):
         return None
 
 ##############################################################################
-        
+# este dato debería ser parte de Medida
 def min_max(tipo,PotAut):
     if tipo == 'vel':
-        return [0,30]
+        return [0,40]
     elif tipo == 'dir':
         return [0,360]
     elif tipo == 'pot':
@@ -231,8 +225,8 @@ def corr_medidas(x,y,NDatosCorr,NDatosDesf,addFiltro_y):
     if not flg_dir_dir and np.sum(idx_mask)>0:
         x_m_mask = x_m[idx_mask]
         y_m_mask = y_m[idx_mask]
-        x_m_mask_u = r.rankdata(x_m_mask, "average")
-        y_m_mask_u = r.rankdata(y_m_mask, "average")       
+        x_m_mask_u = stats.rankdata(x_m_mask, "average")
+        y_m_mask_u = stats.rankdata(y_m_mask, "average")
         
         x_m_mask_u = x_m_mask_u / np.max(x_m_mask_u)
         y_m_mask_u = y_m_mask_u / np.max(y_m_mask_u)
@@ -279,11 +273,8 @@ def corr_medidas(x,y,NDatosCorr,NDatosDesf,addFiltro_y):
 
         else:
             corr[k] = corr[k-1]
-            #print('(filtrado)')
         k = k + 1
-    #print(cualquiera)
-    #print('Episodios:',len(cualquiera))
-    
+
     corr_y = np.zeros(len(y.muestras))
     filtro_total_y = np.ones(len(y.muestras),dtype=bool)
     for k in range(len(y.muestras)):
@@ -296,14 +287,13 @@ def corr_medidas(x,y,NDatosCorr,NDatosDesf,addFiltro_y):
    
     idx_datos_ok = np.where(filtro_total_y < 1) 
     corr_prom = corr_y[idx_datos_ok].mean()    
-    #print ('NDatosDesf: ',NDatosDesf,', corr = ',corr_prom)
-    
+
     if addFiltro_y:
         nombre_f = 'corr_' + x.tipo + '_' + x.procedencia
         y.agregar_filtro(nombre_f, corr_y < 0.9 )
     
-    return d.Medida('corr',corr_y,list(y.tiempo),'corr','corr_' + x.tipo + '_' 
-                    + y.tipo,corr_prom * 0.99,1.0,0), corr_prom
+    return datos.Medida('corr', corr_y, list(y.tiempo), 'corr', 'corr_' + x.tipo + '_'
+                        + y.tipo, corr_prom * 0.99, 1.0, 0), corr_prom
 
 
 ##############################################################################
@@ -349,7 +339,7 @@ def corrMAX_Ndesf(x,y,NdesfMin,NdesfMax,corregirDesf,desf_dinamico,flg_graficar)
 
     print(corr_mat)     
     
-    Ndesf_opt_k = d.Medida( 'corr', Ndesf_opt_k,y.tiempo,'Ndesf_opt_k','Ndesf_opt_k_' + x.tipo + '_' + y.tipo,-NdesfMin,NdesfMax,0)
+    Ndesf_opt_k = datos.Medida('corr', Ndesf_opt_k, y.tiempo, 'Ndesf_opt_k', 'Ndesf_opt_k_' + x.tipo + '_' + y.tipo, -NdesfMin, NdesfMax, 0)
     
     '''
     if flg_graficar:
@@ -366,13 +356,6 @@ def corrMAX_Ndesf(x,y,NdesfMin,NdesfMax,corregirDesf,desf_dinamico,flg_graficar)
 
 
 def corregir_vel_altura (velRef,velAjustar):
-    
-    
-    
     return None
     
 
-
-#tipo=str_to_tipo('vel')
-#tipo2=str_to_tipo('dirgasdfgsdfg')
-        

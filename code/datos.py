@@ -82,26 +82,27 @@ class Medida(object):
         self.calcular_filtros()
         
 
-
     def calcular_filtros(self):
-        if (self.tipo != 'Ndesf_opt_k'):        
-            self.agregar_filtro('fuera_de_rango',f.filtrar_rango
-                            (self.muestras,self.minval,self.maxval))
-        if (self.tipo != 'corr') and (self.tipo != 'Ndesf_opt_k'):        
-            self.agregar_filtro('trancada',f.filtrar_rep
-                                (self.muestras,self.get_filtro('fuera_de_rango'),self.nrep))
-            
+        if (self.tipo != 'Ndesf_opt_k'):
+            filtro = f.filtrar_rango(self.muestras, self.minval, self.maxval)
+            self.agregar_filtro('fuera_de_rango',filtro)
+        if (self.tipo != 'corr') and (self.tipo != 'Ndesf_opt_k'):
+            filtro = f.filtrar_rep(self.muestras,self.get_filtro('fuera_de_rango'),self.nrep)
+            self.agregar_filtro('trancada',filtro)
+
+
     def agregar_filtro(self,nombre_f,filt):
         self.filtros[self.nombre + '_' + nombre_f] = filt.astype(np.uint8)
 
-    
-        
+
     def get_filtro(self,nombre_f):
-        return self.filtros[self.nombre + '_' + nombre_f]
+        filtros = self.get_filtros()
+        return filtros[self.nombre + '_' + nombre_f]
 
 
-    
     def get_filtros(self):
+        if self.filtros is None:
+            self.calcular_filtros()
         return self.filtros
     
     
@@ -168,11 +169,11 @@ class Medidor(object):
     @see Medida
     '''
 
-
     def __init__(self, nombre, medidas, ubicacion):
         self.nombre = nombre
         self.medidas = medidas
-        self.ubicacion = ubicacion     
+        self.ubicacion = ubicacion
+        self.filtros = None
 
     def get_medida(self,tipo,proc):
         for m in self.medidas:
@@ -185,34 +186,26 @@ class Medidor(object):
         for m in meds:
            self.medidas.append(m)
         
+    def get_filtros(self):
+        if self.filtros is None:
+            self.calcular_filtros()
 
-    def calcular_filtros(self):            
 
-        
-        '''
-        for med in self.medidas: 
-            if (med.tipo == 'rad'):
-                med.agregar_filtro('rad_sup_maxGHI',f.filtrar_rad(med,self.ubicacion))
-
-        '''
-        
-        '''        
-        if (self.tipo != 'rad'):        
-            self.agregar_filtro('trancada',f.filtrar_rep
-                                (self.muestras,self.get_filtro('fuera_de_rango'),self.nrep))    
-        
-        '''
-        
+    def calcular_filtros(self):
+        self.filtros = dict()
         for med in self.medidas:
+            self.filtros.update(med.get_filtros())
             tipo_m = med.tipo
             proc_m = med.procedencia
             if (proc_m != 'pronos'):
                 if tipo_m in ('vel','dir','rad','tem'):
                     med_ref = self.get_medida(tipo_m,'pronos')
-                    f.corr_medidas(med_ref,med,6,0,True)
-                    
+                    med_corr = f.corr_medidas(med_ref,med,6,0,True)
+                    self.filtros.update(med_corr.get_filtros())
+        return None
+
+
     def desfasar_meds(self):
-            
         '''
         Primero tengo que arreglar las meds pronos para que queden en fase con el scada
         '''
@@ -224,8 +217,6 @@ class Medidor(object):
                     #med_ref = self.get_medida(tipo_m,'scada')
                     med.desfasar(-18)
                     #f.corrMAX_Ndesf(med_ref,med,-5,5,True,True,True)
-     
-            
 
         
 ##############################################################################
@@ -236,12 +227,13 @@ class Parque(object):
     Tiene asociadas medidas de potencia y uno o
     mas medidores.
     '''
-    def __init__(self,medidores,cgm,pot,dis):
+    def __init__(self,id,medidores,cgm,pot,dis):
         if isinstance(medidores,list):
             self.medidores = medidores
         else:
             self.medidores = list()
             self.medidores.append(medidores)
+        self.id = id
         self.cgm = cgm
         self.pot = pot
         self.pot_SMEC = None
@@ -249,14 +241,12 @@ class Parque(object):
         self.decorr = None
         self._filtro_cgm = None
         self._filtro_potBaja = None
-
+        self.filtros = None
 
     def filtro_cgm(self):
         if self._filtro_cgm == None:
             self._filtro_cgm = np.abs(self.pot.muestras - self.cgm.muestras) < (self.cgm.maxval * 0.1)                 
         return self._filtro_cgm
-
-
 
     def filtro_potBaja(self):
         if self._filtro_potBaja == None:
@@ -267,9 +257,12 @@ class Parque(object):
     def calc_corr_medidor(self,med):
         return None
         
+    def get_filtros(self):
+        if self.filtros is not None:
+            return self.filtros
 
     def calcular_filtros(self):
-        
+
         '''
         Primero tengo que acomodar las series que estuvieran desfasadas
         '''
@@ -281,19 +274,18 @@ class Parque(object):
         for med in self.medidores:
             med.desfasar_meds()        
         
-
+        self.filtros = dict()
         '''
         Calcular los filtros de los medidores
         '''
         for med in self.medidores:
-            med.calcular_filtros()
-
+            dict.update(med.get_filtros())
         '''
         Calcular los filtros del parque
-        '''        
-        
+        '''
         return None
-        
+
+
     def decorrelacion(self):
         '''
         Arma un filtro para cada medidor
@@ -328,9 +320,6 @@ class Parque(object):
         
         vel_m_mask = vel_m[idx_mask]
         pot_m_mask = pot_m[idx_mask]
-        
-        #plt.figure()
-        #plt.scatter(vel_m[idx_mask], pot_m[idx_mask])
 
         vel_m_mask_u = r.rankdata(vel_m_mask, "average")#/len(vel_m_mask)
         pot_m_mask_u = r.rankdata(pot_m_mask, "average")#/len(pot_m_mask)        
@@ -352,9 +341,6 @@ class Parque(object):
         vel_m_g [idx_mask] = r.norm.ppf(vel_m_mask_u) 
         pot_m_g [idx_mask] = r.norm.ppf(pot_m_mask_u)
 
-        #plt.figure()        
-        #plt.scatter(vel_m_g [idx_mask], pot_m_g [idx_mask])
-         
         idx_buff = np.zeros(NDatosCorr,dtype=int)
         corr = np.zeros(len(vel.muestras))
         k_idx_buff = 0
@@ -412,10 +398,8 @@ class Concentrador(object):
         self.parques = parques
 
 
-
     def deriva (self):
         return None
-
 
         
     @staticmethod

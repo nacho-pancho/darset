@@ -9,6 +9,7 @@ import datetime
 from windrose import WindroseAxes
 import time
 from PIL import Image,ImageDraw,ImageFont
+import filtros
 
 #=================================================================================
 
@@ -121,7 +122,9 @@ def clickplot_redraw():
         if (max_yi <= med_i.maxval) & (max_yi > max_ejes[idx_tipo]):
             max_ejes[idx_tipo] =  max_yi           
         
-        plt.axis([window[0],window[1],min_ejes[idx_tipo]*0.9,max_ejes[idx_tipo]*1.1])
+        #plt.axis([window[0],window[1],min_ejes[idx_tipo]*0.9,max_ejes[idx_tipo]*1.1])
+        min_max_tipo = filtros.min_max(med_i.tipo,50)
+        plt.axis([window[0],window[1],min_max_tipo[0],min_max_tipo[1]])
         plt.ylabel(med_i.tipo)
         plt.draw()
         

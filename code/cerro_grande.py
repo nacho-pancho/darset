@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import filtros
 import graficas
 import copy
+import time
 
 ##############################################################################
 
@@ -25,14 +26,14 @@ if __name__ == '__main__':
     nidCentral = 7    
 
     parque = archivos.leerArchivosCentral(nidCentral)
-    
-    parque.calcular_filtros()
-    
+    filtros = parque.get_filtros()
+
     vel_SCADA = parque.medidores[0].get_medida('vel','scada')
     vel_pronos= parque.medidores[0].get_medida('vel','pronos')
 
     dir_SCADA = parque.medidores[0].get_medida('dir','scada')
     dir_pronos= parque.medidores[0].get_medida('dir','pronos')
+    consigna = parque.cgm
 
     pot_scada = parque.pot
     
@@ -45,8 +46,10 @@ if __name__ == '__main__':
     meds.append(dir_pronos)
 
     meds.append(pot_scada)
-    
+    meds.append(consigna)
+
     graficas.clickplot(meds)
     plt.show()
-    
+
+
     

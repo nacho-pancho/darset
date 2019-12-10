@@ -14,11 +14,13 @@ import copy
 import math as m
 import pandas as pd
 import scipy.signal as signal
-
+import pickle
+import gzip
 
 ##############################################################################
 
 RUTA_DATOS = '../data/'
+
 
 ##############################################################################
 
@@ -73,11 +75,18 @@ def dt_to_dt10min(dt):
 
 ##############################################################################
 
-def archiSCADA(ncentral):
-    return RUTA_DATOS +'/c'+ str(ncentral) +'/c'+str(ncentral)+'_series10min.sas'
+def archiPICKLE(ncentral):
+    return RUTA_DATOS +'/c'+ str(ncentral) +'/c'+str(ncentral)+'.pkl.gz'
 
 ##############################################################################
-    
+
+def archiFILTROS(ncentral):
+    return RUTA_DATOS +'/c'+ str(ncentral) +'/c'+str(ncentral)+'_filtros.pkl.gz'
+
+##############################################################################
+
+def archiSCADA(ncentral):
+    return os.path.join(RUTA_DATOS,f'c{ncentral}/c{ncentral}_series10min.sas')
 
 ##############################################################################
 
@@ -108,6 +117,7 @@ def leerCampo(file):
     return cols[0]    
 
 ##############################################################################
+
 
 def leerArchi(nidCentral,tipoArchi):    
     if tipoArchi == 'scada':
@@ -226,7 +236,7 @@ def leerArchi(nidCentral,tipoArchi):
     print('CREANDO MEDIDOR')
     Medidor = datos.Medidor(ident,medidas,ubicacion)
     print('CREANDO PARQUE')
-    parque = datos.Parque(Medidor,cgm,pot,dis)
+    parque = datos.Parque(nidCentral,Medidor,cgm,pot,dis)
     print('LECTURA TERMINADA\n')
     return parque
 
@@ -289,10 +299,11 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
     archi_pronos = archiPRONOS(nidCentral)       
 
     if not os.path.exists(archi_pronos):
+        print(f"AVISO: no hay pronósticos para esta central. Archivo {archi_pronos} no encontrado.")
         return None
         exit
 
-    print(f"Leyendo archivo de pronósticos para la central {nidCentral}")
+    print(f"Leyendo archivo de pronósticos para la central {nidCentral}: {archi_pronos}")
     
     f = open(archi_pronos, 'r')
     
@@ -331,11 +342,8 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
 
     line=f.readline()
     tipos = line.split()
-    #seg = np.arange(1,nSeries+1,1,dtype=np.int)
     tipos = [ tipos[i] for i in range(nSeries)]
         
-
-    # Leo etiquetas de tiempo comunes a todos los datos
     data=np.loadtxt(archi_pronos,skiprows=8)
 
     line=f.readline()
@@ -344,8 +352,7 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
     dtini_str = cols[0]
     dtini = NumtoDateTime(float(dtini_str))
       
-    
-    # Leo medidas
+        # Leo medidas
     medidas = []
     for i in range(nSeries):
 
@@ -389,8 +396,17 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
 ##############################################################################
     
 def leerArchivosCentral (nidCentral):
-        
-    
+    #
+    # si existe, cargamos el objeto guardado
+    #
+    archip = archiPICKLE(nidCentral)
+    if os.path.exists(archip):
+        print(f'INFO: cargando datos de parque de {archip}')
+        return cargarCentral(nidCentral)
+    #
+    # si no, generamos todo desde 0 en base a los distintos archivos
+    # de texto que componen la info de la central.
+    #
     parque = leerArchi(nidCentral,'scada')
     
     parqueGen = leerArchi(nidCentral,'gen')
@@ -410,5 +426,24 @@ def leerArchivosCentral (nidCentral):
         parque.medidores[0].agregar_meds(medidor_pronos10min.medidas)
     else:
         print("AVISO: No hay archivo PRONOS para esta central.")
+    #
+    # si existe, cargamos el objeto guardado
+    #
+    print(f'INFO: guardando datos de parque en {archip}')
+    guardarCentral(parque)
     return parque
         
+##############################################################################
+
+def guardarCentral(parque):
+    archi_central = archiPICKLE(parque.id)
+    with gzip.open(archi_central,'wb') as output:
+        pickle.dump(parque,output,pickle.HIGHEST_PROTOCOL)
+
+##############################################################################
+
+def cargarCentral(id):
+    archi_central = archiPICKLE(id)
+    with gzip.open(archi_central,'r') as input:
+        parque = pickle.load(input)
+        return parque
