@@ -384,7 +384,7 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
         dt_10min = fechaInitoDateTimeN ( dt_ini, len(meds))
 
         med = datos.Medida('pronos',meds,dt_10min,tipoDato,nombre,minmax[0],minmax[1],nrep)
-        med.desfasar(-18) # los pronósticos vienen con GMT 0, nosotros tenemos GMT -3
+        #med.desfasar(-18) # los pronósticos vienen con GMT 0, nosotros tenemos GMT -3
         medidas.append(med)
 
     Medidor = datos.Medidor(ident,medidas,ubicacion)
@@ -409,7 +409,7 @@ def leerArchivosCentral (nidCentral):
     
     parqueGen = leerArchi(nidCentral,'gen')
     if parqueGen is not None:
-        parque.medidores[0].agregar_meds(parqueGen.medidores[0].medidas)
+        parque.medidores[0].agregar_meds(parqueGen.medidores[0]._medidas)
     else:
         print("AVISO: No hay archivo GEN para esta central.")
     

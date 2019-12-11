@@ -101,32 +101,16 @@ class Medida(object):
         Asumimos que el tiempo inicial ya está alineado a 10 minutos
         """
         dtd10 = datetime.timedelta(minutes=10)
-        n1 = len(nuevos_tiempos)
         tini1 = nuevos_tiempos[0]
         n0 = len(self.tiempo)
+        print(len(self.tiempo),len(self.muestras),len(nuevos_tiempos))
         tini0 = self.tiempo[0]
         offset = int((tini0-tini1)/dtd10)
-        if offset < 0:
-            print(f"AVISO: medidas antes tiempo registrado")
-            offset1 = 0
-            offset0 = -offset
-            n0 = n0 - offset0 # perdimos offset0 muestras de esta medida
-        else:
-            offset1 = offset
-            offset0 = 0
 
-        if n0-offset0 > n1:
-            print(f"AVISO: medidas después de tiempo registrado")
-            n0 = n1-offset0
-            # n1 queda igual
-        else:
-            n1 = n0 - offset0 # n1 va hasta lo que da la señal
-            n0 = n0 - offset1
         self.tiempo = nuevos_tiempos
         muestras_viejas = self.muestras
-        self.muestras = np.ones(len(nuevos_tiempos))*-1e10
-        print(f"registrando: [{offset0}:{n0}] -> [{offset1}:{n1}]")
-        self.muestras[offset1:n1] = muestras_viejas[offset0:n0]
+        self.muestras = np.ones(len(nuevos_tiempos))* FUERA_DE_RANGO
+        self.muestras[offset:(offset + n0)] = muestras_viejas
 
     def calcular_filtros(self):
         """
@@ -266,13 +250,17 @@ class Medidor(object):
             t = self._medidas[i].get_tiempo()
             t0 = t[0]
             t1 = t[-1]
+            nom = self._medidas[i].nombre
+            print(f"{nom} {t0} {t1}")
             if t0 < tmin:
                 tmin = t0
             if t1 > tmax:
                 tmax = t1
         dtd10 = datetime.timedelta(minutes=10)
-        n = int( (tmax-tmin)/dtd10 )
+        n =int( np.ceil( (tmax-tmin)/dtd10 ) )+ 1
+        print(n)
         tiempo = [tmin+dtd10*i for i in range(n)]
+        print(len(tiempo))
         return tiempo
 
     def registrar(self,periodo):
@@ -280,6 +268,7 @@ class Medidor(object):
             periodo = self.get_tiempo()
 
         for m in self._medidas:
+            print(len(periodo))
             m.registrar(periodo)
 
 
@@ -298,7 +287,8 @@ class Medidor(object):
             if proc_m != 'pronos':
                 if tipo_m in ('vel','dir','rad','tem'):
                     med_ref = self.get_medida(tipo_m,'pronos')
-                    med_corr = f.corr_medidas(med_ref,med,6,0,True)
+                    if med_ref != None:
+                        med_corr = f.corr_medidas(med_ref,med,6,0,True)
                     self._filtros.update(med_corr.get_filtros())
         return None
 
@@ -336,8 +326,9 @@ class Parque(object):
             if t1 > tmax:
                 tmax = t1
         dtd10 = datetime.timedelta(minutes=10)
-        n = int( (tmax-tmin)/dtd10 )
+        n = int( np.ceil( (tmax-tmin)/dtd10 ) ) + 1 
         tiempo = [tmin+dtd10*i for i in range(n)]
+        print('periodo',len(tiempo))
         return tiempo
 
     def registrar(self):
@@ -377,15 +368,28 @@ class Parque(object):
         """
         meds = self.get_medidas()
         ncols = len(meds)
+        if self.pot_SMEC is not None:
+            ncolstot = ncols + 3
+        else:
+            ncolstot = ncols + 2
         nrows = len(meds[0].tiempo)
-        M = np.zeros((nrows,ncols),dtype=np.single)
-        F = np.zeros((nrows,ncols),dtype=np.bool)
+        M = np.zeros((nrows,ncolstot),dtype=np.single)
+        F = np.zeros((nrows,ncolstot),dtype=np.bool)
         nombres =list()
         for i in range(ncols):
             nombres.append(meds[i].nombre)
             M[:,i] = meds[i].muestras
             F[:,i] = meds[i].filtrada()
+        M[:,ncols] = self.pot.muestras
+        nombres.append('potSCADA')
+        M[:,ncols+1] = self.cgm.muestras
+        nombres.append('cgmSCADA')
+        if self.pot_SMEC is not None:
+            M[:,ncols+2] = self.pot_SMEC.muestras
+            nombres.append('potSMEC')
+        
         return M,F,nombres
+    
 
     def calcular_filtros(self):
 
