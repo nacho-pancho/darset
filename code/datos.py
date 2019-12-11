@@ -46,16 +46,18 @@ import scipy.stats as r
 import archivos as arch
 import copy
 
+FUERA_DE_RANGO = -1e20
+
 ##############################################################################
 
 class Ubicacion(object):
-    '''
+    """
     Ubicacion fisica en estandar UTM
-    '''    
+    """
     def __init__(self,zona,huso,x,y,ident):
-        '''
+        """
         inicializa en base a atributos
-        '''
+        """
         self.zona = zona
         self.huso = huso
         self.x = x
@@ -64,12 +66,17 @@ class Ubicacion(object):
 
 ##############################################################################
 
+import datetime
+
 class Medida(object):
-    '''
+    """
     Representa una serie de tiempo asociada a una medida
     de tipo particular, por ejemplo meteorologica o de potencia
-    '''
+    """
+
     def __init__(self,procedencia,muestras,tiempo,tipo,nombre,minval,maxval,nrep):
+        t0 = tiempo[0]
+        print(f"Medida {procedencia} de tipo {tipo}, nombre {nombre}, comenzando en tiempo {t0}")
         self.procedencia = procedencia
         self.muestras = muestras
         self.tiempo = tiempo
@@ -78,12 +85,55 @@ class Medida(object):
         self.minval = minval
         self.maxval = maxval
         self.nrep = nrep
-        self.filtros = dict()
-        self.calcular_filtros()
-        
+        self.filtros = None
+
+
+    def get_tiempo(self):
+        """
+        Devuelve el conjunto de tiempos en lo que s emidió
+        """
+        return self.tiempo
+
+
+    def registrar(self,nuevos_tiempos):
+        """
+        Reubica las muestras y el tiempo de la serie al rango de tiempos especificado
+        Asumimos que el tiempo inicial ya está alineado a 10 minutos
+        """
+        dtd10 = datetime.timedelta(minutes=10)
+        n1 = len(nuevos_tiempos)
+        tini1 = nuevos_tiempos[0]
+        n0 = len(self.tiempo)
+        tini0 = self.tiempo[0]
+        offset = int((tini0-tini1)/dtd10)
+        if offset < 0:
+            print(f"AVISO: medidas antes tiempo registrado")
+            offset1 = 0
+            offset0 = -offset
+            n0 = n0 - offset0 # perdimos offset0 muestras de esta medida
+        else:
+            offset1 = offset
+            offset0 = 0
+
+        if n0-offset0 > n1:
+            print(f"AVISO: medidas después de tiempo registrado")
+            n0 = n1-offset0
+            # n1 queda igual
+        else:
+            n1 = n0 - offset0 # n1 va hasta lo que da la señal
+            n0 = n0 - offset1
+        self.tiempo = nuevos_tiempos
+        muestras_viejas = self.muestras
+        self.muestras = np.ones(len(nuevos_tiempos))*-1e10
+        print(f"registrando: [{offset0}:{n0}] -> [{offset1}:{n1}]")
+        self.muestras[offset1:n1] = muestras_viejas[offset0:n0]
 
     def calcular_filtros(self):
-        if (self.tipo != 'Ndesf_opt_k'):
+        """
+        Calcula todos los filtros disponibles para esta medida
+        """
+        self.filtros = dict()
+        if self.tipo != 'Ndesf_opt_k':
             filtro = f.filtrar_rango(self.muestras, self.minval, self.maxval)
             self.agregar_filtro('fuera_de_rango',filtro)
         if (self.tipo != 'corr') and (self.tipo != 'Ndesf_opt_k'):
@@ -92,31 +142,43 @@ class Medida(object):
 
 
     def agregar_filtro(self,nombre_f,filt):
+        """
+        Agrega un nuevo tipo de filtro a la medida
+        """
         self.filtros[self.nombre + '_' + nombre_f] = filt.astype(np.uint8)
 
 
     def get_filtro(self,nombre_f):
+        """
+        Obtiene el filtro de nombre especificado
+        """
         filtros = self.get_filtros()
         return filtros[self.nombre + '_' + nombre_f]
 
 
     def get_filtros(self):
+        """
+        Devuelve una lista con todos los filtros
+        """
         if self.filtros is None:
             self.calcular_filtros()
         return self.filtros
     
     
-    def reset_filtros(self,NMuestras):
-        self.filtros.clear()
-
-    def reset_muestrasYTiempo(self,dtini,NMuestras):
-        self.tiempo = arch.fechaInitoDateTimeN(dtini,NMuestras)
-        self.muestras = np.full(NMuestras,1.5 * self.maxval)
-    
-    def reset_med (self,dtini,NMuestras):
-        self.reset_filtros(NMuestras)
-        self.reset_muestrasYTiempo(dtini,NMuestras)
-        
+#    def reset_filtros(self,NMuestras):
+#        """
+#        Borra todos los filtros
+#        """
+#        self.filtros.clear()#
+#
+#    def reset_muestrasYTiempo(self,dtini,NMuestras):
+#        self.tiempo = arch.fechaInitoDateTimeN(dtini,NMuestras)
+#        self.muestras = np.full(NMuestras,1.5 * self.maxval)
+#
+#    def reset_med (self,dtini,NMuestras):
+#        self.reset_filtros(NMuestras)
+#        self.reset_muestrasYTiempo(dtini,NMuestras)
+#
  
     def filtrada(self):
         filtrada = np.zeros(len(self.muestras),dtype=bool)
@@ -129,6 +191,7 @@ class Medida(object):
         dt_desf = (self.tiempo[1] - self.tiempo[0]) * Ndesf
         self.tiempo = [dt +  dt_desf for dt in self.tiempo] 
         return None
+
 
     def desfasar_dinamico (self,Ndesf):
         
@@ -155,21 +218,21 @@ class Medida(object):
         
         self.calcular_filtros()
         
-        
-        #del  med_old
         return None
         
   
 ##############################################################################
     
 class Medidor(object):
-    '''
+    """
     Genera una o varias Medid/as en determinados
     instantes de tiempo
     @see Medida
-    '''
+    """
 
     def __init__(self, nombre, medidas, ubicacion):
+        nm = len(medidas)
+        print(f"Medidor {nombre} con {nm} medidas ubicado en {ubicacion}")
         self.nombre = nombre
         self.medidas = medidas
         self.ubicacion = ubicacion
@@ -185,7 +248,36 @@ class Medidor(object):
     def agregar_meds(self,meds):
         for m in meds:
            self.medidas.append(m)
-        
+
+    def get_tiempo(self):
+        """
+        Devuelve el período máximo que cubre los tiempos de medición de todas las medidas
+        en este medidor.
+        """
+        t = self.medidas[0].get_tiempo()
+        tmin = t[0]
+        tmax = t[-1]
+        for i in range(1,len(self.medidas)):
+            t = self.medidas[i].get_tiempo()
+            t0 = t[0]
+            t1 = t[-1]
+            if t0 < tmin:
+                tmin = t0
+            if t1 > tmax:
+                tmax = t1
+        dtd10 = datetime.timedelta(minutes=10)
+        n = int( (tmax-tmin)/dtd10 )
+        tiempo = [tmin+dtd10*i for i in range(n)]
+        return tiempo
+
+    def registrar(self,periodo):
+        if periodo is None:
+            periodo = self.get_tiempo()
+
+        for m in self.medidas:
+            m.registrar(periodo)
+
+
     def get_filtros(self):
         if self.filtros is None:
             self.calcular_filtros()
@@ -197,37 +289,23 @@ class Medidor(object):
             self.filtros.update(med.get_filtros())
             tipo_m = med.tipo
             proc_m = med.procedencia
-            if (proc_m != 'pronos'):
+            if proc_m != 'pronos':
                 if tipo_m in ('vel','dir','rad','tem'):
                     med_ref = self.get_medida(tipo_m,'pronos')
-                    med_corr = f.corr_medidas(med_ref,med,6,0,True)
+                    med_corr,corr_prom = f.corr_medidas(med_ref,med,6,0,True)
                     self.filtros.update(med_corr.get_filtros())
         return None
-
-
-    def desfasar_meds(self):
-        '''
-        Primero tengo que arreglar las meds pronos para que queden en fase con el scada
-        '''
-        for med in self.medidas:
-            tipo_m = med.tipo
-            proc_m = med.procedencia
-            if proc_m == 'pronos':
-                #if tipo_m =='rad':
-                    #med_ref = self.get_medida(tipo_m,'scada')
-                    med.desfasar(-18)
-                    #f.corrMAX_Ndesf(med_ref,med,-5,5,True,True,True)
 
         
 ##############################################################################
 
 class Parque(object):
-    '''
+    """
     Representa un parque de generación de energía
     Tiene asociadas medidas de potencia y uno o
     mas medidores.
-    '''
-    def __init__(self,id,medidores,cgm,pot,dis):
+    """
+    def __init__(self,id,medidores,cgm,pot):
         if isinstance(medidores,list):
             self.medidores = medidores
         else:
@@ -235,33 +313,52 @@ class Parque(object):
             self.medidores.append(medidores)
         self.id = id
         self.cgm = cgm
-        self.pot = pot
-        self.pot_SMEC = None
-        self.dis = dis
+        self.pot = pot # medida principal del parque
+        self.pot_SMEC = None # medida principal según SMEC, no siempre disponible
         self.decorr = None
         self.filtros = None
 
 
-    def calc_corr_medidor(self,med):
-        return None
-        
+    def get_periodo(self):
+        t  = self.pot.get_tiempo()
+        tmin,tmax = t[0],t[-1]
+        for i in range(len(self.medidores)):
+            t = self.medidores[i].get_tiempo()
+            t0, t1 = t[0],t[-1]
+            if t0 < tmin:
+                tmin = t0
+            if t1 > tmax:
+                tmax = t1
+        dtd10 = datetime.timedelta(minutes=10)
+        n = int( (tmax-tmin)/dtd10 )
+        tiempo = [tmin+dtd10*i for i in range(n)]
+        return tiempo
+
+    def registrar(self):
+        periodo = self.get_periodo()
+        for M in self.medidores:
+            M.registrar(periodo)
+        self.pot.registrar(periodo)
+        if self.pot_SMEC is not None:
+            self.pot_SMEC.registrar(periodo)
+        if self.cgm is not None:
+            self.cgm.registrar(periodo)
+        # resetear filtros, etc.
+        self.decorr = None
+        self.filtros = None
+
     def get_filtros(self):
-        if self.filtros is not None:
-            return self.filtros
+        if self.filtros is  None:
+            return self.calcular_filtros()
+        return self.filtros
+
 
     def calcular_filtros(self):
 
-        '''
-        Primero tengo que acomodar las series que estuvieran desfasadas
-        '''
-        
-        if self.pot_SMEC != None:     
-            self.pot_SMEC.desfasar(-1)
-        
-        
-        for med in self.medidores:
-            med.desfasar_meds()        
-        
+        # Primero tengo que acomodar las series que estuvieran desfasadas
+        if self.pot_SMEC is not None:
+            self.pot_SMEC.desfasar(-1) # si siempre es así, por qué no hacerlo al leer el archivo?
+
         self.filtros = dict()
         '''
         Calcular los filtros de los medidores
@@ -278,12 +375,12 @@ class Parque(object):
 
 
     def decorrelacion(self):
-        '''
+        """
         Arma un filtro para cada medidor
         donde 1 en cada filtro indica que en ese momento
-        el medidor corresp. esta decorrelacionado con 
+        el medidor corresp. esta decorrelacionado con
         la potencia reportada por el parque
-        '''
+        """
         if self.decorr is None:
             self.decorr = dict()
             for med in self.medidores:
@@ -361,46 +458,36 @@ class Parque(object):
         return Medida(corr,list(vel.tiempo),'corr','corr_vel_pot',0.7,1.0,0)
 
 
-    
-    def deriva (self):
-        return None
-
-
-    
     def correlacion_dir(self,medidores):
         dir_ref = medidores[0].get_medida('dir')
         dir_2 = medidores[1].get_medida('dir')
-        
         dir_dif  = dir_2 - dir_ref
-        
         return Medida(np.cos(dir_dif),dir_ref.tiempo,'corr','corr_dir_dir',0.7,1.0,0)
+
         
 ##############################################################################
             
 class Concentrador(object):
-    '''
+    """
     Reune (concentra) la informacion de varios parques.
     Sirve para tener un panorama general, y para detectar
     anomalias a escala global, como derivas.
-    '''
+    """
+
     def __init__(self,parques):
         self.parques = parques
 
 
-    def deriva (self):
-        return None
-
-        
     @staticmethod
     def geteventos(filtro, margen=0):
-        '''
+        """
         devuelve una lista de rangos de a forma
         np.arange(a,b) -> a,.....,b-1
         correspondientes a lapsos de tiempo durante
         los que se detectó alguna anomalía.
-        los rangos pueden ser "engorfados" por un margen dado 
+        los rangos pueden ser "engorfados" por un margen dado
         (por defecto 0) para darle contexto a un graficado posterior.
-        '''
+        """
         N = len(filtro)
         f0 = filtro.astype(filtro,np.int8)
     

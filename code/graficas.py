@@ -66,9 +66,6 @@ def clickplot_redraw():
         NGrafs = len(tipos)+1
     
 
-    min_ejes = np.full(NGrafs,99999999)
-    max_ejes = np.full(NGrafs,-99999999)
-    
     print('figure',time.time()-t0)
     t0 = time.time()
     plt.figure(clickfig.number)
@@ -114,15 +111,6 @@ def clickplot_redraw():
         c_i = viridis(i/len(medidas))
         plt.plot(x_i,y_i,color=c_i)
         
-        min_yi = np.min(y_i)
-        if  (min_yi >= med_i.minval) & (min_yi < min_ejes[idx_tipo]):
-            min_ejes[idx_tipo] =  min_yi
-        
-        max_yi = np.max(y_i) 
-        if (max_yi <= med_i.maxval) & (max_yi > max_ejes[idx_tipo]):
-            max_ejes[idx_tipo] =  max_yi           
-        
-        #plt.axis([window[0],window[1],min_ejes[idx_tipo]*0.9,max_ejes[idx_tipo]*1.1])
         min_max_tipo = filtros.min_max(med_i.tipo,50)
         plt.axis([window[0],window[1],min_max_tipo[0],min_max_tipo[1]])
         plt.ylabel(med_i.tipo)

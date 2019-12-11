@@ -211,7 +211,7 @@ def corr_medidas(x,y,NDatosCorr,NDatosDesf,addFiltro_y):
             y_m_des[k] = y.muestras[k_y]
             filtro_y_des[k] = filtro_y[k_y]
         else:
-            y_m_des[k] = -99999999
+            y_m_des[k] = datos.FUERA_DE_RANGO
             filtro_y_des[k] = 1
             
     filtro_total = filtro_x | filtro_y_des
@@ -283,7 +283,7 @@ def corr_medidas(x,y,NDatosCorr,NDatosDesf,addFiltro_y):
             corr_y[k] = corr[k_x]
             filtro_total_y[k] = filtro_total[k_x]
         else:
-            corr_y[k] = -99999999
+            corr_y[k] = datos.FUERA_DE_RANGO
    
     idx_datos_ok = np.where(filtro_total_y < 1) 
     corr_prom = corr_y[idx_datos_ok].mean()    
@@ -305,8 +305,8 @@ def corrMAX_Ndesf(x,y,NdesfMin,NdesfMax,corregirDesf,desf_dinamico,flg_graficar)
     
     corr_mat = np.zeros((len(rango),len(y.muestras)))
     
-    corr_max_med = -99999999
-    Ndesf_max_med = -99999999
+    corr_max_med = datos.FUERA_DE_RANGO
+    Ndesf_max_med = datos.FUERA_DE_RANGO
     
     fila = 0    
     for Ndesf in rango:

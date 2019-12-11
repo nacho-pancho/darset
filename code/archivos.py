@@ -70,9 +70,10 @@ def dt_to_dt10min(dt):
     dtdia = datetime.datetime(dt.year, dt.month, dt.day)
     dt10min = NMuestras10minEntreDts(dtdia,dt)*datetime.timedelta(seconds=10*60)
     dt10min = dt10min + dtdia
-
     return dt10min
-
+#
+#
+# whatsapp BROU 092 001996
 ##############################################################################
 
 def archiPICKLE(ncentral):
@@ -210,12 +211,10 @@ def leerArchi(nidCentral,tipoArchi):
     print('\tLeyendo medidas')
     pot = None
     cgm = None
-    dis = None
     medidas = []
     for i in range(nSeries):
-        print('\t\tmedida',i,'tipo',tipos[i])
         tipoDato = filtros.str_to_tipo(tipos[i])
-        if tipoDato == None:
+        if tipoDato is None:
             continue
         meds = data[:,i+1]
         nombre = tipoDato + ident
@@ -224,19 +223,19 @@ def leerArchi(nidCentral,tipoArchi):
         
         med = datos.Medida(tipoArchi,meds,tiempo,tipoDato,nombre,minmax[0],minmax[1],nrep)
         
-        if (tipoDato != 'pot' and tipoDato != 'cgm' and tipoDato != 'dis'):
+        if tipoDato != 'pot' and tipoDato != 'cgm' and tipoDato != 'dis':
             medidas.append(med)
-        elif (tipoDato == 'pot'):
+        elif tipoDato == 'pot':
             pot=copy.copy(med) 
-        elif (tipoDato == 'cgm'):
+        elif tipoDato == 'cgm':
             cgm=copy.copy(med) 
-        elif (tipoDato == 'dis'):
+        elif tipoDato == 'dis':
             dis=copy.copy(med) 
     
     print('CREANDO MEDIDOR')
     Medidor = datos.Medidor(ident,medidas,ubicacion)
     print('CREANDO PARQUE')
-    parque = datos.Parque(nidCentral,Medidor,cgm,pot,dis)
+    parque = datos.Parque(nidCentral,Medidor,cgm,pot)
     print('LECTURA TERMINADA\n')
     return parque
 
@@ -349,15 +348,15 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
     line=f.readline()
     cols = line.split()   
     f.close() 
-    dtini_str = cols[0]
-    dtini = NumtoDateTime(float(dtini_str))
-      
-        # Leo medidas
+    dt_ini_str = cols[0]
+    dt_ini = NumtoDateTime(float(dt_ini_str))
+
+    # Leo medidas
     medidas = []
     for i in range(nSeries):
 
         tipoDato = filtros.str_to_tipo(tipos[i])
-        if tipoDato == None:
+        if tipoDato is None:
             break
         meds = data[:,i+1]
         nombre = tipoDato + ident
@@ -382,11 +381,10 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
             else:            
                 meds = signal.resample_poly(meds,up=60,down=10)        
             
-        delta_30min = datetime.timedelta(minutes=30) # sumo 30 min para que este en fase con SCADA
-        dt_ini_corr = dtini #+ delta_30min
-        dt_10min = fechaInitoDateTimeN ( dt_ini_corr, len(meds)) 
+        dt_10min = fechaInitoDateTimeN ( dt_ini, len(meds))
 
         med = datos.Medida('pronos',meds,dt_10min,tipoDato,nombre,minmax[0],minmax[1],nrep)
+        med.desfasar(-18) # los pronósticos vienen con GMT 0, nosotros tenemos GMT -3
         medidas.append(med)
 
     Medidor = datos.Medidor(ident,medidas,ubicacion)
@@ -410,19 +408,19 @@ def leerArchivosCentral (nidCentral):
     parque = leerArchi(nidCentral,'scada')
     
     parqueGen = leerArchi(nidCentral,'gen')
-    if (parqueGen != None):
+    if parqueGen is not None:
         parque.medidores[0].agregar_meds(parqueGen.medidores[0].medidas)
     else:
         print("AVISO: No hay archivo GEN para esta central.")
     
     med_10min, med_15min = leerArchiSMEC(nidCentral)
-    if (med_10min != None):
+    if med_10min is not None:
         parque.pot_SMEC = med_10min
     else:
         print("AVISO: No hay archivo SMEC para esta central.")
 
     medidor_pronos10min = leerArchiPRONOS(nidCentral,10)    
-    if (medidor_pronos10min != None):
+    if medidor_pronos10min is not None:
         parque.medidores[0].agregar_meds(medidor_pronos10min.medidas)
     else:
         print("AVISO: No hay archivo PRONOS para esta central.")

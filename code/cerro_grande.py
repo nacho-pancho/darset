@@ -27,11 +27,13 @@ if __name__ == '__main__':
 
     parque = archivos.leerArchivosCentral(nidCentral)
     medidor = parque.medidores[0]
+    parque.registrar()
     filtros = medidor.get_filtros()
+
     med1 = medidor.get_medida('vel','pronos')
     med2 = parque.pot
 
-    '''
+
     vel_SCADA = parque.medidores[0].get_medida('vel','scada')
     vel_pronos= parque.medidores[0].get_medida('vel','pronos')
 
@@ -41,7 +43,7 @@ if __name__ == '__main__':
 
     pot_scada = parque.pot
     
-    meds = []
+    meds = list()
     
     meds.append(vel_SCADA)
     meds.append(vel_pronos)
@@ -54,6 +56,6 @@ if __name__ == '__main__':
 
     graficas.clickplot(meds)
     plt.show()
-    '''
+
 
     
