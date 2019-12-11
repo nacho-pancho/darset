@@ -427,8 +427,6 @@ def leerArchivosCentral (nidCentral):
     #
     # si existe, cargamos el objeto guardado
     #
-    print(f'INFO: guardando datos de parque en {archip}')
-    guardarCentral(parque)
     return parque
         
 ##############################################################################

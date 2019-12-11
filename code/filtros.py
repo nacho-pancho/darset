@@ -186,8 +186,13 @@ def filtrar_rep(v,filtro_huecos,nRep):
 ##############################################################################
     
 def corr_medidas(x,y,NDatosCorr,NDatosDesf,addFiltro_y):
+    """
+    Las medidas deben estar sincronizadas
+    """
+    if x.tiempo[0] != y.tiempo[0]:
+        print(f'ERROR: medidas deben estar registradas para calcular correlacion!')
+        return None
 
-    
     if ((x.tipo == 'dir') and (y.tipo == 'dir')):
         flg_dir_dir = True
     else:
@@ -196,32 +201,13 @@ def corr_medidas(x,y,NDatosCorr,NDatosDesf,addFiltro_y):
     filtro_x = x.filtrada()
     filtro_y = y.filtrada() 
     
-    dtini_x = x.tiempo[0]
-    dtini_y = y.tiempo[0]
-    
-    N10min_des_yx = arch.NMuestras10minEntreDts(dtini_x,dtini_y)
-
-    filtro_y_des = np.ones(len(x.muestras),dtype=bool)
-
-    y_m_des = np.zeros(len(x.muestras))
-    
-    for k in range(len(x.muestras)):
-        k_y = k - N10min_des_yx - NDatosDesf 
-        if k_y in range(len(y.muestras)):
-            y_m_des[k] = y.muestras[k_y]
-            filtro_y_des[k] = filtro_y[k_y]
-        else:
-            y_m_des[k] = datos.FUERA_DE_RANGO
-            filtro_y_des[k] = 1
-            
-    filtro_total = filtro_x | filtro_y_des
+    filtro_total = filtro_x | filtro_y
            
     idx_mask = np.where(filtro_total < 1)
     
     x_m = x.muestras
-    y_m = y_m_des
-    
-    
+    y_m = y.muestras
+
     if not flg_dir_dir and np.sum(idx_mask)>0:
         x_m_mask = x_m[idx_mask]
         y_m_mask = y_m[idx_mask]
@@ -237,13 +223,12 @@ def corr_medidas(x,y,NDatosCorr,NDatosDesf,addFiltro_y):
         x_m_u [idx_mask] = x_m_mask_u 
         y_m_u [idx_mask] = y_m_mask_u
 
-                 
     idx_buff = np.zeros(NDatosCorr,dtype=int)
     corr = np.zeros(len(x.muestras))
     k_idx_buff = 0
     k = 0
 
-    while (k < len(x_m)):
+    while k < len(x_m):
         if not filtro_total[k]:
             if k_idx_buff < NDatosCorr:
                 idx_buff[k_idx_buff] = k
@@ -275,25 +260,12 @@ def corr_medidas(x,y,NDatosCorr,NDatosDesf,addFiltro_y):
             corr[k] = corr[k-1]
         k = k + 1
 
-    corr_y = np.zeros(len(y.muestras))
-    filtro_total_y = np.ones(len(y.muestras),dtype=bool)
-    for k in range(len(y.muestras)):
-        k_x = k + N10min_des_yx + NDatosDesf 
-        if k_x in range(len(x.muestras)):
-            corr_y[k] = corr[k_x]
-            filtro_total_y[k] = filtro_total[k_x]
-        else:
-            corr_y[k] = datos.FUERA_DE_RANGO
-   
-    idx_datos_ok = np.where(filtro_total_y < 1) 
-    corr_prom = corr_y[idx_datos_ok].mean()    
-
     if addFiltro_y:
         nombre_f = 'corr_' + x.tipo + '_' + x.procedencia
-        y.agregar_filtro(nombre_f, corr_y < 0.9 )
+        y.agregar_filtro(nombre_f, corr < 0.9 )
     
-    return datos.Medida('corr', corr_y, list(y.tiempo), 'corr', 'corr_' + x.tipo + '_'
-                        + y.tipo, corr_prom * 0.99, 1.0, 0), corr_prom
+    return datos.Medida('corr', corr, list(y.tiempo), 'corr', 'corr_' + x.tipo + '_'
+                        + y.tipo, np.mean(corr) * 0.99, 1.0, 0)
 
 
 ##############################################################################

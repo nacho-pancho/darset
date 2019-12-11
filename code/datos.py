@@ -85,7 +85,7 @@ class Medida(object):
         self.minval = minval
         self.maxval = maxval
         self.nrep = nrep
-        self.filtros = None
+        self._filtros = None
 
 
     def get_tiempo(self):
@@ -132,7 +132,7 @@ class Medida(object):
         """
         Calcula todos los filtros disponibles para esta medida
         """
-        self.filtros = dict()
+        self._filtros = dict()
         if self.tipo != 'Ndesf_opt_k':
             filtro = f.filtrar_rango(self.muestras, self.minval, self.maxval)
             self.agregar_filtro('fuera_de_rango',filtro)
@@ -145,7 +145,7 @@ class Medida(object):
         """
         Agrega un nuevo tipo de filtro a la medida
         """
-        self.filtros[self.nombre + '_' + nombre_f] = filt.astype(np.uint8)
+        self._filtros[self.nombre + '_' + nombre_f] = filt.astype(np.uint8)
 
 
     def get_filtro(self,nombre_f):
@@ -160,9 +160,9 @@ class Medida(object):
         """
         Devuelve una lista con todos los filtros
         """
-        if self.filtros is None:
+        if self._filtros is None:
             self.calcular_filtros()
-        return self.filtros
+        return self._filtros
     
     
 #    def reset_filtros(self,NMuestras):
@@ -182,7 +182,7 @@ class Medida(object):
  
     def filtrada(self):
         filtrada = np.zeros(len(self.muestras),dtype=bool)
-        for f in self.filtros.values():
+        for f in self.get_filtros().values():
             filtrada = filtrada | f
         return filtrada    
 
@@ -236,7 +236,7 @@ class Medidor(object):
         self.nombre = nombre
         self.medidas = medidas
         self.ubicacion = ubicacion
-        self.filtros = None
+        self._filtros = None
 
     def get_medida(self,tipo,proc):
         for m in self.medidas:
@@ -279,21 +279,22 @@ class Medidor(object):
 
 
     def get_filtros(self):
-        if self.filtros is None:
+        if self._filtros is None:
             self.calcular_filtros()
+        return self._filtros
 
 
     def calcular_filtros(self):
-        self.filtros = dict()
+        self._filtros = dict()
         for med in self.medidas:
-            self.filtros.update(med.get_filtros())
+            self._filtros.update(med.get_filtros())
             tipo_m = med.tipo
             proc_m = med.procedencia
             if proc_m != 'pronos':
                 if tipo_m in ('vel','dir','rad','tem'):
                     med_ref = self.get_medida(tipo_m,'pronos')
                     med_corr,corr_prom = f.corr_medidas(med_ref,med,6,0,True)
-                    self.filtros.update(med_corr.get_filtros())
+                    self._filtros.update(med_corr.get_filtros())
         return None
 
         
@@ -316,7 +317,7 @@ class Parque(object):
         self.pot = pot # medida principal del parque
         self.pot_SMEC = None # medida principal según SMEC, no siempre disponible
         self.decorr = None
-        self.filtros = None
+        self._filtros = None
 
 
     def get_periodo(self):
@@ -345,12 +346,12 @@ class Parque(object):
             self.cgm.registrar(periodo)
         # resetear filtros, etc.
         self.decorr = None
-        self.filtros = None
+        self._filtros = None
 
     def get_filtros(self):
-        if self.filtros is  None:
+        if self._filtros is  None:
             return self.calcular_filtros()
-        return self.filtros
+        return self._filtros
 
 
     def calcular_filtros(self):
@@ -359,7 +360,7 @@ class Parque(object):
         if self.pot_SMEC is not None:
             self.pot_SMEC.desfasar(-1) # si siempre es así, por qué no hacerlo al leer el archivo?
 
-        self.filtros = dict()
+        self._filtros = dict()
         '''
         Calcular los filtros de los medidores
         '''
@@ -368,8 +369,8 @@ class Parque(object):
         '''
         Calcular los filtros del parque
         '''
-        self.filtros['cgm'] = np.abs(self.pot.muestras - self.cgm.muestras) < (self.cgm.maxval * 0.05)
-        self.filtros['pot_baja'] = np.abs(self.pot.muestras) < (self.cgm.maxval * 0.05)
+        self._filtros['cgm'] = np.abs(self.pot.muestras - self.cgm.muestras) < (self.cgm.maxval * 0.05)
+        self._filtros['pot_baja'] = np.abs(self.pot.muestras) < (self.cgm.maxval * 0.05)
 
         return None
 

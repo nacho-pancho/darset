@@ -58,8 +58,8 @@ imprimir_map_zoom = False
 def clickplot_redraw():
     print('redraw')
     t0 = time.time()
-    global window, medidas, tipos, tini, tfin, imprimir_map_zoom
-    
+    global window, medidas, tipos, imprimir_map_zoom
+
     if 1: #imprimir_map_zoom:
         NGrafs = len(tipos)+2
     else:
@@ -166,7 +166,7 @@ def click_event_handler(event):
     manejo de eventos del mouse sobre una gráfica
     utilizado para el clickplot
     '''
-    global window,tcenter
+    global window,tcenter, tini, tfin
     print('click')
     #
     # capturar pos (x,y)  en la imagen
@@ -189,7 +189,7 @@ def scroll_event_handler(event):
     utilizado para el clickplot
     '''
     print('scroll')
-    global window_size,window,tcenter
+    global window_size,window,tcenter, tini, tfin
     step = event.step
     #print(f'scroll: step = {step}')
     #
@@ -214,20 +214,14 @@ def clickplot(_medidas,figsize=(8,6)):
     en donde se resalta, para cada medida, los intervalos
     en donde saltó una alarma por algún tipo de anomalía detectada
     '''
-    global clickfig, tini, tfin, window, medidas, tipos, alarm_map,\
-    map_h, alarm_map_zoom
+    global clickfig, window, medidas, tipos, alarm_map,\
+    map_h, alarm_map_zoom, window_size, tini, tfin
     medidas = _medidas
+    tini = medidas[0].tiempo[0]
+    tfin = medidas[0].tiempo[-1]
 
-    tini = datetime.datetime(datetime.MAXYEAR,1,1) 
-    tfin = datetime.datetime(datetime.MINYEAR,1,1) 
     tipos = set()
     for m in medidas:
-        tini_med = m.tiempo[0]
-        tfin_med = m.tiempo[-1]
-        if tini > tini_med:
-            tini = tini_med
-        if tfin < tfin_med:
-            tfin = tfin_med
         if m.tipo not in tipos:
             tipos.add(m.tipo)
     tipos = list(tipos)
@@ -242,29 +236,31 @@ def clickplot(_medidas,figsize=(8,6)):
         nfiltros = nfiltros + len (m.get_filtros())
 
     map_h = BAR_HEIGHT * nfiltros
+
     alarm_map = create_alarm_map (map_h, MAP_WIDTH, medidas,tini,tfin)
     
     if imprimir_map_zoom:
-        alarm_map_zoom = create_alarm_map (map_h, MAP_WIDTH_ZOOM, medidas,tini,tfin)
+        alarm_map_zoom = create_alarm_map (map_h, MAP_WIDTH_ZOOM, medidas, tini, tfin)
     
     cid = clickfig.canvas.mpl_connect('button_press_event', click_event_handler)
     cid = clickfig.canvas.mpl_connect('scroll_event', scroll_event_handler)
     #
     # ahora si, se muestran las curvas en la ventana de tiempo actual
-    #2000
+    #
+    tini = medidas[0].tiempo[0]
     window_size = DEFAULT_WINDOW_SIZE
     window = (tini, tini+window_size)
-    tcenter = tini + window_size/2
     clickplot_redraw()
 
 #---------------------------------------------------------------------------------
 
-def create_alarm_map (map_h,map_width, medidas,tini_z,tfin_z):
+def create_alarm_map (map_h,map_width, medidas, t0, t1):
+    global MAP_WIDTH, tini, tfin
 
     alarm_map = np.zeros((map_h,map_width,3))
     # el mapa de alarma tiene MAP_WIDTH pixels de ancho
-    # pixels_per_t indica a cuántos pasos de tiempo corresponde 1 pixel   
-    period = tfin_z - tini_z
+    # pixels_per_t indica a cuántos pasos de tiempo corresponde 1 pixel
+    period = t1 - t0
     map_h, MAP_WIDTH, z  = alarm_map.shape
     t_per_pixel = period * (1.0 / MAP_WIDTH) 
     
@@ -279,21 +275,20 @@ def create_alarm_map (map_h,map_width, medidas,tini_z,tfin_z):
         # este vector es relativo a lo tiempos de la señal
         #print(m.nombre)
         t_i = m.tiempo
-        tfin = t_i[-1]
-        tini = t_i[0]
+        t_i1 = t_i[-1]
+        t_i0 = t_i[0]
         filtros = m.get_filtros()
         dt = (tfin - tini) / (len(t_i) - 1)
-        #print('medida',i_medida,' filtro', i_filtro, 'tini=',tini,'tfin=',tfin, 'dt',dt)
         for fnom,fdata in filtros.items():
             print('filtro:',fnom,' data:', len(fdata))
             row_i[:] = 0
             for j in range(MAP_WIDTH):
-                tmed = tini_z + j*t_per_pixel # tiempo t en la medida
-                if tmed < tini:
+                t_i = t_i0 + j*t_per_pixel # tiempo t en la medida
+                if t_i < t0:
                     continue
-                if tmed > tfin:
+                if t_i > t1:
                     continue
-                k0 = (tmed - tini)/dt
+                k0 = (t_i - t_i0)/dt
                 row_i[0, j] = fdata[int(k0)]
             col_i[:] = 0
             col_i[ (i_filtro*BAR_HEIGHT) : ((i_filtro+1)*BAR_HEIGHT),0 ] = 1
@@ -316,8 +311,5 @@ def create_alarm_map (map_h,map_width, medidas,tini_z,tfin_z):
         for fnom,fdata in filtros.items():
             draw.text((10,BAR_HEIGHT*i),fnom,font=font)    
             i = i + 1
-    #alarm_uint8 = np.uint8(alarm_map*255)
-    #alarm_overlay = np.uint8(np.array(alarm_img))
-    #return (1.0/255.0)*np.float32( np.bitwise_xor(alarm_uint8, alarm_overlay) )
     return (1.0/255.0)*np.float32(np.array(alarm_img))
     

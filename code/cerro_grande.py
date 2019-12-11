@@ -29,6 +29,7 @@ if __name__ == '__main__':
     medidor = parque.medidores[0]
     parque.registrar()
     filtros = medidor.get_filtros()
+    archivos.guardarCentral(parque)
 
     med1 = medidor.get_medida('vel','pronos')
     med2 = parque.pot
