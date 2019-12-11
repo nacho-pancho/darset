@@ -380,10 +380,12 @@ class Parque(object):
         nrows = len(meds[0].tiempo)
         M = np.zeros((nrows,ncols),dtype=np.single)
         F = np.zeros((nrows,ncols),dtype=np.bool)
+        nombres =list()
         for i in range(ncols):
+            nombres.append(meds[i].nombre)
             M[:,i] = meds[i].muestras
             F[:,i] = meds[i].filtrada()
-        return M,F
+        return M,F,nombres
 
     def calcular_filtros(self):
 

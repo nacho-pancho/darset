@@ -27,11 +27,16 @@ if __name__ == '__main__':
     parque.registrar()
     medidor = parque.medidores[0]
     filtros = medidor.get_filtros()
-    M,F = parque.exportar_medidas()
-    np.savetxt('M7.ascii',M,fmt='%7e')
-    np.savetxt('F7.ascii',F,fmt='%d')
+    M,F,nombres = parque.exportar_medidas()
+    #np.savetxt('M7.ascii',M,fmt='%7e')
+    #np.savetxt('F7.ascii',F,fmt='%d')
     np.savez_compressed('M7.npz',M)
     np.savez_compressed('F7.npz',F)
+    fn = open("n7.txt","w")
+    for n in nombres:
+        print(f"{n}",file=fn,end='\t')
+    print(file=fn)
+    fn.close()
 
     #archivos.guardarCentral(parque)
 
