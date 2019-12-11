@@ -11,14 +11,18 @@ def plot_meds(M,F,nom,xnom,ynom,_fig=None):
     
     x_col = nom.index(xnom)
     y_col = nom.index(ynom)
+    z_col = nom.index('dirPRONOS')
     
     x_med = M[:,x_col]
     y_med = M[:,y_col]
+    z_med = M[:,z_col]
     
     x_ok = (F[:,x_col] == 0 ) & (x_med > datos.FUERA_DE_RANGO)
     y_ok = (F[:,y_col] == 0 ) & (y_med > datos.FUERA_DE_RANGO)
+    z_ok = (F[:,z_col] == 0 ) & (z_med > 175) & (z_med < 185)
     
-    todo_ok = x_ok & y_ok
+    
+    todo_ok = x_ok & y_ok & z_ok
     
     x_med_ok = x_med[todo_ok]
     y_med_ok = y_med[todo_ok]
