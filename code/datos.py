@@ -234,31 +234,36 @@ class Medidor(object):
         nm = len(medidas)
         print(f"Medidor {nombre} con {nm} medidas ubicado en {ubicacion}")
         self.nombre = nombre
-        self.medidas = medidas
+        self._medidas = medidas
         self.ubicacion = ubicacion
         self._filtros = None
 
     def get_medida(self,tipo,proc):
-        for m in self.medidas:
+        for m in self._medidas:
             if (m.tipo == tipo) and (m.procedencia == proc):
                 return m
         print(f"AVISO: medida de tipo {tipo} y procedencia {proc} no encontrada.")
         return None
 
+
+    def get_medidas(self):
+        return self._medidas
+
+
     def agregar_meds(self,meds):
         for m in meds:
-           self.medidas.append(m)
+           self._medidas.append(m)
 
     def get_tiempo(self):
         """
         Devuelve el período máximo que cubre los tiempos de medición de todas las medidas
         en este medidor.
         """
-        t = self.medidas[0].get_tiempo()
+        t = self._medidas[0].get_tiempo()
         tmin = t[0]
         tmax = t[-1]
-        for i in range(1,len(self.medidas)):
-            t = self.medidas[i].get_tiempo()
+        for i in range(1, len(self._medidas)):
+            t = self._medidas[i].get_tiempo()
             t0 = t[0]
             t1 = t[-1]
             if t0 < tmin:
@@ -274,7 +279,7 @@ class Medidor(object):
         if periodo is None:
             periodo = self.get_tiempo()
 
-        for m in self.medidas:
+        for m in self._medidas:
             m.registrar(periodo)
 
 
@@ -286,14 +291,14 @@ class Medidor(object):
 
     def calcular_filtros(self):
         self._filtros = dict()
-        for med in self.medidas:
+        for med in self._medidas:
             self._filtros.update(med.get_filtros())
             tipo_m = med.tipo
             proc_m = med.procedencia
             if proc_m != 'pronos':
                 if tipo_m in ('vel','dir','rad','tem'):
                     med_ref = self.get_medida(tipo_m,'pronos')
-                    med_corr,corr_prom = f.corr_medidas(med_ref,med,6,0,True)
+                    med_corr = f.corr_medidas(med_ref,med,6,0,True)
                     self._filtros.update(med_corr.get_filtros())
         return None
 
@@ -353,12 +358,34 @@ class Parque(object):
             return self.calcular_filtros()
         return self._filtros
 
+    def get_medidas(self):
+        todas_las_medidas = list()
+        todas_las_medidas.append(self.pot)
+        if self.pot_SMEC is not None:
+            todas_las_medidas.append(self.pot_SMEC)
+        for M in self.medidores:
+            for m in M.get_medidas():
+                todas_las_medidas.append(m)
+        return todas_las_medidas
+
+
+    def exportar_medidas(self):
+        """
+        Devuelve las medidas y sus filtros totales correspondientes como dos matrices M y F
+        La primera tiene valores reales y contiene una medida en cada fila i
+        LA segunda tiene valores booleanos y la fila i tiene el filtro de la medida i
+        """
+        meds = self.get_medidas()
+        ncols = len(meds)
+        nrows = len(meds[0].tiempo)
+        M = np.zeros((nrows,ncols),dtype=np.single)
+        F = np.zeros((nrows,ncols),dtype=np.bool)
+        for i in range(ncols):
+            M[:,i] = meds[i].muestras
+            F[:,i] = meds[i].filtrada()
+        return M,F
 
     def calcular_filtros(self):
-
-        # Primero tengo que acomodar las series que estuvieran desfasadas
-        if self.pot_SMEC is not None:
-            self.pot_SMEC.desfasar(-1) # si siempre es así, por qué no hacerlo al leer el archivo?
 
         self._filtros = dict()
         '''

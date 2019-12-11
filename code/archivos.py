@@ -290,7 +290,7 @@ def leerArchiSMEC(nidCentral):
     med_10min = datos.Medida('smec',muestras10min,dt_10min,'pot','potSMEC10m',minmax[0],minmax[1],nrep)
     med_15min = datos.Medida('smec',muestras15min,dt_15min,'pot','potSMEC15m',minmax[0],minmax[1],nrep)
 
-    return med_10min, med_15min       
+    return med_10min, med_15min
 
 ##############################################################################
 
@@ -415,13 +415,14 @@ def leerArchivosCentral (nidCentral):
     
     med_10min, med_15min = leerArchiSMEC(nidCentral)
     if med_10min is not None:
-        parque.pot_SMEC = med_10min
+        parque.pot_SMEC = med_10min.desfasar(-1) # por que se desfasaba?
+
     else:
         print("AVISO: No hay archivo SMEC para esta central.")
 
     medidor_pronos10min = leerArchiPRONOS(nidCentral,10)    
     if medidor_pronos10min is not None:
-        parque.medidores[0].agregar_meds(medidor_pronos10min.medidas)
+        parque.medidores[0].agregar_meds(medidor_pronos10min._medidas)
     else:
         print("AVISO: No hay archivo PRONOS para esta central.")
     #

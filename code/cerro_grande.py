@@ -11,10 +11,8 @@ Created on Wed Oct 23 03:44:51 2019
 
 import archivos
 import matplotlib.pyplot as plt
-import filtros
 import graficas
-import copy
-import time
+import numpy as np
 
 ##############################################################################
 
@@ -26,14 +24,16 @@ if __name__ == '__main__':
     nidCentral = 7    
 
     parque = archivos.leerArchivosCentral(nidCentral)
-    medidor = parque.medidores[0]
     parque.registrar()
+    medidor = parque.medidores[0]
     filtros = medidor.get_filtros()
-    archivos.guardarCentral(parque)
+    M,F = parque.exportar_medidas()
+    np.savetxt('M7.ascii',M,fmt='%7e')
+    np.savetxt('F7.ascii',F,fmt='%d')
+    np.savez_compressed('M7.npz',M)
+    np.savez_compressed('F7.npz',F)
 
-    med1 = medidor.get_medida('vel','pronos')
-    med2 = parque.pot
-
+    #archivos.guardarCentral(parque)
 
     vel_SCADA = parque.medidores[0].get_medida('vel','scada')
     vel_pronos= parque.medidores[0].get_medida('vel','pronos')
