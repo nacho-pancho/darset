@@ -5,6 +5,7 @@ Created on Wed Dec 11 17:38:02 2019
 @author: usuario
 """
 import datos
+import numpy as np
 import matplotlib.pyplot as plt
 
 def plot_meds(M,F,nom,xnom,ynom,_fig=None):
@@ -19,7 +20,7 @@ def plot_meds(M,F,nom,xnom,ynom,_fig=None):
     
     x_ok = (F[:,x_col] == 0 ) & (x_med > datos.FUERA_DE_RANGO)
     y_ok = (F[:,y_col] == 0 ) & (y_med > datos.FUERA_DE_RANGO)
-    z_ok = (F[:,z_col] == 0 ) & (z_med > 175) & (z_med < 185)
+    z_ok = (F[:,z_col] == 0 ) 
     
     
     todo_ok = x_ok & y_ok & z_ok
@@ -33,8 +34,10 @@ def plot_meds(M,F,nom,xnom,ynom,_fig=None):
     plt.scatter(x_med_ok, y_med_ok, marker = '.',color=(0,0,0,0.1))
     return fig
 
-#if __name__ == '__main__':
-#    M = np.load('M7.npz')
-#    F = np.load('F7.npz')    
-#    plot_scatter.plot_meds(M,F,nom,'velSCADA','potSCADA')
-#    f = plot_scatter.plot_meds(M,F,nom,'velPRONOS','potSCADA',_fig=f)
+if __name__ == '__main__':
+    M = np.load('M7.npz')['arr_0']
+    F = np.load('F7.npz')['arr_0']
+    nom = open('n7.txt').read().split()
+    f = plot_meds(M,F,nom,'velSCADA','potSCADA')
+    f = plot_meds(M,F,nom,'velPRONOS','potSCADA',_fig=f)
+    plt.show()
