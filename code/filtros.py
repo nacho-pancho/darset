@@ -192,6 +192,8 @@ def corr_medidas(x,y,NDatosCorr,NDatosDesf,addFiltro_y):
     if x.tiempo[0] != y.tiempo[0]:
         print(f'ERROR: medidas deben estar registradas para calcular correlacion!')
         return None
+    print(x.nombre,x.tiempo[:3])
+    print(y.nombre,y.tiempo[:3])
 
     if ((x.tipo == 'dir') and (y.tipo == 'dir')):
         flg_dir_dir = True

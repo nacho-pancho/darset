@@ -12,7 +12,6 @@ import numpy as np
 import datetime
 import copy
 import math as m
-import pandas as pd
 import scipy.signal as signal
 import pickle
 import gzip
@@ -20,7 +19,7 @@ import gzip
 ##############################################################################
 
 RUTA_DATOS = '../data/'
-
+TS_MIN = 60
 
 ##############################################################################
 
@@ -32,15 +31,17 @@ def fechaNumtoDateTime(dt_num):
         dt.append(dt_datetime)
     return dt
 
+import math
+
 ##############################################################################
-def NMuestras10minEntreDts(dt1,dt2):
+def NMuestrasTSEntreDts(dt1,dt2):
     dif_dtini = dt2 - dt1
-    return round((dif_dtini.total_seconds() + 1)/600)
+    return int(math.ceil(dif_dtini/datetime.timedelta(minutes=TS_MIN)))
 
 ##############################################################################
 def NumtoDateTime(num):
-    dtini=datetime.datetime(1900, 1,1)
-    dt_datetime=dtini + datetime.timedelta(seconds=((num-2)*24*3600))
+    dtini=datetime.datetime(1900, 1, 1)
+    dt_datetime = dtini + datetime.timedelta(days=num-2)
     return dt_datetime
 
 ##############################################################################
@@ -57,20 +58,20 @@ def fechaInitoDateTime(dt_ini,ndias,cant_min):
 
 ##############################################################################
 
-def fechaInitoDateTimeN(dt_ini,Nmuestras10min):
+def fechaInitoDateTimeN(dt_ini,NmuestrasTS):
     dt = []
-    for k in range(Nmuestras10min):
-        dt_k = dt_ini + k * datetime.timedelta(seconds=10*60)
+    for k in range(NmuestrasTS):
+        dt_k = dt_ini + k * datetime.timedelta(minutes=TS_MIN)
         dt.append(dt_k)
     return dt
 
 ##############################################################################
     
-def dt_to_dt10min(dt):
+def dt_to_dtTS(dt):
     dtdia = datetime.datetime(dt.year, dt.month, dt.day)
-    dt10min = NMuestras10minEntreDts(dtdia,dt)*datetime.timedelta(seconds=10*60)
-    dt10min = dt10min + dtdia
-    return dt10min
+    dtTS = NMuestrasTSEntreDts(dtdia,dt)*datetime.timedelta(minutes=TS_MIN)
+    dtTS = dtTS + dtdia
+    return dtTS
 #
 #
 # whatsapp BROU 092 001996
@@ -114,8 +115,7 @@ def path(ncentral):
 def leerCampo(file):
     line = file.readline().strip()
     cols = line.split()
-    print('Campo',cols[1:],'Valor',cols[0])
-    return cols[0]    
+    return cols[0]
 
 ##############################################################################
 
@@ -173,15 +173,14 @@ def leerArchi(nidCentral,tipoArchi):
     line=f.readline().strip()
     tipos = line.split()
     seg = np.arange(1,nSeries+1,1,dtype=np.int)
-    #tipos = tipos[1:]
-    print('\ttipos',tipos)    
+    print('\ttipos',tipos)
     f.close() 
     
     print('LEYENDO DATOS')
     # Leo etiquetas de tiempo comunes a todos los datos
     data=np.loadtxt(archi,skiprows=8)
     dt_num=data[:,0]
-    tiempo=fechaNumtoDateTime(dt_num)
+    tiempo = fechaNumtoDateTime(dt_num)
     #
     # verificamos que no haya fechas repetidas
     #
@@ -192,7 +191,7 @@ def leerArchi(nidCentral,tipoArchi):
     dtmin,dtmed,dtmax = np.min(dt),np.median(dt),np.max(dt)
     print(f"\tdt: min{dtmin} med={dtmed} max={dtmax}")
     dt.append(dt[-1])
-    dtposta = datetime.timedelta(minutes=10)
+    dtposta = datetime.timedelta(minutes=TS_MIN)
     dtcero = datetime.timedelta(0)
     if dtmin == dtcero: # 
         trep = tiempo[dt == dtcero]
@@ -205,9 +204,7 @@ def leerArchi(nidCentral,tipoArchi):
         exit
     
     print('\tconvirtiendo etiquetas de  tiempo a DateTime')
-    dtini_10min = dt_to_dt10min(tiempo[0])
-    tiempo = fechaInitoDateTimeN(dtini_10min,len(tiempo))
-    
+
     print('\tLeyendo medidas')
     pot = None
     cgm = None
@@ -216,11 +213,30 @@ def leerArchi(nidCentral,tipoArchi):
         tipoDato = filtros.str_to_tipo(tipos[i])
         if tipoDato is None:
             continue
-        meds = data[:,i+1]
+        meds = data[:, i+1]
+        if TS_MIN != 10:
+            if tipoDato == 'dir':
+                meds_sin = [m.sin(m.radians(k)) for k in meds]
+                meds_cos = [m.cos(m.radians(k)) for k in meds]
+
+                meds_sin_m = signal.resample_poly(meds_sin, up=10, down=TS_MIN)
+                meds_cos_m = signal.resample_poly(meds_cos, up=10, down=TS_MIN)
+
+                meds_m = [m.atan2(s, c) for s, c in zip(meds_sin_m, meds_cos_m)]
+                meds_m = [m.degrees(k) for k in meds_m]
+                for k in range(len(meds_m)):
+                    if meds_m[k] < 0:
+                        meds_m[k] = meds_m[k] + 360
+
+                meds = np.asarray(meds_m)
+            else:
+                meds = signal.resample_poly(meds, up=10, down=TS_MIN)
+
+        dtini_TS = dt_to_dtTS(tiempo[0])
+        tiempo = fechaInitoDateTimeN(dtini_TS, len(meds))
         nombre = tipoDato + ident
         minmax = filtros.min_max(tipoDato,PAutorizada)
         nrep = filtros.Nrep(tipoDato)
-        
         med = datos.Medida(tipoArchi,meds,tiempo,tipoDato,nombre,minmax[0],minmax[1],nrep)
         
         if tipoDato != 'pot' and tipoDato != 'cgm' and tipoDato != 'dis':
@@ -246,7 +262,7 @@ def leerArchiSMEC(nidCentral):
     archi_SMEC = archiSMEC(nidCentral)
 
     if not os.path.exists(archi_SMEC):
-        return None,None
+        return None
         exit        
 
     print(f"Leyendo archivo SMEC  para la central {nidCentral}")
@@ -265,6 +281,7 @@ def leerArchiSMEC(nidCentral):
     muestras_mat = np.array(result)
     ndias,n15min = muestras_mat.shape
     muestras15min = muestras_mat.flatten().astype(float)*4
+    muestrasTS = signal.resample_poly(muestras15min,up=15,down=TS_MIN)
 
     # Leo fecha inicial
     f = open(archi_SMEC, 'r')
@@ -276,25 +293,20 @@ def leerArchiSMEC(nidCentral):
     dtini_str = cols[0]
     dtini = datetime.datetime.strptime(dtini_str, '%d/%m/%Y') 
 
-    delta_30min = datetime.timedelta(minutes=30) # sumo 30 min para que este en fase con SCADA
-    dt_ini_corr = dtini + delta_30min
-    dt_15min = fechaInitoDateTime(dt_ini_corr,ndias,15) 
+    dt_ini_corr = dtini + datetime.timedelta(minutes=30) # sumo 30 min para que este en fase con SCADA
     
-    muestras10min = signal.resample_poly(muestras15min,up=15,down=10)
-    dt_10min = fechaInitoDateTime(dt_ini_corr,ndias,10)   
-
+    dt_TS = fechaInitoDateTime(dt_ini_corr,ndias,TS_MIN)
     tipoDato = 'pot'
     minmax = filtros.min_max(tipoDato,50)
     nrep = filtros.Nrep(tipoDato)
   
-    med_10min = datos.Medida('smec',muestras10min,dt_10min,'pot','potSMEC10m',minmax[0],minmax[1],nrep)
-    med_15min = datos.Medida('smec',muestras15min,dt_15min,'pot','potSMEC15m',minmax[0],minmax[1],nrep)
+    med_TS = datos.Medida('smec',muestrasTS,dt_TS,'pot','potSMEC',minmax[0],minmax[1],nrep)
 
-    return med_10min, med_15min
+    return med_TS 
 
 ##############################################################################
 
-def leerArchiPRONOS(nidCentral,muestreo_mins):    
+def leerArchiPRONOS(nidCentral):    
     archi_pronos = archiPRONOS(nidCentral)       
 
     if not os.path.exists(archi_pronos):
@@ -309,7 +321,6 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
     # Leo datos de las estaciones
     
     line=f.readline()
-    print(line)
     cols = line.split()
     nSeries = int(cols[0])
     
@@ -363,13 +374,13 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
         minmax = filtros.min_max(tipoDato,PAutorizada)
         nrep = filtros.Nrep(tipoDato)
         
-        if muestreo_mins != 60:      
+        if TS_MIN != 60:      
             if tipoDato == 'dir':
                 meds_sin = [m.sin(m.radians(k)) for k in meds ]
                 meds_cos = [m.cos(m.radians(k)) for k in meds ]
                 
-                meds_sin_m = signal.resample_poly(meds_sin,up=60,down=muestreo_mins)
-                meds_cos_m = signal.resample_poly(meds_cos,up=60,down=muestreo_mins)
+                meds_sin_m = signal.resample_poly(meds_sin,up=60,down=TS_MIN)
+                meds_cos_m = signal.resample_poly(meds_cos,up=60,down=TS_MIN)
                             
                 meds_m = [m.atan2(s,c) for s,c in zip(meds_sin_m,meds_cos_m)]
                 meds_m = [m.degrees(k) for k in meds_m]
@@ -379,12 +390,10 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
                 
                 meds = np.asarray(meds_m) 
             else:            
-                meds = signal.resample_poly(meds,up=60,down=10)        
+                meds = signal.resample_poly(meds,up=60,down=TS_MIN)        
             
-        dt_10min = fechaInitoDateTimeN ( dt_ini, len(meds))
-
-        med = datos.Medida('pronos',meds,dt_10min,tipoDato,nombre,minmax[0],minmax[1],nrep)
-        #med.desfasar(-18) # los pronósticos vienen con GMT 0, nosotros tenemos GMT -3
+        dt_TS = fechaInitoDateTimeN ( dt_ini, len(meds))
+        med = datos.Medida('pronos',meds,dt_TS,tipoDato,nombre,minmax[0],minmax[1],nrep)
         medidas.append(med)
 
     Medidor = datos.Medidor(ident,medidas,ubicacion)
@@ -413,16 +422,16 @@ def leerArchivosCentral (nidCentral):
     else:
         print("AVISO: No hay archivo GEN para esta central.")
     
-    med_10min, med_15min = leerArchiSMEC(nidCentral)
-    if med_10min is not None:
-        parque.pot_SMEC = med_10min.desfasar(-1) # por que se desfasaba?
+    med_TS = leerArchiSMEC(nidCentral)
+    if med_TS is not None:
+        parque.pot_SMEC = med_TS.desfasar(-1) # por que se desfasaba?
 
     else:
         print("AVISO: No hay archivo SMEC para esta central.")
 
-    medidor_pronos10min = leerArchiPRONOS(nidCentral,10)    
-    if medidor_pronos10min is not None:
-        parque.medidores[0].agregar_meds(medidor_pronos10min._medidas)
+    medidor_pronosTS = leerArchiPRONOS(nidCentral)
+    if medidor_pronosTS is not None:
+        parque.medidores[0].agregar_meds(medidor_pronosTS._medidas)
     else:
         print("AVISO: No hay archivo PRONOS para esta central.")
     #

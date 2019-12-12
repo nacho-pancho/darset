@@ -1,3 +1,6 @@
 #!/bin/bash 
-wget -c http://iie.fing.edu.uy/~nacho/data/energia/darset-20191209.7z
-7zr x darset-20191209.7z
+for C in 5 7 11 
+do 
+	wget -c http://iie.fing.edu.uy/~nacho/data/energia/darset/c$C.7z
+	7zr -x c$C.7z
+done
