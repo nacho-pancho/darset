@@ -8,7 +8,7 @@ import datos
 import numpy as np
 import matplotlib.pyplot as plt
 
-def plot_meds(M,F,nom,xnom,ynom,_fig=None):
+def plot_meds(M,F,nom,xnom,ynom,_fig=None,color=(0,0,0,0.1)):
     
     x_col = nom.index(xnom)
     y_col = nom.index(ynom)
@@ -31,13 +31,16 @@ def plot_meds(M,F,nom,xnom,ynom,_fig=None):
         fig = plt.figure(figsize=(10,10))
     else:
         fig = _fig
-    plt.scatter(x_med_ok, y_med_ok, marker = '.',color=(0,0,0,0.1))
+    plt.scatter(x_med_ok, y_med_ok, marker = '.',color=color)
     return fig
 
 if __name__ == '__main__':
     M = np.load('M7.npz')['arr_0']
     F = np.load('F7.npz')['arr_0']
     nom = open('n7.txt').read().split()
-    f = plot_meds(M,F,nom,'velSCADA','potSCADA')
-    f = plot_meds(M,F,nom,'velPRONOS','potSCADA',_fig=f)
+    col = nom.index('velPRONOS')
+    M[:,col] = M[:,col]/3.6
+    #f = plot_meds(M,F,nom,'velSCADA','potSCADA',color=(0.25,0,0,0.1))
+    f = plot_meds(M,F,nom,'velPRONOS','potSCADA',color=(0,0,0.25,0.1))
+    plt.grid(True)
     plt.show()
