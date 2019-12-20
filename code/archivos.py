@@ -107,7 +107,7 @@ def archiSMEC(ncentral):
 ##############################################################################
 
 def path(ncentral):
-    return RUTA_DATOS +'/c'+ str(ncentral) + '/'
+    return RUTA_DATOS +'c'+ str(ncentral) + '/'
 
 ##############################################################################
     
@@ -169,6 +169,11 @@ def leerArchi(nidCentral,tipoArchi):
     cols = line.split()
     PAutorizada = float(cols[0])
     print('\tpotencia autorizada:',PAutorizada)
+
+    line=f.readline().strip()
+    cols = line.split()
+    cant_molinos = int(cols[0])
+    print('\tcantidad molinos:',cant_molinos)
     
     line=f.readline().strip()
     tipos = line.split()
@@ -179,7 +184,7 @@ def leerArchi(nidCentral,tipoArchi):
     
     print('LEYENDO DATOS')
     # Leo etiquetas de tiempo comunes a todos los datos
-    data=np.loadtxt(archi,skiprows=8)
+    data=np.loadtxt(archi,skiprows=9)
     dt_num=data[:,0]
     tiempo=fechaNumtoDateTime(dt_num)
     #
@@ -218,7 +223,7 @@ def leerArchi(nidCentral,tipoArchi):
             continue
         meds = data[:,i+1]
         nombre = tipoDato + ident
-        minmax = filtros.min_max(tipoDato,PAutorizada)
+        minmax = filtros.min_max(tipoDato,PAutorizada,cant_molinos)
         nrep = filtros.Nrep(tipoDato)
         
         med = datos.Medida(tipoArchi,meds,tiempo,tipoDato,nombre,minmax[0],minmax[1],nrep)
@@ -226,16 +231,16 @@ def leerArchi(nidCentral,tipoArchi):
         if tipoDato != 'pot' and tipoDato != 'cgm' and tipoDato != 'dis':
             medidas.append(med)
         elif tipoDato == 'pot':
-            pot=copy.copy(med) 
+            pot = med #copy.copy(med) 
         elif tipoDato == 'cgm':
-            cgm=copy.copy(med) 
+            cgm = med #copy.copy(med)
         elif tipoDato == 'dis':
-            dis=copy.copy(med) 
+            dis = med #copy.copy(med) 
     
     print('CREANDO MEDIDOR')
     Medidor = datos.Medidor(ident,medidas,ubicacion)
     print('CREANDO PARQUE')
-    parque = datos.Parque(nidCentral,Medidor,cgm,pot)
+    parque = datos.Parque(nidCentral,Medidor,cgm,pot,dis,PAutorizada,cant_molinos)
     print('LECTURA TERMINADA\n')
     return parque
 
@@ -284,7 +289,7 @@ def leerArchiSMEC(nidCentral):
     dt_10min = fechaInitoDateTime(dt_ini_corr,ndias,10)   
 
     tipoDato = 'pot'
-    minmax = filtros.min_max(tipoDato,50)
+    minmax = filtros.min_max(tipoDato,50,100)
     nrep = filtros.Nrep(tipoDato)
   
     med_10min = datos.Medida('smec',muestras10min,dt_10min,'pot','potSMEC10m',minmax[0],minmax[1],nrep)
@@ -360,7 +365,7 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
             break
         meds = data[:,i+1]
         nombre = tipoDato + ident
-        minmax = filtros.min_max(tipoDato,PAutorizada)
+        minmax = filtros.min_max(tipoDato,PAutorizada,1000)
         nrep = filtros.Nrep(tipoDato)
         
         if muestreo_mins != 60:      

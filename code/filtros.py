@@ -47,13 +47,15 @@ def str_to_tipo(s):
     elif s.find('rad') != -1:
         return 'rad'
     elif s.find('ro') != -1:
-        return 'ro'        
+        return 'ro'
+    elif s.find('turb') != -1:
+        return 'turb'        
     else:
         return None
 
 ##############################################################################
 # este dato debería ser parte de Medida
-def min_max(tipo,PotAut):
+def min_max(tipo,PotAut,NMolinos):
     if tipo == 'vel':
         return [0,40]
     elif tipo == 'dir':
@@ -69,13 +71,16 @@ def min_max(tipo,PotAut):
     elif tipo == 'cgm':
         return [0,PotAut]
     elif tipo == 'dis':
-        return [0,1]
+        return [0,NMolinos]
     elif tipo == 'corr_sp':
         return [-1,1]
     elif tipo == 'rad' or tipo == 'rad_max':
         return [-10,1400] 
     elif tipo == 'ro':
         return [1.05,1.3]
+    elif tipo == 'turb':
+        return [0,0.1]
+
 
 ##############################################################################
 

@@ -111,7 +111,7 @@ def clickplot_redraw():
         c_i = viridis(i/len(medidas))
         plt.plot(x_i,y_i,color=c_i)
         
-        min_max_tipo = filtros.min_max(med_i.tipo,50)
+        min_max_tipo = filtros.min_max(med_i.tipo,50,1000)
         plt.axis([window[0],window[1],min_max_tipo[0],min_max_tipo[1]])
         plt.ylabel(med_i.tipo)
         plt.draw()

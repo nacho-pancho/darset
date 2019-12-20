@@ -289,7 +289,7 @@ class Medidor(object):
                     med_ref = self.get_medida(tipo_m,'pronos')
                     if med_ref != None:
                         med_corr = f.corr_medidas(med_ref,med,6,0,True)
-                    self._filtros.update(med_corr.get_filtros())
+                        self._filtros.update(med_corr.get_filtros())
         return None
 
         
@@ -301,7 +301,7 @@ class Parque(object):
     Tiene asociadas medidas de potencia y uno o
     mas medidores.
     """
-    def __init__(self,id,medidores,cgm,pot):
+    def __init__(self, id, medidores, cgm, pot, dis, PAutorizada, cant_molinos):
         if isinstance(medidores,list):
             self.medidores = medidores
         else:
@@ -311,13 +311,27 @@ class Parque(object):
         self.cgm = cgm
         self.pot = pot # medida principal del parque
         self.pot_SMEC = None # medida principal según SMEC, no siempre disponible
+        self.dis = dis
         self.decorr = None
         self._filtros = None
-
+        self.PAutorizada = PAutorizada
+        self.cant_molinos = cant_molinos
 
     def get_periodo(self):
-        t  = self.pot.get_tiempo()
-        tmin,tmax = t[0],t[-1]
+        
+        if (self.pot != None):
+            t  = self.pot.get_tiempo()
+            tmin,tmax = t[0],t[-1]
+        
+        if (self.cgm != None):
+            t  = self.cgm.get_tiempo()
+            tmin,tmax = min(t[0],tmin),max(t[-1],tmax)
+            
+        if (self.dis != None):
+            t  = self.dis.get_tiempo()
+            tmin,tmax = min(t[0],tmin),max(t[-1],tmax)
+
+
         for i in range(len(self.medidores)):
             t = self.medidores[i].get_tiempo()
             t0, t1 = t[0],t[-1]
@@ -336,24 +350,45 @@ class Parque(object):
         for M in self.medidores:
             M.registrar(periodo)
         self.pot.registrar(periodo)
+        
         if self.pot_SMEC is not None:
             self.pot_SMEC.registrar(periodo)
         if self.cgm is not None:
             self.cgm.registrar(periodo)
+        if self.dis is not None:
+            self.dis.registrar(periodo)            
         # resetear filtros, etc.
         self.decorr = None
         self._filtros = None
 
     def get_filtros(self):
+
+        if (self.pot != None) and (self.pot._filtros is None):
+            self.pot.calcular_filtros()            
+        
+        if (self.cgm != None) and (self.cgm._filtros is None):
+            self.cgm.calcular_filtros()            
+
+        if (self.pot_SMEC != None) and (self.pot_SMEC._filtros is None):
+            self.pot_SMEC.calcular_filtros()   
+
+        if (self.dis != None) and (self.dis._filtros is None):
+            self.dis.calcular_filtros()             
+    
         if self._filtros is  None:
             return self.calcular_filtros()
         return self._filtros
 
     def get_medidas(self):
         todas_las_medidas = list()
-        todas_las_medidas.append(self.pot)
-        if self.pot_SMEC is not None:
-            todas_las_medidas.append(self.pot_SMEC)
+
+        if self.pot is not None:
+            todas_las_medidas.append(self.pot)
+        if self.cgm is not None:
+            todas_las_medidas.append(self.cgm)
+        if self.dis is not None:
+            todas_las_medidas.append(self.dis)
+            
         for M in self.medidores:
             for m in M.get_medidas():
                 todas_las_medidas.append(m)
@@ -368,41 +403,43 @@ class Parque(object):
         """
         meds = self.get_medidas()
         ncols = len(meds)
-        if self.pot_SMEC is not None:
-            ncolstot = ncols + 3
-        else:
-            ncolstot = ncols + 2
         nrows = len(meds[0].tiempo)
-        M = np.zeros((nrows,ncolstot),dtype=np.single)
-        F = np.zeros((nrows,ncolstot),dtype=np.bool)
+        M = np.zeros((nrows,ncols),dtype=np.single)
+        F = np.zeros((nrows,ncols),dtype=np.bool)
         nombres =list()
         for i in range(ncols):
             nombres.append(meds[i].nombre)
             M[:,i] = meds[i].muestras
             F[:,i] = meds[i].filtrada()
-        M[:,ncols] = self.pot.muestras
-        nombres.append('potSCADA')
-        M[:,ncols+1] = self.cgm.muestras
-        nombres.append('cgmSCADA')
-        if self.pot_SMEC is not None:
-            M[:,ncols+2] = self.pot_SMEC.muestras
-            nombres.append('potSMEC')
         
-        return M,F,nombres
+        tiempo_ = meds[0].tiempo
+        
+        return M,F,nombres,tiempo_
     
 
     def calcular_filtros(self):
 
         self._filtros = dict()
+        
         '''
         Calcular los filtros de los medidores
         '''
         for med in self.medidores:
             dict.update(med.get_filtros())
+        
         '''
         Calcular los filtros del parque
-        '''
-        self._filtros['cgm'] = np.abs(self.pot.muestras - self.cgm.muestras) < (self.cgm.maxval * 0.05)
+        '''        
+        filt_cgm = np.abs(self.pot.muestras - self.cgm.muestras) < (self.PAutorizada * 0.05)
+        filt_cgm = filt_cgm & (self.cgm.muestras < 0.99 * self.PAutorizada )#* np.ones(len(self.cgm.muestras)))
+        
+        self.pot.agregar_filtro('cgm',filt_cgm)
+        
+        filt_dis = self.dis.muestras < self.cant_molinos
+        self.pot.agregar_filtro('disp_menor_max',filt_dis)
+        
+        self._filtros['cgm'] = filt_cgm
+        self._filtros['disp_menor_max'] = filt_dis
         self._filtros['pot_baja'] = np.abs(self.pot.muestras) < (self.cgm.maxval * 0.05)
 
         return None
