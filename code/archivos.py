@@ -358,6 +358,7 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
 
     # Leo medidas
     medidas = []
+    vel = None
     for i in range(nSeries):
 
         tipoDato = filtros.str_to_tipo(tipos[i])
@@ -370,14 +371,15 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
         
         if muestreo_mins != 60:      
             if tipoDato == 'dir':
-                meds_sin = [m.sin(m.radians(k)) for k in meds ]
-                meds_cos = [m.cos(m.radians(k)) for k in meds ]
+                meds_sin = [m.sin(m.radians(k)) for k in meds]
+                meds_cos = [m.cos(m.radians(k)) for k in meds]
                 
                 meds_sin_m = signal.resample_poly(meds_sin,up=60,down=muestreo_mins)
                 meds_cos_m = signal.resample_poly(meds_cos,up=60,down=muestreo_mins)
                             
                 meds_m = [m.atan2(s,c) for s,c in zip(meds_sin_m,meds_cos_m)]
                 meds_m = [m.degrees(k) for k in meds_m]
+
                 for k in range(len(meds_m)):
                     if meds_m[k] < 0 :
                         meds_m[k] = meds_m[k] + 360
@@ -387,10 +389,26 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
                 meds = signal.resample_poly(meds,up=60,down=10)        
             
         dt_10min = fechaInitoDateTimeN ( dt_ini, len(meds))
-
+        
         med = datos.Medida('pronos',meds,dt_10min,tipoDato,nombre,minmax[0],minmax[1],nrep)
-        #med.desfasar(-18) # los pronósticos vienen con GMT 0, nosotros tenemos GMT -3
         medidas.append(med)
+        
+        if tipoDato == 'vel':
+            vel = med
+            
+        if (tipoDato == 'dir') and (vel != None) :
+            velx = vel.muestras * [m.cos(m.radians(k)) for k in med.muestras]
+            vely = vel.muestras * [m.sin(m.radians(k)) for k in med.muestras]
+            med = datos.Medida('pronos',velx,vel.tiempo,'vel','velx' + ident,
+                               vel.minval,vel.maxval,vel.nrep)
+            medidas.append(med)
+            
+            med = datos.Medida('pronos',vely,vel.tiempo,'vel','vely' + ident,
+                               vel.minval,vel.maxval,vel.nrep)
+            medidas.append(med)
+        
+        #med.desfasar(-18) # los pronósticos vienen con GMT 0, nosotros tenemos GMT -3
+
 
     Medidor = datos.Medidor(ident,medidas,ubicacion)
            

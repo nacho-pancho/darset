@@ -288,8 +288,9 @@ class Medidor(object):
                 if tipo_m in ('vel','dir','rad','tem'):
                     med_ref = self.get_medida(tipo_m,'pronos')
                     if med_ref != None:
-                        med_corr = f.corr_medidas(med_ref,med,6,0,True)
-                        self._filtros.update(med_corr.get_filtros())
+                        #med_corr = f.corr_medidas(med_ref,med,6,0,True)
+                        #self._filtros.update(med_corr.get_filtros())
+                        a = 1
         return None
 
         
