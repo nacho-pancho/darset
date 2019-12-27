@@ -21,7 +21,7 @@ def split_sequences(sequences, n_steps):
 		seq_x, seq_y = sequences[i:end_ix, :-1], sequences[end_ix-1, -1]
 		X.append(seq_x)
 		y.append(seq_y)
-	return array(X), array(y)
+	return np.array(X), np.array(y)
 
 
 def gen_series_analisis_serial(parque1, parque2, nom_series_p1, nom_series_p2, 
@@ -39,8 +39,8 @@ def gen_series_analisis_serial(parque1, parque2, nom_series_p1, nom_series_p2,
          F1_[:,icol] = F1[:,x_col]
          icol = icol + 1
          
-    M2_ = np.zeros((M2.shape[0],len(nom_series_p2)))
-    F2_ = np.zeros((F2.shape[0],len(nom_series_p2)))
+    M2_ = np.zeros((M2.shape[0], len(nom_series_p2)))
+    F2_ = np.zeros((F2.shape[0], len(nom_series_p2)))
     icol = 0
     for i in range(len(nom_series_p2)):
          x_col = nom2.index(nom_series_p2[i])

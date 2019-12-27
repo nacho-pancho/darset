@@ -9,6 +9,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import gen_series_analisis_serial as seriesAS
 import pandas as pd
+import datos
+import graficas
+import filtros 
+
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
+from keras.layers import Dense, Dropout, LSTM
+from keras.layers import SimpleRNN, Embedding
+from keras.models import Sequential
 
 if __name__ == '__main__':
     
@@ -20,26 +30,107 @@ if __name__ == '__main__':
     medidor1 = parque1.medidores[0]
     filtros1 = parque1.get_filtros()
     M1, F1, nom1, t1 = parque1.exportar_medidas()
-    nom_series_p1 = ['potSCADA','velSCADA']
+    nom_series_p1 = ['velGEN']
+    vel_GEN_5 = parque1.medidores[0].get_medida('vel','gen')
 
     parque2 = archivos.leerArchivosCentral(7)
     parque2.registrar()
     medidor2 = parque2.medidores[0]
     filtros2 = parque2.get_filtros()
     M2, F2, nom2, t2 = parque2.exportar_medidas()
-    nom_series_p2 = ['potSCADA','velSCADA','dirSCADA','velPRONOS','dirPRONOS']
+    nom_series_p2 = ['velPRONOS','dirPRONOS','potSCADA']
+    vel_PRONOS_7 = parque2.medidores[0].get_medida('vel','pronos')
+    
+    
     
     t, M, nom_series = seriesAS.gen_series_analisis_serial(parque1, parque2,
-                                                           nom_series_p1,nom_series_p2)    
+                                                           nom_series_p1, nom_series_p2)    
+      
+    # creo data frame con datos    
+    df = pd.DataFrame(M, index=t, columns=nom_series) 
     
 
+    # Filtro valores menores a cero
+    df_ = df[(df >= 0).all(axis=1)]
+        
+    df_.corr(method='spearman')
     
-    # creo data frame con datos    
-    df = pd.DataFrame(M, index = t, columns = nom_series) 
+    # choose a number of time steps
+    n_steps = 10
     
-    #df.tail()
+    # convert into input/output
+    X, y = seriesAS.split_sequences(df_.values, n_steps)
     
-    #Filtro valores menores a cero
-    dataCerroG = dCerroG[(dCerroG >= 0).all(axis=1)]
+    X_orig, y_orig = seriesAS.split_sequences(df.values, n_steps)
     
-    seriesAS. 
+    print(X.shape, y.shape)
+    
+    # summarize the data
+    #for i in range(len(X)):
+    for i in range(len(X)-3,len(X)):
+        print(X[i],'/n', y[i])
+        
+    # define model
+    #defino el numero de entradas
+    n_features = X.shape[2]
+    #defino la red
+    model = Sequential()
+    model.add(Dense(10,kernel_initializer='normal', activation='linear'))
+    model.add(LSTM(10, activation='linear', input_shape=(n_steps, n_features)))
+    
+    #model.add(Dense(10,kernel_initializer='normal', activation='relu'))
+    model.add(Dense(1))
+    model.compile(optimizer='adam', loss='mse',metrics=['mean_squared_error'])     
+
+    # fit model
+    model.fit(X, y, epochs=20)
+    
+    salida_modelo_TEST = model.predict(X_orig)    
+    
+    
+    plt.figure
+    plt.plot(y_orig,salida_modelo_TEST,'b,')
+    #plt.plot(salida_obj,entrada_pot_12,'r.')
+    plt.xlim((0,60))
+    plt.ylim((0,60))
+    plt.show
+    
+    
+    #idx = (df >= 0).all(axis=1).to_numpy()
+    idx = np.ones(len(df.index))
+    cnt_val = 0
+    for k in range(len(idx)):
+        if (idx[k] == 1):
+            cnt_val = cnt_val + 1
+            if cnt_val >= n_steps:
+                df['potSCADA_7'][k] = salida_modelo_TEST[cnt_val-n_steps,0]
+
+    
+    
+    RMS = np.mean(np.subtract( y_orig , salida_modelo_TEST[:,0]) ** 2) ** .5
+    print('RMS = ' + str(RMS))
+        
+    tipoDato = 'pot'
+    nrep = filtros.Nrep(tipoDato)
+    pCG_mod = datos.Medida('estimacion', df['potSCADA_7'].to_numpy(), df.index,
+                           tipoDato,'pot_estimada', 0, 60, nrep) 
+    
+
+    pot_scada = parque2.pot
+    cgm = parque2.cgm
+    
+    meds = list()
+    
+    meds.append(pot_scada)
+    meds.append(cgm)
+    meds.append(pCG_mod)
+    meds.append(vel_GEN_5)
+    meds.append(vel_PRONOS_7)
+
+    graficas.clickplot(meds)
+    plt.show()
+    
+    
+    
+    
+    
