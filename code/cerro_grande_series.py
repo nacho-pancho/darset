@@ -116,7 +116,7 @@ if __name__ == '__main__':
                            tipoDato,'pot_estimada', 0, 60, nrep) 
     
 
-    pot_scada = parque2.pot
+    pot_scada = 2*parque2.pot
     cgm = parque2.cgm
     
     meds = list()
