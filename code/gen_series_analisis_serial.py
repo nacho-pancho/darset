@@ -23,6 +23,43 @@ def split_sequences(sequences, n_steps):
 		y.append(seq_y)
 	return np.array(X), np.array(y)
 
+def split_sequences_pot_input(sequences, n_steps, n_desf_pot = 1):            
+    X, y = list(), list()
+    X_orig, y_orig = list(), list()
+    for i in range(len(sequences)):
+        
+        if i - n_desf_pot < 0:
+            continue
+        
+        # find the end of this pattern
+        end_ix = i + n_steps
+        # check if we are beyond the dataset
+        if end_ix > len(sequences):
+            break
+        
+        # gather input and output parts of the pattern
+        #seq_x_vars_pas = sequences[i:(end_ix - n_steps), :-1]
+        #seq_x_vars_fut = sequences[(end_ix - n_steps):end_ix, :-1]
+        
+        seq_x_vars= sequences[i:end_ix, :-1]
+        
+        seq_x_pots = sequences[i-n_desf_pot:end_ix - n_desf_pot, -1]	
+        
+        seq_x = np.column_stack((seq_x_vars, seq_x_pots))
+		
+        seq_y = sequences[end_ix - 1, -1]
+
+        X_orig.append(seq_x)
+        y_orig.append(seq_y)
+		
+        if (np.any(seq_x < -100) or np.any(seq_y < -100)):
+            continue
+               
+        X.append(seq_x)
+        y.append(seq_y)
+        
+    return np.array(X), np.array(y), np.array(X_orig), np.array(y_orig)
+
 
 def gen_series_analisis_serial(parque1, parque2, nom_series_p1, nom_series_p2, 
                                guardar = False):

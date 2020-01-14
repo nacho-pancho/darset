@@ -30,15 +30,18 @@ if __name__ == '__main__':
     medidor1 = parque1.medidores[0]
     filtros1 = parque1.get_filtros()
     M1, F1, nom1, t1 = parque1.exportar_medidas()
-    nom_series_p1 = ['velGEN']
+    nom_series_p1 = ['velGEN','dirGEN']
     vel_GEN_5 = parque1.medidores[0].get_medida('vel','gen')
+    vel_scada_5 = parque1.medidores[0].get_medida('vel','scada')
+    dir_scada_5 = parque1.medidores[0].get_medida('dir','scada')
+    dir_pronos_5 = parque1.medidores[0].get_medida('dir','pronos')
 
     parque2 = archivos.leerArchivosCentral(7)
     parque2.registrar()
     medidor2 = parque2.medidores[0]
     filtros2 = parque2.get_filtros()
     M2, F2, nom2, t2 = parque2.exportar_medidas()
-    nom_series_p2 = ['velPRONOS','dirPRONOS','potSCADA']
+    nom_series_p2 = ['velPRONOS','dirPRONOS','radPRONOS','potSCADA']
     vel_PRONOS_7 = parque2.medidores[0].get_medida('vel','pronos')
     
     
@@ -56,18 +59,23 @@ if __name__ == '__main__':
     df_.corr(method='spearman')
     
     # choose a number of time steps
-    n_steps = 10
+    n_steps = 5
+    n_desf_pot = 4
     
     # convert into input/output
-    X, y = seriesAS.split_sequences(df_.values, n_steps)
+    #X, y = seriesAS.split_sequences(df_.values, n_steps)
     
-    X_orig, y_orig = seriesAS.split_sequences(df.values, n_steps)
+    X, y, X_orig, y_orig = seriesAS.split_sequences_pot_input(df.values, 
+                                                           n_steps, n_desf_pot)
+    
+    #X_orig, y_orig = seriesAS.split_sequences(df.values, n_steps)
     
     print(X.shape, y.shape)
+    print(X)
     
     # summarize the data
     #for i in range(len(X)):
-    for i in range(len(X)-3,len(X)):
+    for i in range(len(X)-2,len(X)):
         print(X[i],'/n', y[i])
         
     # define model
@@ -80,10 +88,10 @@ if __name__ == '__main__':
     
     #model.add(Dense(10,kernel_initializer='normal', activation='relu'))
     model.add(Dense(1))
-    model.compile(optimizer='adam', loss='mse',metrics=['mean_squared_error'])     
+    model.compile(optimizer='adam', loss='mse', metrics=['mean_squared_error'])     
 
     # fit model
-    model.fit(X, y, epochs=20)
+    model.fit(X, y, epochs=10)
     
     salida_modelo_TEST = model.predict(X_orig)    
     
@@ -97,17 +105,11 @@ if __name__ == '__main__':
     
     
     #idx = (df >= 0).all(axis=1).to_numpy()
-    idx = np.ones(len(df.index))
-    cnt_val = 0
-    for k in range(len(idx)):
-        if (idx[k] == 1):
-            cnt_val = cnt_val + 1
-            if cnt_val >= n_steps:
-                df['potSCADA_7'][k] = salida_modelo_TEST[cnt_val-n_steps,0]
+    for k in range(n_desf_pot + n_steps, len(df.index) - n_steps):
+        df['potSCADA_7'][k] = salida_modelo_TEST[k - n_desf_pot - n_steps, 0]
 
     
-    
-    RMS = np.mean(np.subtract( y_orig , salida_modelo_TEST[:,0]) ** 2) ** .5
+    RMS = np.mean(np.subtract(y_orig, salida_modelo_TEST[:,0])** 2) ** .5
     print('RMS = ' + str(RMS))
         
     tipoDato = 'pot'
@@ -116,7 +118,7 @@ if __name__ == '__main__':
                            tipoDato,'pot_estimada', 0, 60, nrep) 
     
 
-    pot_scada = 2*parque2.pot
+    pot_scada = parque2.pot
     cgm = parque2.cgm
     
     meds = list()
@@ -125,7 +127,12 @@ if __name__ == '__main__':
     meds.append(cgm)
     meds.append(pCG_mod)
     meds.append(vel_GEN_5)
+    meds.append(vel_scada_5)
     meds.append(vel_PRONOS_7)
+    
+    meds.append(dir_pronos_5)
+    meds.append(dir_scada_5)
+    
 
     graficas.clickplot(meds)
     plt.show()

@@ -437,7 +437,7 @@ class Parque(object):
         self.pot.agregar_filtro('cgm',filt_cgm)
         
         filt_dis = self.dis.muestras < self.cant_molinos
-        self.pot.agregar_filtro('disp_menor_max',filt_dis)
+        #self.pot.agregar_filtro('disp_menor_max',filt_dis)
         
         self._filtros['cgm'] = filt_cgm
         self._filtros['disp_menor_max'] = filt_dis
