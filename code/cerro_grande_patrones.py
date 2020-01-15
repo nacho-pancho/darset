@@ -12,6 +12,7 @@ import pandas as pd
 import datos
 import graficas
 import filtros 
+import datetime
 
 import tensorflow as tf
 from tensorflow import keras
@@ -45,12 +46,56 @@ if __name__ == '__main__':
     nom_series_p2 = ['velPRONOS','dirPRONOS','radPRONOS','potSCADA']
     vel_PRONOS_7 = parque2.medidores[0].get_medida('vel','pronos')
     
-    seriesAS.gen_series_analisis_serial(parque1, parque2, nom_series_p1, nom_series_p2, 
-                               True)
     
     t, M, nom_series = seriesAS.gen_series_analisis_serial(parque1, parque2,
-                                                           nom_series_p1, nom_series_p2)    
-      
+                                                 nom_series_p1, nom_series_p2)    
+    
+    # Busco secuencias de patrones que quiero calcular su pot
+    
+    pot = M[:,-1]
+    filt_pot = pot < -1
+    k = 0
+    delta = 60
+    dt_ini_calc = datetime.datetime(2018, 5, 1)
+    dt_fin_calc = datetime.datetime(2018, 8, 1)
+
+    dt = t[1] - t[0]    
+    k_ini_calc = round((dt_ini_calc - t[0])/dt)
+    k_fin_calc = round((dt_fin_calc - t[0])/dt)
+        
+    k = k_ini_calc
+    
+    X_Pats = list()
+    X_calc = list()
+    
+    while k <= k_fin_calc:
+        
+        if filt_pot[k]:
+            # Encuentro RO
+            kiniRO = k
+            # Avanzo RO hasta salir 
+            while filt_pot[k+1]:
+                k = k + 1
+           
+            kfinRO = k    
+            #Agrego sequencia con RO patron
+            x_pat = M[(kiniRO - delta):(kfinRO + delta),:]
+            X_Pats.append(x_pat)
+            
+            x_calc = np.full(len(x_pat), False)
+            x_calc[delta:-delta+1] = True
+            X_calc.append(x_calc)
+        else:
+            k = k + 1
+                
+    print(f"{len(X_Pats)} RO encontradas en el periodo {dt_ini_calc} a {dt_fin_calc}")
+    
+    
+    
+    X,y = seriesAS.split_sequences_patrones(M, X_Pats[0], X_calc[0])
+        
+        
+
     # creo data frame con datos    
     df = pd.DataFrame(M, index=t, columns=nom_series) 
     

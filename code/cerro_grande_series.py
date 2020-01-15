@@ -140,7 +140,7 @@ if __name__ == '__main__':
     
     meds.append(pot_scada_cg)
     meds.append(pot_scada_mw)
-    meds.append(cgm)
+    meds.append(cgm_cg)
     meds.append(pCG_mod)
     meds.append(vel_GEN_5)
     meds.append(vel_scada_5)
