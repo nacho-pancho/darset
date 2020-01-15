@@ -13,17 +13,18 @@ import math
 def split_sequences_patrones(sequences, seq_patron, flg_calcular_seq_pat):
 
     n_steps_pat = len(seq_patron)
-	X, y = list(), list()
-	
+    X, y = list(), list()
+    
     filt_seq = sequences < -1
     filt_pat = seq_patron < -1
     
     for i in range(len(sequences)):
-		# find the end of this pattern
-		end_ix = i + n_steps_pat
-		# check if we are beyond the dataset
-		if end_ix > len(sequences):
-			break
+        # find the end of this pattern
+        end_ix = i + n_steps_pat
+        # check if we are beyond the dataset
+        if end_ix > len(sequences):
+            break
+        
         
         data_seq_i = sequences[i:end_ix, :]
         data_seq_i_pot = sequences[:,-1]
@@ -38,32 +39,32 @@ def split_sequences_patrones(sequences, seq_patron, flg_calcular_seq_pat):
         y_ok = not (filt_seq_i_pot[flg_calcular_seq_pat].any())
         
         
-        if seq_i_igual_pat and y_ok:            		
+        if seq_i_igual_pat and y_ok:                    
             
-    		seq_x_arr = data_seq_i[~filt_pat]            
+            seq_x_arr = data_seq_i[~filt_pat]            
             seq_y_arr = data_seq_i_pot[flg_calcular_seq_pat]
     
             seq_x = seq_x_arr.flatten()
             seq_y = seq_y_arr.flatten()    
             
-    		X.append(seq_x)
-    		y.append(seq_y)
+            X.append(seq_x)
+            y.append(seq_y)
 
-	return np.array(X), np.array(y)
+    return np.array(X), np.array(y)
 
 def split_sequences(sequences, n_steps):
-	X, y = list(), list()
-	for i in range(len(sequences)):
-		# find the end of this pattern
-		end_ix = i + n_steps
-		# check if we are beyond the dataset
-		if end_ix > len(sequences):
-			break
-		# gather input and output parts of the pattern
-		seq_x, seq_y = sequences[i:end_ix, :-1], sequences[end_ix-1, -1]
-		X.append(seq_x)
-		y.append(seq_y)
-	return np.array(X), np.array(y)
+    X, y = list(), list()
+    for i in range(len(sequences)):
+        # find the end of this pattern
+        end_ix = i + n_steps
+        # check if we are beyond the dataset
+        if end_ix > len(sequences):
+            break
+        # gather input and output parts of the pattern
+        seq_x, seq_y = sequences[i:end_ix, :-1], sequences[end_ix-1, -1]
+        X.append(seq_x)
+        y.append(seq_y)
+    return np.array(X), np.array(y)
 
 def split_sequences_pot_input(sequences, n_steps, n_desf_pot = 1):            
 
@@ -85,19 +86,19 @@ def split_sequences_pot_input(sequences, n_steps, n_desf_pot = 1):
         #seq_x_vars_pas = sequences[i:(end_ix - n_steps), :-1]
         #seq_x_vars_fut = sequences[(end_ix - n_steps):end_ix, :-1]
         
-        seq_x_vars= sequences[i:end_ix, :-1]      	
+        seq_x_vars= sequences[i:end_ix, :-1]          
 
         if n_desf_pot == 0:
             seq_x = seq_x_vars
         else:
             seq_x_pots = sequences[i-n_desf_pot:end_ix - n_desf_pot, -1]            
             seq_x = np.column_stack((seq_x_vars, seq_x_pots))
-            		
+                    
         seq_y = sequences[end_ix - 1, -1]
 
         X_orig.append(seq_x)
         y_orig.append(seq_y)
-		
+        
         if (np.any(seq_x < -1) or np.any(seq_y < -1)):
             continue
                
