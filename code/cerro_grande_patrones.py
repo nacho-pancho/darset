@@ -49,15 +49,20 @@ if __name__ == '__main__':
     
     t, M, nom_series = seriesAS.gen_series_analisis_serial(parque1, parque2,
                                                  nom_series_p1, nom_series_p2)    
+
     
     # Busco secuencias de patrones que quiero calcular su pot
     
     pot = M[:,-1]
+   
+    #inicializo la pot igual a la real, luego relleno huecos
+    pot_estimada = pot
+    
     filt_pot = pot < -1
     k = 0
-    delta = 60
-    dt_ini_calc = datetime.datetime(2018, 5, 1)
-    dt_fin_calc = datetime.datetime(2018, 8, 1)
+    delta = 10
+    dt_ini_calc = datetime.datetime(2018, 5, 10)
+    dt_fin_calc = datetime.datetime(2018, 5, 15 )
 
     dt = t[1] - t[0]    
     k_ini_calc = round((dt_ini_calc - t[0])/dt)
@@ -67,17 +72,19 @@ if __name__ == '__main__':
     
     X_Pats = list()
     X_calc = list()
+    kini_calc = list()
     
     while k <= k_fin_calc:
         
         if filt_pot[k]:
             # Encuentro RO
             kiniRO = k
+            kini_calc.append(kiniRO)
             # Avanzo RO hasta salir 
             while filt_pot[k+1]:
                 k = k + 1
            
-            kfinRO = k                       
+            kfinRO = k                  
             #Agrego sequencia con RO patron
             x_pat = M[(kiniRO - delta):(kfinRO + delta),:]
             
@@ -93,41 +100,64 @@ if __name__ == '__main__':
                 
     print(f"{len(X_Pats)} RO encontradas en el periodo {dt_ini_calc} a {dt_fin_calc}")
     
-  
-    X,y = seriesAS.split_sequences_patrones(M, X_Pats[0], X_calc[0])
+    for i in range(len(X_Pats)):
         
-    X_train = 
+        print(f"Calculando RO {i} de {len(X_Pats)}")
+        
+        X,y = seriesAS.split_sequences_patrones(M, X_Pats[i], X_calc[i])
+            
+        train_pu = 0.7
+        
+        k_train = round(len(X)*train_pu)
+        X_train = X[:k_train]
+        X_test = X[k_train:]
+        
+        y_train = y[:k_train]
+        y_test = y[k_train:]
+        
+        
+        n_features = X.shape[1]
+        n_output = y.shape[1]
+        #defino la red
+        model = Sequential()
+        model.add(Dense(n_features, activation='linear', input_dim=n_features))
+        model.add(Dense(10, activation='linear'))
+        model.add(Dense(n_output, activation='linear'))
+        model.compile(optimizer='adam', loss='mse', metrics=['mean_squared_error'])     
+        
+        print(model.summary())
+        
+        
+        # fit model
+        model.fit(X_train, y_train, epochs=15)
+        
+        y_test_predict = model.predict(X_test)    
     
     
-    n_features = X.shape[1]
-    n_output = y.shape[1]
-    #defino la red
-    model = Sequential()
-    model.add(Dense(round(n_features/6), activation='linear', input_dim=n_features))
-    model.add(Dense(10, activation='linear'))
-    model.add(Dense(n_output, activation='linear'))
-    model.compile(optimizer='adam', loss='mse', metrics=['mean_squared_error'])     
+        #plt.figure
+        #plt.plot(y_test,y_test_predict,'b,')
     
-    print(model.summary())
+        filt_pat = X_Pats[i] < -1000
+        
+        X_RO = X_Pats[i][~filt_pat].flatten()
+        
+        X_RO_ = np.asmatrix(X_RO)
+        
+        y_RO = model.predict(X_RO_)
+        
+        y_RO_= np.squeeze(y_RO)
+        
+        kini_RO = kini_calc[i] 
+        
+        pot_estimada[kini_RO:kini_RO+y_RO_.size] = y_RO_
     
-    
-    # fit model
-    model.fit(X, y, epochs=10)
-    
-    y_predict = model.predict(X)    
-    
-    #idx = (df >= 0).all(axis=1).to_numpy()
-    for k in range(n_desf_pot + n_steps, len(df.index) - n_steps):
-        df['potSCADA_7'][k] = salida_modelo_TEST[k - n_desf_pot - n_steps, 0]
 
-    
-    RMS = np.mean(np.subtract(y_orig, salida_modelo_TEST[:,0])** 2) ** .5
-    print('RMS = ' + str(RMS))
-        
+
+    #calculo la medida
     tipoDato = 'pot'
     nrep = filtros.Nrep(tipoDato)
-    pCG_mod = datos.Medida('estimacion', df['potSCADA_7'].to_numpy(), df.index,
-                           tipoDato,'pot_estimada', 0, 60, nrep) 
+    pCG_mod = datos.Medida('estimacion',pot_estimada , t,
+                           tipoDato,'pot_estimada', 0, 60, nrep)     
     
     pot_scada_mw = parque1.pot
     pot_scada_cg = parque2.pot
@@ -136,15 +166,15 @@ if __name__ == '__main__':
     meds = list()
     
     meds.append(pot_scada_cg)
-    meds.append(pot_scada_mw)
-    meds.append(cgm)
+    #meds.append(pot_scada_mw)
+    meds.append(cgm_cg)
     meds.append(pCG_mod)
     meds.append(vel_GEN_5)
     meds.append(vel_scada_5)
     meds.append(vel_PRONOS_7)
     
-    meds.append(dir_pronos_5)
-    meds.append(dir_scada_5)
+    #meds.append(dir_pronos_5)
+    #meds.append(dir_scada_5)
     
 
     graficas.clickplot(meds)

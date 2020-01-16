@@ -426,8 +426,8 @@ class Parque(object):
         '''
         Calcular los filtros del parque
         '''        
-        filt_cgm = np.abs(self.pot.muestras - self.cgm.muestras) < (self.PAutorizada * 0.05)
-        filt_cgm = filt_cgm & (self.cgm.muestras < 0.99 * self.PAutorizada )#* np.ones(len(self.cgm.muestras)))
+        filt_cgm = np.abs(self.pot.muestras - self.cgm.muestras) < (self.PAutorizada * 0.4)
+        filt_cgm = filt_cgm & (self.cgm.muestras < 0.999 * self.PAutorizada )#* np.ones(len(self.cgm.muestras)))
         
         self.pot.agregar_filtro('cgm',filt_cgm)
         
