@@ -93,67 +93,28 @@ if __name__ == '__main__':
                 
     print(f"{len(X_Pats)} RO encontradas en el periodo {dt_ini_calc} a {dt_fin_calc}")
     
-    
-    
+  
     X,y = seriesAS.split_sequences_patrones(M, X_Pats[0], X_calc[0])
         
-        
-
-    # creo data frame con datos    
-    df = pd.DataFrame(M, index=t, columns=nom_series) 
+    X_train = 
     
-
-    # Filtro valores menores a cero
-    df_ = df[(df >= 0).all(axis=1)]
     
-    stats = df_.describe()
-    stats = stats.transpose()
-    stats
-
-    df_norm = (df - stats['mean'])/stats['std']
-        
-    df_.corr(method='spearman')
-    df_norm.corr(method='spearman')
-    
-    # choose a number of time steps
-    n_steps = 2
-    n_desf_pot = 0
-    
-    # convert into input/output
-    #X, y = seriesAS.split_sequences(df_.values, n_steps)
-    
-    X, y, X_orig, y_orig = seriesAS.split_sequences_pot_input(df_norm.values, 
-                                                           n_steps, n_desf_pot)    
-    
-    n_features = X.shape[2]
+    n_features = X.shape[1]
+    n_output = y.shape[1]
     #defino la red
     model = Sequential()
-    model.add(Dense(10,kernel_initializer='normal', activation='linear'))
-    model.add(Dense(10, activation='linear', input_dim=10))
-    
-    
-    #model.add(Dense(10,kernel_initializer='normal', activation='relu'))
-    model.add(Dense(1))
+    model.add(Dense(round(n_features/6), activation='linear', input_dim=n_features))
+    model.add(Dense(10, activation='linear'))
+    model.add(Dense(n_output, activation='linear'))
     model.compile(optimizer='adam', loss='mse', metrics=['mean_squared_error'])     
-
+    
+    print(model.summary())
+    
+    
     # fit model
     model.fit(X, y, epochs=10)
     
-    salida_modelo_TEST_norm = model.predict(X_orig)    
-    
-    
-    plt.figure
-    plt.plot(y_orig,salida_modelo_TEST_norm,'b,')
-    #plt.plot(salida_obj,entrada_pot_12,'r.')
-    plt.xlim((0,60))
-    plt.ylim((0,60))
-    plt.show
-    
-
-    std_pot = stats.at['potSCADA_7', 'std']
-    mean_pot = stats.at['potSCADA_7', 'mean']        
-    salida_modelo_TEST = salida_modelo_TEST_norm * std_pot + mean_pot
-
+    y_predict = model.predict(X)    
     
     #idx = (df >= 0).all(axis=1).to_numpy()
     for k in range(n_desf_pot + n_steps, len(df.index) - n_steps):
