@@ -68,7 +68,7 @@ if __name__ == '__main__':
     df_norm.corr(method='spearman')
     
     # choose a number of time steps
-    n_steps = 2
+    n_steps = 1
     n_desf_pot = 0
     
     # convert into input/output

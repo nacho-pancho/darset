@@ -43,7 +43,7 @@ if __name__ == '__main__':
     medidor2 = parque2.medidores[0]
     filtros2 = parque2.get_filtros()
     M2, F2, nom2, t2 = parque2.exportar_medidas()
-    nom_series_p2 = ['velPRONOS','dirPRONOS','radPRONOS','potSCADA']
+    nom_series_p2 = ['velPRONOS','dirPRONOS','potSCADA']
     vel_PRONOS_7 = parque2.medidores[0].get_medida('vel','pronos')
     
     
@@ -77,14 +77,17 @@ if __name__ == '__main__':
             while filt_pot[k+1]:
                 k = k + 1
            
-            kfinRO = k    
+            kfinRO = k                       
             #Agrego sequencia con RO patron
             x_pat = M[(kiniRO - delta):(kfinRO + delta),:]
+            
             X_Pats.append(x_pat)
             
             x_calc = np.full(len(x_pat), False)
             x_calc[delta:-delta+1] = True
             X_calc.append(x_calc)
+            print(f"cantidad de ROs = {len(X_Pats)}")
+            k = k + 1
         else:
             k = k + 1
                 
@@ -120,26 +123,14 @@ if __name__ == '__main__':
     #X, y = seriesAS.split_sequences(df_.values, n_steps)
     
     X, y, X_orig, y_orig = seriesAS.split_sequences_pot_input(df_norm.values, 
-                                                           n_steps, n_desf_pot)
+                                                           n_steps, n_desf_pot)    
     
-    
-    #X_orig, y_orig = seriesAS.split_sequences(df.values, n_steps)
-    
-    print(X.shape, y.shape)
-    print(X)
-    
-    # summarize the data
-    #for i in range(len(X)):
-    for i in range(len(X)-2,len(X)):
-        print(X[i],'/n', y[i])
-        
-    # define model
-    #defino el numero de entradas
     n_features = X.shape[2]
     #defino la red
     model = Sequential()
     model.add(Dense(10,kernel_initializer='normal', activation='linear'))
-    model.add(LSTM(10, activation='linear', input_shape=(n_steps, n_features)))
+    model.add(Dense(10, activation='linear', input_dim=10))
+    
     
     #model.add(Dense(10,kernel_initializer='normal', activation='relu'))
     model.add(Dense(1))

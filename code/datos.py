@@ -103,7 +103,6 @@ class Medida(object):
         dtd10 = datetime.timedelta(minutes=10)
         tini1 = nuevos_tiempos[0]
         n0 = len(self.tiempo)
-        print(len(self.tiempo),len(self.muestras),len(nuevos_tiempos))
         tini0 = self.tiempo[0]
         offset = int((tini0-tini1)/dtd10)
 
@@ -258,9 +257,7 @@ class Medidor(object):
                 tmax = t1
         dtd10 = datetime.timedelta(minutes=10)
         n =int( np.ceil( (tmax-tmin)/dtd10 ) )+ 1
-        print(n)
         tiempo = [tmin+dtd10*i for i in range(n)]
-        print(len(tiempo))
         return tiempo
 
     def registrar(self,periodo):
@@ -268,7 +265,6 @@ class Medidor(object):
             periodo = self.get_tiempo()
 
         for m in self._medidas:
-            print(len(periodo))
             m.registrar(periodo)
 
 
@@ -343,7 +339,6 @@ class Parque(object):
         dtd10 = datetime.timedelta(minutes=10)
         n = int( np.ceil( (tmax-tmin)/dtd10 ) ) + 1 
         tiempo = [tmin+dtd10*i for i in range(n)]
-        print('periodo',len(tiempo))
         return tiempo
 
     def registrar(self):

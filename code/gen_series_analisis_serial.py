@@ -15,8 +15,8 @@ def split_sequences_patrones(sequences, seq_patron, flg_calcular_seq_pat):
     n_steps_pat = len(seq_patron)
     X, y = list(), list()
     
-    filt_seq = sequences < -1
-    filt_pat = seq_patron < -1
+    filt_seq = sequences < -1000
+    filt_pat = seq_patron < -1000
     
     for i in range(len(sequences)):
         # find the end of this pattern
@@ -27,13 +27,13 @@ def split_sequences_patrones(sequences, seq_patron, flg_calcular_seq_pat):
         
         
         data_seq_i = sequences[i:end_ix, :]
-        data_seq_i_pot = sequences[:,-1]
+        data_seq_i_pot = sequences[i:end_ix,-1]
         
         filt_seq_i = filt_seq[i:end_ix, :]        
         filt_seq_i_pot = filt_seq_i[:,-1]
         
         
-        filt_seq_i_pat = filt_seq_i or filt_pat
+        filt_seq_i_pat = filt_seq_i | filt_pat
         
         seq_i_igual_pat = np.array_equal(filt_pat, filt_seq_i_pat)
         y_ok = not (filt_seq_i_pot[flg_calcular_seq_pat].any())
