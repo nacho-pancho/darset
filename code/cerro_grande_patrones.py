@@ -61,8 +61,8 @@ if __name__ == '__main__':
     filt_pot = pot < -1
     k = 0
     delta = 10
-    dt_ini_calc = datetime.datetime(2018, 5, 10)
-    dt_fin_calc = datetime.datetime(2018, 5, 15 )
+    dt_ini_calc = datetime.datetime(2018, 5, 1)
+    dt_fin_calc = datetime.datetime(2018, 9, 1 )
 
     dt = t[1] - t[0]    
     k_ini_calc = round((dt_ini_calc - t[0])/dt)
@@ -129,7 +129,7 @@ if __name__ == '__main__':
         
         
         # fit model
-        model.fit(X_train, y_train, epochs=15, verbose=0)
+        model.fit(X_train, y_train, epochs=20, verbose=0)
         
         y_test_predict = model.predict(X_test)    
         y_dif = np.subtract(y_test,y_test_predict)

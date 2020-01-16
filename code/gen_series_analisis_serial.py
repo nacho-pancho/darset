@@ -50,7 +50,7 @@ def split_sequences_patrones(sequences, seq_patron, flg_calcular_seq_pat):
             X.append(seq_x)
             y.append(seq_y)
 
-    print(f"{len(X)} muestras encontradas en el patron")
+    print(f"{len(X)} muestras encontradas en el patron de RO")
     
     
     return np.array(X), np.array(y)
