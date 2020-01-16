@@ -125,15 +125,22 @@ if __name__ == '__main__':
         model.add(Dense(n_output, activation='linear'))
         model.compile(optimizer='adam', loss='mse', metrics=['mean_squared_error'])     
         
-        print(model.summary())
+        #print(model.summary())
         
         
         # fit model
-        model.fit(X_train, y_train, epochs=15)
+        model.fit(X_train, y_train, epochs=15, verbose=0)
         
         y_test_predict = model.predict(X_test)    
-    
-    
+        y_dif = np.subtract(y_test,y_test_predict)
+        
+        MSE = np.square(y_dif).mean()
+        RMSE = MSE ** .5
+        
+        print(f"Error medio = {y_dif.mean()} MW")
+        print(f"Error cuadrático medio = {RMSE} MW")
+        
+        
         #plt.figure
         #plt.plot(y_test,y_test_predict,'b,')
     
