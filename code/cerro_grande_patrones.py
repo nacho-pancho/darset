@@ -64,8 +64,8 @@ if __name__ == '__main__':
     filt_pot = pot < -1
     k = 0
     delta = 20
-    dt_ini_calc = datetime.datetime(2018, 6, 9)
-    dt_fin_calc = datetime.datetime(2018, 6, 11)
+    dt_ini_calc = datetime.datetime(2018, 7, 29)
+    dt_fin_calc = datetime.datetime(2018, 7, 30)
 
     dt = t[1] - t[0]    
     k_ini_calc = round((dt_ini_calc - t[0])/dt)
@@ -105,7 +105,7 @@ if __name__ == '__main__':
     
     for i in range(len(X_Pats)):
         
-        print(f"Calculando RO {i} de {len(X_Pats)}")
+        print(f"Calculando RO {i+1} de {len(X_Pats)}")
         
         X,y = seriesAS.split_sequences_patrones(M, X_Pats[i], X_calc[i])
             
