@@ -43,8 +43,11 @@ if __name__ == '__main__':
     medidor2 = parque2.medidores[0]
     filtros2 = parque2.get_filtros()
     M2, F2, nom2, t2 = parque2.exportar_medidas()
-    nom_series_p2 = ['velPRONOS','dirPRONOS','potSCADA']
+    #nom_series_p2 = ['velPRONOS','dirPRONOS','potSCADA']
+    nom_series_p2 = ['velGEN','potSCADA']
     vel_PRONOS_7 = parque2.medidores[0].get_medida('vel','pronos')
+    vel_GEN_7 = parque2.medidores[0].get_medida('vel','gen')
+    vel_SCADA_7 = parque2.medidores[0].get_medida('vel','scada')
     
     
     t, M, nom_series = seriesAS.gen_series_analisis_serial(parque1, parque2,
@@ -60,9 +63,9 @@ if __name__ == '__main__':
     
     filt_pot = pot < -1
     k = 0
-    delta = 10
-    dt_ini_calc = datetime.datetime(2018, 5, 1)
-    dt_fin_calc = datetime.datetime(2018, 9, 1 )
+    delta = 20
+    dt_ini_calc = datetime.datetime(2018, 6, 9)
+    dt_fin_calc = datetime.datetime(2018, 6, 11)
 
     dt = t[1] - t[0]    
     k_ini_calc = round((dt_ini_calc - t[0])/dt)
@@ -129,11 +132,16 @@ if __name__ == '__main__':
         
         
         # fit model
-        model.fit(X_train, y_train, epochs=20, verbose=0)
+        model.fit(X_train, y_train, epochs=50, verbose=0)
         
         y_test_predict = model.predict(X_test)    
         y_dif = np.subtract(y_test,y_test_predict)
         
+        y_dif = np.mean(y_dif, axis = 1)
+    
+        plt.figure()
+        plt.hist(y_dif, bins = 100,cumulative=True)  
+  
         MSE = np.square(y_dif).mean()
         RMSE = MSE ** .5
         
@@ -176,8 +184,13 @@ if __name__ == '__main__':
     #meds.append(pot_scada_mw)
     meds.append(cgm_cg)
     meds.append(pCG_mod)
+    
     meds.append(vel_GEN_5)
     meds.append(vel_scada_5)
+
+    meds.append(vel_GEN_7)
+    meds.append(vel_SCADA_7)
+    
     meds.append(vel_PRONOS_7)
     
     #meds.append(dir_pronos_5)
