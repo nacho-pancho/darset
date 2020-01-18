@@ -45,7 +45,7 @@ if __name__ == '__main__':
     M2, F2, nom2, t2 = parque2.exportar_medidas()
     #nom_series_p2 = ['velPRONOS','dirPRONOS','potSCADA']
     #nom_series_p2 = ['velGEN','potSCADA']
-    nom_series_p2 = ['potSCADA']
+    nom_series_p2 = ['cosdirPRONOS','sindirPRONOS','potSCADA']
     vel_PRONOS_7 = parque2.medidores[0].get_medida('vel','pronos')
     vel_GEN_7 = parque2.medidores[0].get_medida('vel','gen')
     vel_SCADA_7 = parque2.medidores[0].get_medida('vel','scada')
@@ -83,8 +83,8 @@ if __name__ == '__main__':
     filt_pot = pot < -1
     k = 0
     delta = 5
-    dt_ini_calc = datetime.datetime(2018, 6, 18)
-    dt_fin_calc = datetime.datetime(2018, 6, 20)
+    dt_ini_calc = datetime.datetime(2018, 6, 9)
+    dt_fin_calc = datetime.datetime(2018, 6, 10)
 
     dt = t[1] - t[0]    
     k_ini_calc = round((dt_ini_calc - t[0])/dt)
@@ -196,14 +196,14 @@ if __name__ == '__main__':
         print(f"RMSE_test = {RMSE_test_pu*100} %") 
         print(f"EMed = {Error_medio_pu*100} %")
         
-        '''
+
         plt.figure()
         plt.hist(y_dif_acum_pu, bins = 100,cumulative=True, density = True)  
         plt.xlim(-1,1)
         plt.xticks(np.arange(-1, 1, step=0.1))
         plt.ylim(0,1)
         plt.yticks(np.arange(0, 1, step=0.1))
-        '''    
+   
 
     
         filt_pat = X_Pats_n[i] < -1000
