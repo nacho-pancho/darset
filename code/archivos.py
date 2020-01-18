@@ -236,6 +236,17 @@ def leerArchi(nidCentral,tipoArchi):
             cgm = med #copy.copy(med)
         elif tipoDato == 'dis':
             dis = med #copy.copy(med) 
+
+        if tipoDato == 'vel':
+            vel = med
+            
+        if (tipoDato == 'dir') and (vel != None):
+            
+            velx, vely = velxy_from_veldir(vel, med, ident)    
+            
+            medidas.append(velx)
+            medidas.append(vely)
+
     
     print('CREANDO MEDIDOR')
     Medidor = datos.Medidor(ident,medidas,ubicacion)
@@ -362,6 +373,7 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
     for i in range(nSeries):
 
         tipoDato = filtros.str_to_tipo(tipos[i])
+        print(tipoDato)
         if tipoDato is None:
             break
         meds = data[:,i+1]
@@ -396,17 +408,13 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
         if tipoDato == 'vel':
             vel = med
             
-        if (tipoDato == 'dir') and (vel != None) :
-            velx = vel.muestras * [m.cos(m.radians(k)) for k in med.muestras]
-            vely = vel.muestras * [m.sin(m.radians(k)) for k in med.muestras]
-            med = datos.Medida('pronos',velx,vel.tiempo,'vel','velx' + ident,
-                               vel.minval,vel.maxval,vel.nrep)
-            medidas.append(med)
+        if (tipoDato == 'dir') and (vel != None):
             
-            med = datos.Medida('pronos',vely,vel.tiempo,'vel','vely' + ident,
-                               vel.minval,vel.maxval,vel.nrep)
-            medidas.append(med)
-        
+            velx, vely = velxy_from_veldir(vel, med, ident)    
+            
+            medidas.append(velx)
+            medidas.append(vely)
+       
         #med.desfasar(-18) # los pronósticos vienen con GMT 0, nosotros tenemos GMT -3
 
 
@@ -415,7 +423,20 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
     return Medidor
 
 ##############################################################################
+
+def velxy_from_veldir(vel, dir_, ident):
+
+    proc = vel.procedencia
+    velx = vel.muestras * [m.cos(m.radians(k)) for k in dir_.muestras]
+    vely = vel.muestras * [m.sin(m.radians(k)) for k in dir_.muestras]
+    med_velx = datos.Medida(proc,velx,vel.tiempo,'vel','velx' + ident,
+                       vel.minval,vel.maxval,vel.nrep)
     
+    med_vely = datos.Medida(proc,vely,vel.tiempo,'vel','vely' + ident,
+                       vel.minval,vel.maxval,vel.nrep)
+    return med_velx,med_vely
+    
+ 
 def leerArchivosCentral (nidCentral):
     #
     # si existe, cargamos el objeto guardado

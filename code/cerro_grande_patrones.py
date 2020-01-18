@@ -32,7 +32,7 @@ if __name__ == '__main__':
     filtros1 = parque1.get_filtros()
     M1, F1, nom1, t1 = parque1.exportar_medidas()
     #nom_series_p1 = ['velGEN','dirGEN','velPRONOS','dirPRONOS','potSCADA']
-    nom_series_p1 = ['velGEN','dirGEN']
+    nom_series_p1 = ['velxGEN','velyGEN']
     vel_GEN_5 = parque1.medidores[0].get_medida('vel','gen')
     vel_scada_5 = parque1.medidores[0].get_medida('vel','scada')
     dir_scada_5 = parque1.medidores[0].get_medida('dir','scada')
@@ -44,7 +44,8 @@ if __name__ == '__main__':
     filtros2 = parque2.get_filtros()
     M2, F2, nom2, t2 = parque2.exportar_medidas()
     #nom_series_p2 = ['velPRONOS','dirPRONOS','potSCADA']
-    nom_series_p2 = ['velGEN','potSCADA']
+    #nom_series_p2 = ['velGEN','potSCADA']
+    nom_series_p2 = ['velxPRONOS','velyPRONOS','velGEN','potSCADA']
     vel_PRONOS_7 = parque2.medidores[0].get_medida('vel','pronos')
     vel_GEN_7 = parque2.medidores[0].get_medida('vel','gen')
     vel_SCADA_7 = parque2.medidores[0].get_medida('vel','scada')
@@ -52,6 +53,24 @@ if __name__ == '__main__':
     
     t, M, nom_series = seriesAS.gen_series_analisis_serial(parque1, parque2,
                                                  nom_series_p1, nom_series_p2)    
+
+    # Normalizo datos 
+    
+    df = pd.DataFrame(M, index=t, columns=nom_series) 
+    
+    df = df[(df >= 0).all(axis=1)]
+    
+    stats = df.describe()
+    stats = stats.transpose()
+
+    M_max = np.tile(stats['max'].values,(len(M),1))
+    M_min = np.tile(stats['min'].values,(len(M),1))
+    
+    M_n = (M - M_min )/(M_max - M_min)
+        
+    max_pot = stats.at['potSCADA_7', 'max']
+    min_pot = stats.at['potSCADA_7', 'min']        
+
 
     
     # Busco secuencias de patrones que quiero calcular su pot
@@ -63,9 +82,9 @@ if __name__ == '__main__':
     
     filt_pot = pot < -1
     k = 0
-    delta = 20
-    dt_ini_calc = datetime.datetime(2018, 7, 29)
-    dt_fin_calc = datetime.datetime(2018, 7, 30)
+    delta = 5
+    dt_ini_calc = datetime.datetime(2018, 7, 8)
+    dt_fin_calc = datetime.datetime(2018, 7, 9)
 
     dt = t[1] - t[0]    
     k_ini_calc = round((dt_ini_calc - t[0])/dt)
@@ -73,8 +92,8 @@ if __name__ == '__main__':
         
     k = k_ini_calc
     
-    X_Pats = list()
-    X_calc = list()
+    X_Pats_n = list()
+    X_calc_n = list()
     kini_calc = list()
     
     while k <= k_fin_calc:
@@ -89,13 +108,13 @@ if __name__ == '__main__':
            
             kfinRO = k                  
             #Agrego sequencia con RO patron
-            x_pat = M[(kiniRO - delta):(kfinRO + delta),:]
+            x_pat_n = M_n[(kiniRO - delta):(kfinRO + delta),:]
             
-            X_Pats.append(x_pat)
+            X_Pats_n.append(x_pat_n)
             
-            x_calc = np.full(len(x_pat), False)
-            x_calc[delta:-delta+1] = True
-            X_calc.append(x_calc)
+            x_calc_n = np.full(len(x_pat_n), False)
+            x_calc_n[delta:-delta+1] = True
+            X_calc_n.append(x_calc_n)
             print(f"cantidad de ROs = {len(X_Pats)}")
             k = k + 1
         else:
@@ -103,62 +122,99 @@ if __name__ == '__main__':
                 
     print(f"{len(X_Pats)} RO encontradas en el periodo {dt_ini_calc} a {dt_fin_calc}")
     
-    for i in range(len(X_Pats)):
+    for i in range(len(X_Pats_n)):
         
-        print(f"Calculando RO {i+1} de {len(X_Pats)}")
+        print(f"Calculando RO {i+1} de {len(X_Pats_n)}")
         
-        X,y = seriesAS.split_sequences_patrones(M, X_Pats[i], X_calc[i])
+        X_n,y_n = seriesAS.split_sequences_patrones(M_n, X_Pats_n[i], X_calc_n[i])
             
+        
+        
         train_pu = 0.7
         
-        k_train = round(len(X)*train_pu)
-        X_train = X[:k_train]
-        X_test = X[k_train:]
+        k_train = round(len(X_n)*train_pu)
+        X_train_n = X_n[:k_train]
+        X_test_n = X_n[k_train:]
         
-        y_train = y[:k_train]
-        y_test = y[k_train:]
+        y_train_n = y_n[:k_train]
+        y_test_n = y_n[k_train:]
         
+   
         
-        n_features = X.shape[1]
-        n_output = y.shape[1]
+        n_features = X_n.shape[1]
+        n_output = y_n.shape[1]
         #defino la red
         model = Sequential()
         model.add(Dense(n_features, activation='linear', input_dim=n_features))
         model.add(Dense(10, activation='linear'))
-        model.add(Dense(n_output, activation='linear'))
+        model.add(Dense(n_output, activation='relu'))
         model.compile(optimizer='adam', loss='mse', metrics=['mean_squared_error'])     
         
         #print(model.summary())
         
         
         # fit model
-        model.fit(X_train, y_train, epochs=50, verbose=0)
+        model.fit(X_train_n, y_train_n, epochs=10, verbose=1)
         
-        y_test_predict = model.predict(X_test)    
-        y_dif = np.subtract(y_test,y_test_predict)
         
-        y_dif = np.mean(y_dif, axis = 1)
-    
+        
+        
+        y_test_predict_n = model.predict(X_test_n) 
+        y_train_predict_n = model.predict(X_train_n) 
+        
+        # desnormalizo 
+        
+        
+        y_test_predict = y_test_predict_n * (max_pot-min_pot) + min_pot
+        y_train_predict = y_train_predict_n * (max_pot-min_pot) + min_pot
+
+        y_test = y_test_n * (max_pot-min_pot) + min_pot
+        
+        
+        y_test_predict_acum = np.sum(y_test_predict, axis = 1)
+        y_test_acum = np.sum(y_test, axis = 1)
+        
+        y_dif_acum = np.subtract(y_test_predict_acum,y_test_acum)        
+        
+        Error_medio = y_dif_acum.mean()
+        
+        MSE_test = np.square(y_dif_acum).mean()
+                
+        RMSE_test = MSE_test ** .5
+        
+        y_dif_acum_pu = np.divide(y_dif_acum,y_test_acum)
+
+        Error_medio_pu = np.divide(y_dif_acum,y_test_acum).mean()
+
+        MSE_test_pu = np.square(y_dif_acum_pu).mean()        
+        RMSE_test_pu = MSE_test_pu ** .5
+        
+        print(f"MSE_test = {MSE_test} MW")
+        print(f"RMSE_test = {RMSE_test} MW")
+        print(f"EMed = {Error_medio} MW")
+        print(f"MSE_test = {MSE_test_pu*100} %")
+        print(f"RMSE_test = {RMSE_test_pu*100} %") 
+        print(f"EMed = {Error_medio_pu*100} %")
+        
+        '''
         plt.figure()
-        plt.hist(y_dif, bins = 100,cumulative=True)  
-  
-        MSE = np.square(y_dif).mean()
-        RMSE = MSE ** .5
-        
-        print(f"Error medio = {y_dif.mean()} MW")
-        print(f"Error cuadrático medio = {RMSE} MW")
-        
-        
-        #plt.figure
-        #plt.plot(y_test,y_test_predict,'b,')
+        plt.hist(y_dif_acum_pu, bins = 100,cumulative=True, density = True)  
+        plt.xlim(-1,1)
+        plt.xticks(np.arange(-1, 1, step=0.1))
+        plt.ylim(0,1)
+        plt.yticks(np.arange(0, 1, step=0.1))
+        '''    
+
     
-        filt_pat = X_Pats[i] < -1000
+        filt_pat = X_Pats_n[i] < -1000
         
-        X_RO = X_Pats[i][~filt_pat].flatten()
+        X_RO_n = X_Pats_n[i][~filt_pat].flatten()
         
-        X_RO_ = np.asmatrix(X_RO)
+        X_RO_n = np.asmatrix(X_RO_n)
         
-        y_RO = model.predict(X_RO_)
+        y_RO_n = model.predict(X_RO_n)
+        
+        y_RO = y_RO_n * (max_pot-min_pot) + min_pot
         
         y_RO_= np.squeeze(y_RO)
         

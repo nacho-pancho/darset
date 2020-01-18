@@ -56,7 +56,7 @@ imprimir_map_zoom = False
 #---------------------------------------------------------------------------------
 
 def clickplot_redraw():
-    print('redraw')
+    #print('redraw')
     t0 = time.time()
     global window, medidas, tipos, imprimir_map_zoom
 
@@ -66,26 +66,26 @@ def clickplot_redraw():
         NGrafs = len(tipos)+1
     
 
-    print('figure',time.time()-t0)
+    #print('figure',time.time()-t0)
     t0 = time.time()
     plt.figure(clickfig.number)
     #print("window:",window)archivos
 
-    print('leyendas',time.time()-t0)
+    #print('leyendas',time.time()-t0)
     t0 = time.time()
     legends = dict()
     for tipo in tipos:
         legends.update( {tipo:list()} )
         
         
-    print('medidas',time.time()-t0)
+    #print('medidas',time.time()-t0)
     t0 = time.time()
     for i in range(len(medidas)):
         med_i = medidas[i]  
         
         idx_tipo = tipos.index(med_i.tipo)
         t_i = med_i.tiempo
-        print(len(t_i))
+        #print(len(t_i))
         legends[med_i.tipo].append(med_i.nombre)
         if 1:
             idx_i = list(map(lambda t: (t >= window[0]) and (t < window[1]), t_i))
@@ -112,11 +112,11 @@ def clickplot_redraw():
         plt.plot(x_i,y_i,color=c_i)
         
         min_max_tipo = filtros.min_max(med_i.tipo,50,1000)
-        plt.axis([window[0],window[1],min_max_tipo[0],min_max_tipo[1]])
+        plt.axis([window[0],window[1],min_max_tipo[0]*0.9,min_max_tipo[1]*1.1])
         plt.ylabel(med_i.tipo)
         plt.draw()
         
-    print('leyendas',time.time()-t0)
+    #print('leyendas',time.time()-t0)
     t0 = time.time()
 
     for i in range(len(tipos)):
@@ -127,7 +127,7 @@ def clickplot_redraw():
     #
     # actualizar el mapa
     #
-    print('mapa gral',time.time()-t0)
+    #print('mapa gral',time.time()-t0)
     t0 = time.time()
     plt.subplot(NGrafs,1,NGrafs)
     j0 = int((window[0]-tini)/(tfin-tini)*MAP_WIDTH)
@@ -145,7 +145,7 @@ def clickplot_redraw():
     # actualizar el zoom del mapa
     #    
     if 1: #if imprimir_map_zoom:
-        print('mapa zoom',time.time()-t0)
+        #print('mapa zoom',time.time()-t0)
         t0 = time.time()
         plt.subplot(NGrafs, 1, NGrafs-1)
         alarm_map_zoom = create_alarm_map (map_h, MAP_WIDTH_ZOOM, medidas, window[0], window[1])        
@@ -154,7 +154,7 @@ def clickplot_redraw():
         plt.gca().get_yaxis().set_visible(False)
         plt.draw()
     plt.tight_layout(pad=1.5)
-    print('listo',time.time()-t0)
+    #print('listo',time.time()-t0)
         
 
     
@@ -167,7 +167,7 @@ def click_event_handler(event):
     utilizado para el clickplot
     '''
     global window,tcenter, tini, tfin
-    print('click')
+    #print('click')
     #
     # capturar pos (x,y)  en la imagen
     #
@@ -188,7 +188,7 @@ def scroll_event_handler(event):
     manejo de eventos del mouse sobre una gráfica
     utilizado para el clickplot
     '''
-    print('scroll')
+    #print('scroll')
     global window_size,window,tcenter, tini, tfin
     step = event.step
     #print(f'scroll: step = {step}')
@@ -280,7 +280,7 @@ def create_alarm_map (map_h,map_width, medidas, t0, t1):
         filtros = m.get_filtros()
         dt = (tfin - tini) / (len(t_i) - 1)
         for fnom,fdata in filtros.items():
-            print('filtro:',fnom,' data:', len(fdata))
+            #print('filtro:',fnom,' data:', len(fdata))
             row_i[:] = 0
             for j in range(MAP_WIDTH):
                 t_i = t_i0 + j*t_per_pixel # tiempo t en la medida
