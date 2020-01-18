@@ -32,7 +32,7 @@ if __name__ == '__main__':
     filtros1 = parque1.get_filtros()
     M1, F1, nom1, t1 = parque1.exportar_medidas()
     #nom_series_p1 = ['velGEN','dirGEN','velPRONOS','dirPRONOS','potSCADA']
-    nom_series_p1 = ['velxGEN','velyGEN']
+    nom_series_p1 = ['velGEN','cosdirGEN','sindirGEN']
     vel_GEN_5 = parque1.medidores[0].get_medida('vel','gen')
     vel_scada_5 = parque1.medidores[0].get_medida('vel','scada')
     dir_scada_5 = parque1.medidores[0].get_medida('dir','scada')
@@ -45,7 +45,7 @@ if __name__ == '__main__':
     M2, F2, nom2, t2 = parque2.exportar_medidas()
     #nom_series_p2 = ['velPRONOS','dirPRONOS','potSCADA']
     #nom_series_p2 = ['velGEN','potSCADA']
-    nom_series_p2 = ['velxPRONOS','velyPRONOS','velGEN','potSCADA']
+    nom_series_p2 = ['potSCADA']
     vel_PRONOS_7 = parque2.medidores[0].get_medida('vel','pronos')
     vel_GEN_7 = parque2.medidores[0].get_medida('vel','gen')
     vel_SCADA_7 = parque2.medidores[0].get_medida('vel','scada')
@@ -83,8 +83,8 @@ if __name__ == '__main__':
     filt_pot = pot < -1
     k = 0
     delta = 5
-    dt_ini_calc = datetime.datetime(2018, 7, 8)
-    dt_fin_calc = datetime.datetime(2018, 7, 9)
+    dt_ini_calc = datetime.datetime(2018, 6, 18)
+    dt_fin_calc = datetime.datetime(2018, 6, 20)
 
     dt = t[1] - t[0]    
     k_ini_calc = round((dt_ini_calc - t[0])/dt)
@@ -154,7 +154,7 @@ if __name__ == '__main__':
         
         
         # fit model
-        model.fit(X_train_n, y_train_n, epochs=10, verbose=1)
+        model.fit(X_train_n, y_train_n, epochs=50, verbose=1)
         
         
         

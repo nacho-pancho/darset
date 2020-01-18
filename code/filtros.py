@@ -80,6 +80,9 @@ def min_max(tipo,PotAut,NMolinos):
         return [1.05,1.3]
     elif tipo == 'turb':
         return [0,0.1]
+    elif (tipo == 'cosdir') or (tipo == 'sindir'):
+        return [-1,1]
+
 
 
 ##############################################################################

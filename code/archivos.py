@@ -243,9 +243,12 @@ def leerArchi(nidCentral,tipoArchi):
         if (tipoDato == 'dir') and (vel != None):
             
             velx, vely = velxy_from_veldir(vel, med, ident)    
-            
             medidas.append(velx)
             medidas.append(vely)
+            
+            cosdir, sindir = cosin_from_dir(med, ident)
+            medidas.append(cosdir)
+            medidas.append(sindir)            
 
     
     print('CREANDO MEDIDOR')
@@ -410,10 +413,13 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
             
         if (tipoDato == 'dir') and (vel != None):
             
-            velx, vely = velxy_from_veldir(vel, med, ident)    
-            
+            velx, vely = velxy_from_veldir(vel, med, ident)               
             medidas.append(velx)
             medidas.append(vely)
+            
+            cosdir, sindir = cosin_from_dir(med, ident)
+            medidas.append(cosdir)
+            medidas.append(sindir)                
        
         #med.desfasar(-18) # los pronósticos vienen con GMT 0, nosotros tenemos GMT -3
 
@@ -429,13 +435,37 @@ def velxy_from_veldir(vel, dir_, ident):
     proc = vel.procedencia
     velx = vel.muestras * [m.cos(m.radians(k)) for k in dir_.muestras]
     vely = vel.muestras * [m.sin(m.radians(k)) for k in dir_.muestras]
-    med_velx = datos.Medida(proc,velx,vel.tiempo,'vel','velx' + ident,
-                       vel.minval,vel.maxval,vel.nrep)
     
-    med_vely = datos.Medida(proc,vely,vel.tiempo,'vel','vely' + ident,
-                       vel.minval,vel.maxval,vel.nrep)
-    return med_velx,med_vely
+    med_velx = datos.Medida(proc,np.power(velx, 3),vel.tiempo,'vel','velx' + ident,
+                       vel.minval ** 3,vel.maxval ** 3,vel.nrep)
     
+    med_vely = datos.Medida(proc,np.power(vely, 3),vel.tiempo,'vel','vely' + ident,
+                       vel.minval ** 3,vel.maxval ** 3,vel.nrep)
+    return med_velx, med_vely
+
+##############################################################################
+
+def cosin_from_dir(dir_, ident):
+
+    proc = dir_.procedencia
+    
+    tipomed_cos = 'cosdir'
+    tipomed_sin = 'sindir'
+    
+    min_, max_ = filtros.min_max(tipomed_cos,1,1)
+    
+    cos = [m.cos(m.radians(k)) for k in dir_.muestras]
+    sin = [m.sin(m.radians(k)) for k in dir_.muestras]
+    
+    med_cos = datos.Medida(proc,cos,dir_.tiempo,tipomed_cos,tipomed_cos + ident,
+                       min_,max_,2)
+    
+    med_sin = datos.Medida(proc,sin,dir_.tiempo,tipomed_sin,tipomed_sin + ident,
+                       min_,max_,2)
+
+    return med_cos, med_sin    
+
+##############################################################################
  
 def leerArchivosCentral (nidCentral):
     #
