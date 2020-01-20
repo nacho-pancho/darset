@@ -435,6 +435,10 @@ def velxy_from_veldir(vel, dir_, ident):
     proc = vel.procedencia
     velx = vel.muestras * [m.cos(m.radians(k)) for k in dir_.muestras]
     vely = vel.muestras * [m.sin(m.radians(k)) for k in dir_.muestras]
+
+    velx = np.where(dir_.muestras > -1, velx, -99999999)
+    vely = np.where(dir_.muestras > -1, vely, -99999999)
+
     
     med_velx = datos.Medida(proc,np.power(velx, 3),vel.tiempo,'vel','velx' + ident,
                        vel.minval ** 3,vel.maxval ** 3,vel.nrep)
@@ -456,6 +460,11 @@ def cosin_from_dir(dir_, ident):
     
     cos = [m.cos(m.radians(k)) for k in dir_.muestras]
     sin = [m.sin(m.radians(k)) for k in dir_.muestras]
+    
+    cos = np.where(dir_.muestras > -1, cos, -99999999)
+    sin = np.where(dir_.muestras > -1, sin, -99999999)
+    
+    
     
     med_cos = datos.Medida(proc,cos,dir_.tiempo,tipomed_cos,tipomed_cos + ident,
                        min_,max_,2)

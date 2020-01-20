@@ -20,6 +20,8 @@ from tensorflow.keras import layers
 from keras.layers import Dense, Dropout, LSTM
 from keras.layers import SimpleRNN, Embedding
 from keras.models import Sequential
+from keras.callbacks import EarlyStopping
+from sklearn.model_selection import train_test_split
 
 if __name__ == '__main__':
     
@@ -58,7 +60,7 @@ if __name__ == '__main__':
     
     df = pd.DataFrame(M, index=t, columns=nom_series) 
     
-    df = df[(df >= 0).all(axis=1)]
+    df = df[(df >= -1000).all(axis=1)]
     
     stats = df.describe()
     stats = stats.transpose()
@@ -83,8 +85,9 @@ if __name__ == '__main__':
     filt_pot = pot < -1
     k = 0
     delta = 5
-    dt_ini_calc = datetime.datetime(2018, 6, 9)
-    dt_fin_calc = datetime.datetime(2018, 6, 10)
+    
+    dt_ini_calc = datetime.datetime(2018, 5, 1)
+    dt_fin_calc = datetime.datetime(2019, 4, 1)
 
     dt = t[1] - t[0]    
     k_ini_calc = round((dt_ini_calc - t[0])/dt)
@@ -103,7 +106,7 @@ if __name__ == '__main__':
             kiniRO = k
             kini_calc.append(kiniRO)
             # Avanzo RO hasta salir 
-            while filt_pot[k+1]:
+            while (k <= k_fin_calc) and (filt_pot[k+1]):
                 k = k + 1
            
             kfinRO = k                  
@@ -115,12 +118,12 @@ if __name__ == '__main__':
             x_calc_n = np.full(len(x_pat_n), False)
             x_calc_n[delta:-delta+1] = True
             X_calc_n.append(x_calc_n)
-            print(f"cantidad de ROs = {len(X_Pats)}")
+            print(f"cantidad de ROs = {len(X_Pats_n)}")
             k = k + 1
         else:
             k = k + 1
                 
-    print(f"{len(X_Pats)} RO encontradas en el periodo {dt_ini_calc} a {dt_fin_calc}")
+    print(f"{len(X_Pats_n)} RO encontradas en el periodo {dt_ini_calc} a {dt_fin_calc}")
     
     for i in range(len(X_Pats_n)):
         
@@ -132,13 +135,17 @@ if __name__ == '__main__':
         
         train_pu = 0.7
         
+        X_train_n, X_test_n, y_train_n, y_test_n = train_test_split(
+                                X_n, y_n, test_size=1-train_pu, random_state=42)
+        
+        '''
         k_train = round(len(X_n)*train_pu)
         X_train_n = X_n[:k_train]
         X_test_n = X_n[k_train:]
         
         y_train_n = y_n[:k_train]
         y_test_n = y_n[k_train:]
-        
+        '''
    
         
         n_features = X_n.shape[1]
@@ -146,16 +153,30 @@ if __name__ == '__main__':
         #defino la red
         model = Sequential()
         model.add(Dense(n_features, activation='linear', input_dim=n_features))
-        model.add(Dense(10, activation='linear'))
-        model.add(Dense(n_output, activation='relu'))
+        model.add(Dense(n_features, activation='linear'))
+        model.add(Dense(n_features, activation='linear'))
+        model.add(Dense(n_features, activation='linear'))
+        model.add(Dense(n_output, activation='sigmoid'))
         model.compile(optimizer='adam', loss='mse', metrics=['mean_squared_error'])     
-        
+
+        # simple early stopping
+        es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=10)
+        # fit model
+        history = model.fit(X_train_n, y_train_n, validation_data=(X_test_n, y_test_n), 
+                            epochs=100, verbose=1, callbacks=[es],initial_epoch = 1)
+        # evaluate the model
+        _, train_acc = model.evaluate(X_train_n, y_train_n, verbose=0)
+        _, test_acc = model.evaluate(X_test_n, y_test_n, verbose=0)
+
+        print('Train: %.3f, Test: %.3f' % (train_acc, test_acc))        
         #print(model.summary())
         
-        
-        # fit model
-        model.fit(X_train_n, y_train_n, epochs=50, verbose=1)
-        
+        # plot training history
+        plt.figure()
+        plt.plot(history.history['loss'], label='train')
+        plt.plot(history.history['val_loss'], label='test')
+        plt.legend()
+        plt.show() 
         
         
         
@@ -197,13 +218,14 @@ if __name__ == '__main__':
         print(f"EMed = {Error_medio_pu*100} %")
         
 
+        '''
         plt.figure()
-        plt.hist(y_dif_acum_pu, bins = 100,cumulative=True, density = True)  
+        plt.hist(y_dif_acum_pu, bins=100, cumulative=True, density = True)  
         plt.xlim(-1,1)
         plt.xticks(np.arange(-1, 1, step=0.1))
         plt.ylim(0,1)
         plt.yticks(np.arange(0, 1, step=0.1))
-   
+        '''
 
     
         filt_pat = X_Pats_n[i] < -1000

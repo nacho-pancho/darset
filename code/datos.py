@@ -426,8 +426,19 @@ class Parque(object):
         '''
         Calcular los filtros del parque
         '''        
-        filt_cgm = np.abs(self.pot.muestras - self.cgm.muestras) < (self.PAutorizada * 0.4)
+        filt_cgm = np.abs(self.pot.muestras - self.cgm.muestras) < (self.PAutorizada * 0.05)
         filt_cgm = filt_cgm & (self.cgm.muestras < 0.999 * self.PAutorizada )#* np.ones(len(self.cgm.muestras)))
+        
+        Ndatos_afectados_RO = 3
+        
+        filt_cgm_ = copy.deepcopy(filt_cgm)
+        
+        for k in range(Ndatos_afectados_RO,len(filt_cgm)-Ndatos_afectados_RO):            
+            if filt_cgm_[k] == 1:
+                filt_cgm[k-Ndatos_afectados_RO:k+Ndatos_afectados_RO] = 1
+
+            
+            
         
         self.pot.agregar_filtro('cgm',filt_cgm)
         
