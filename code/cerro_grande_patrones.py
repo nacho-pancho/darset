@@ -155,10 +155,10 @@ if __name__ == '__main__':
         n_output = y_n.shape[1]
         #defino la red
         model = Sequential()
-        model.add(Dense(n_features, input_dim=n_features, kernel_regularizer=l2(0.8), bias_regularizer=l2(0.01)))
-        model.add(Dense(n_features*5, activation='tanh', kernel_regularizer=l2(0.8), bias_regularizer=l2(0.01)))
-        model.add(Dense(n_features*5, activation='tanh', kernel_regularizer=l2(0.8), bias_regularizer=l2(0.01)))
-        model.add(Dense(n_output, activation='tanh', kernel_regularizer=l2(0.8), bias_regularizer=l2(0.01)))
+        model.add(Dense(n_features, input_dim=n_features, kernel_regularizer=l2(0.01), bias_regularizer=l2(0.01)))
+        model.add(Dense(n_features*5, activation='tanh', kernel_regularizer=l2(0.01), bias_regularizer=l2(0.01)))
+        model.add(Dense(n_features*5, activation='tanh', kernel_regularizer=l2(0.01), bias_regularizer=l2(0.01)))
+        model.add(Dense(n_output, activation='tanh', kernel_regularizer=l2(0.01), bias_regularizer=l2(0.01)))
         model.compile(optimizer='adam', loss='mse', metrics=['mean_squared_error'])     
 
         # simple early stopping
