@@ -23,6 +23,9 @@ from keras.models import Sequential
 from keras.callbacks import EarlyStopping
 from sklearn.model_selection import train_test_split
 
+# import regularizer
+from keras.regularizers import l2
+
 if __name__ == '__main__':
     
     plt.close('all')
@@ -87,7 +90,7 @@ if __name__ == '__main__':
     delta = 5
     
     dt_ini_calc = datetime.datetime(2018, 5, 1)
-    dt_fin_calc = datetime.datetime(2019, 4, 1)
+    dt_fin_calc = datetime.datetime(2018, 5, 10)
 
     dt = t[1] - t[0]    
     k_ini_calc = round((dt_ini_calc - t[0])/dt)
@@ -152,11 +155,10 @@ if __name__ == '__main__':
         n_output = y_n.shape[1]
         #defino la red
         model = Sequential()
-        model.add(Dense(n_features, activation='linear', input_dim=n_features))
-        model.add(Dense(n_features, activation='linear'))
-        model.add(Dense(n_features, activation='linear'))
-        model.add(Dense(n_features, activation='linear'))
-        model.add(Dense(n_output, activation='sigmoid'))
+        model.add(Dense(n_features, input_dim=n_features, kernel_regularizer=l2(0.8), bias_regularizer=l2(0.01)))
+        model.add(Dense(n_features*5, activation='tanh', kernel_regularizer=l2(0.8), bias_regularizer=l2(0.01)))
+        model.add(Dense(n_features*5, activation='tanh', kernel_regularizer=l2(0.8), bias_regularizer=l2(0.01)))
+        model.add(Dense(n_output, activation='tanh', kernel_regularizer=l2(0.8), bias_regularizer=l2(0.01)))
         model.compile(optimizer='adam', loss='mse', metrics=['mean_squared_error'])     
 
         # simple early stopping
