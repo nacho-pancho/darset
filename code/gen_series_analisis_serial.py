@@ -10,39 +10,35 @@ import numpy as np
 import math
 
 
-def split_sequences_patrones(sequences, seq_patron, flg_calcular_seq_pat):
+def split_sequences_patrones(F, Data, Data_Pat, F_Pat, Calc_Pat):
 
-    n_steps_pat = len(seq_patron)
+    n_steps_pat = len( F_Pat )
     X, y = list(), list()
     
-    filt_seq = sequences < -1000
-    filt_pat = seq_patron < -1000
-    
-    for i in range(len(sequences)):
+    for i in range(len(Data)):
         # find the end of this pattern
         end_ix = i + n_steps_pat
         # check if we are beyond the dataset
-        if end_ix > len(sequences):
+        if end_ix > len(Data):
             break
+       
+        data_seq_i = Data[i:end_ix, :]
+        data_seq_i_pot = Data[i:end_ix,-1]
+        
+        filt_seq_i = F[i:end_ix, :]        
+        filt_seq_i_pot = F[i:end_ix, -1]
         
         
-        data_seq_i = sequences[i:end_ix, :]
-        data_seq_i_pot = sequences[i:end_ix,-1]
+        filt_seq_i_pat = filt_seq_i | F_Pat
         
-        filt_seq_i = filt_seq[i:end_ix, :]        
-        filt_seq_i_pot = filt_seq_i[:,-1]
-        
-        
-        filt_seq_i_pat = filt_seq_i | filt_pat
-        
-        seq_i_igual_pat = np.array_equal(filt_pat, filt_seq_i_pat)
-        y_ok = not (filt_seq_i_pot[flg_calcular_seq_pat].any())
+        seq_i_igual_pat = np.array_equal(F_Pat, filt_seq_i_pat)
+        y_ok = not (filt_seq_i_pot[Calc_Pat].any())
         
         
         if seq_i_igual_pat and y_ok:                    
             
-            seq_x_arr = data_seq_i[~filt_pat]            
-            seq_y_arr = data_seq_i_pot[flg_calcular_seq_pat]
+            seq_x_arr = data_seq_i[~F_Pat]            
+            seq_y_arr = data_seq_i_pot[Calc_Pat]
     
             seq_x = seq_x_arr.flatten()
             seq_y = seq_y_arr.flatten()    
@@ -140,7 +136,7 @@ def gen_series_analisis_serial(parque1, parque2, nom_series_p1, nom_series_p2,
     nom_series_tot = nom_series_p1 + nom_series_p2
 
     
-    M1_m = np.ma.array(M1_, mask=F1_.astype(int) , fill_value=-999999).filled()
+    M1_m = np.ma.array(M1_, mask=F1_.astype(int), fill_value=-999999).filled()
     M2_m = np.ma.array(M2_, mask=F2_.astype(int), fill_value=-999999).filled()
 
     dt = t1[1] - t1[0]    
@@ -156,6 +152,9 @@ def gen_series_analisis_serial(parque1, parque2, nom_series_p1, nom_series_p2,
     t_tot = t1[i_tmin1 : (i_tmax1+1)]
     
     M_tot_m = np.concatenate((M1_m[i_tmin1:i_tmax1+1,:],M2_m[i_tmin2:i_tmax2+1,:]),axis = 1)   
+    
+    M_tot = np.concatenate((M1_[i_tmin1:i_tmax1+1,:],M2_[i_tmin2:i_tmax2+1,:]),axis = 1)
+    F_tot = np.concatenate((F1_[i_tmin1:i_tmax1+1,:],F2_[i_tmin2:i_tmax2+1,:]),axis = 1)
 
     if guardar:
         
@@ -196,5 +195,5 @@ def gen_series_analisis_serial(parque1, parque2, nom_series_p1, nom_series_p2,
         f.close()
     
     
-    return t_tot, M_tot_m, nom_series_tot
+    return t_tot, M_tot, F_tot == 1, nom_series_tot
 

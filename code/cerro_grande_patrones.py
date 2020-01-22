@@ -14,11 +14,8 @@ import graficas
 import filtros 
 import datetime
 
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
 from keras.layers import Dense, Dropout, LSTM
-from keras.layers import SimpleRNN, Embedding
+
 from keras.models import Sequential
 from keras.callbacks import EarlyStopping
 from sklearn.model_selection import train_test_split
@@ -32,7 +29,7 @@ if __name__ == '__main__':
     
 
     parque1 = archivos.leerArchivosCentral(5)
-    parque1.registrar()
+    parque1.registrar() 
     medidor1 = parque1.medidores[0]
     filtros1 = parque1.get_filtros()
     M1, F1, nom1, t1 = parque1.exportar_medidas()
@@ -56,16 +53,18 @@ if __name__ == '__main__':
     vel_SCADA_7 = parque2.medidores[0].get_medida('vel','scada')
     
     
-    t, M, nom_series = seriesAS.gen_series_analisis_serial(parque1, parque2,
+    t, M, F, nom_series = seriesAS.gen_series_analisis_serial(parque1, parque2,
                                                  nom_series_p1, nom_series_p2)    
 
     # Normalizo datos 
     
-    df = pd.DataFrame(M, index=t, columns=nom_series) 
+    df_M = pd.DataFrame(M, index=t, columns=nom_series) 
+    df_F = pd.DataFrame(F, index=t, columns=nom_series)
     
-    df = df[(df >= -1000).all(axis=1)]
+    df_M = df_M[(df_F == 0).all(axis=1)]
     
-    stats = df.describe()
+    
+    stats = df_M.describe()
     stats = stats.transpose()
 
     M_max = np.tile(stats['max'].values,(len(M),1))
@@ -85,22 +84,26 @@ if __name__ == '__main__':
     #inicializo la pot igual a la real, luego relleno huecos
     pot_estimada = pot
     
-    filt_pot = pot < -1
-    k = 0
+    filt_pot = F[:,-1]
+
     delta = 5
     
-    dt_ini_calc = datetime.datetime(2018, 5, 1)
-    dt_fin_calc = datetime.datetime(2018, 5, 10)
+    dt_ini_calc = datetime.datetime(2018, 5, 27)
+    dt_fin_calc = datetime.datetime(2018, 5, 30)
 
     dt = t[1] - t[0]    
     k_ini_calc = round((dt_ini_calc - t[0])/dt)
     k_fin_calc = round((dt_fin_calc - t[0])/dt)
-        
-    k = k_ini_calc
     
-    X_Pats_n = list()
-    X_calc_n = list()
+    Pats_Data_n = list()
+
+    Pats_Filt = list()
+
+    Pats_Calc = list()
+    
     kini_calc = list()
+   
+    k = k_ini_calc
     
     while k <= k_fin_calc:
         
@@ -114,28 +117,29 @@ if __name__ == '__main__':
            
             kfinRO = k                  
             #Agrego sequencia con RO patron
-            x_pat_n = M_n[(kiniRO - delta):(kfinRO + delta),:]
+            pat_data_n = M_n[(kiniRO - delta):(kfinRO + delta),:]
+            pat_filt = F[(kiniRO - delta):(kfinRO + delta),:]
             
-            X_Pats_n.append(x_pat_n)
-            
-            x_calc_n = np.full(len(x_pat_n), False)
+            Pats_Data_n.append(pat_data_n)
+            Pats_Filt.append(pat_filt)
+                      
+            x_calc_n = np.full(len(pat_data_n), False)
             x_calc_n[delta:-delta+1] = True
-            X_calc_n.append(x_calc_n)
-            print(f"cantidad de ROs = {len(X_Pats_n)}")
+            Pats_Calc.append(x_calc_n)
+
             k = k + 1
         else:
             k = k + 1
                 
-    print(f"{len(X_Pats_n)} RO encontradas en el periodo {dt_ini_calc} a {dt_fin_calc}")
+    print(f"{len(Pats_Data_n) + 1} RO en el periodo {dt_ini_calc} a {dt_fin_calc}")
     
-    for i in range(len(X_Pats_n)):
+    for i in range(len(Pats_Data_n)):
         
-        print(f"Calculando RO {i+1} de {len(X_Pats_n)}")
+        print(f"Calculando RO {i+1} de {len(Pats_Data_n)}")
         
-        X_n,y_n = seriesAS.split_sequences_patrones(M_n, X_Pats_n[i], X_calc_n[i])
-            
-        
-        
+        X_n,y_n = seriesAS.split_sequences_patrones(F, M_n, Pats_Data_n[i],
+                                                    Pats_Filt[i], Pats_Calc[i])
+
         train_pu = 0.7
         
         X_train_n, X_test_n, y_train_n, y_test_n = train_test_split(
@@ -154,12 +158,16 @@ if __name__ == '__main__':
         n_features = X_n.shape[1]
         n_output = y_n.shape[1]
         #defino la red
+        
+        l2_ = l2(0.000001)
+        
         model = Sequential()
-        model.add(Dense(n_features, input_dim=n_features, kernel_regularizer=l2(0.01), bias_regularizer=l2(0.01)))
-        model.add(Dense(n_features*5, activation='tanh', kernel_regularizer=l2(0.01), bias_regularizer=l2(0.01)))
-        model.add(Dense(n_features*5, activation='tanh', kernel_regularizer=l2(0.01), bias_regularizer=l2(0.01)))
-        model.add(Dense(n_output, activation='tanh', kernel_regularizer=l2(0.01), bias_regularizer=l2(0.01)))
-        model.compile(optimizer='adam', loss='mse', metrics=['mean_squared_error'])     
+        model.add(Dense(n_output*5, input_dim=n_features, kernel_regularizer=l2_, bias_regularizer=l2_))
+        model.add(Dense(n_output*10, input_dim=n_features, kernel_regularizer=l2_, bias_regularizer=l2_))
+        #model.add(Dense(n_features*5, activation='tanh', kernel_regularizer=l2_, bias_regularizer=l2_))
+        #model.add(Dense(n_features*5, activation='tanh', kernel_regularizer=l2_, bias_regularizer=l2_))
+        model.add(Dense(n_output, activation='sigmoid', kernel_regularizer=l2_, bias_regularizer=l2_))
+        model.compile(optimizer='adam', loss='mae', metrics=['mean_squared_error'])     
 
         # simple early stopping
         es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=10)
@@ -190,15 +198,23 @@ if __name__ == '__main__':
         
         y_test_predict = y_test_predict_n * (max_pot-min_pot) + min_pot
         y_train_predict = y_train_predict_n * (max_pot-min_pot) + min_pot
-
+        
         y_test = y_test_n * (max_pot-min_pot) + min_pot
         
         
         y_test_predict_acum = np.sum(y_test_predict, axis = 1)
+
         y_test_acum = np.sum(y_test, axis = 1)
         
-        y_dif_acum = np.subtract(y_test_predict_acum,y_test_acum)        
+        y_dif_acum = np.subtract(y_test_predict_acum, y_test_acum)        
+        Z = y_test.shape
+        cnt_datos_por_RO = Z[1]    
+
+        y_test_acum_por_muestra_pu_PAut = y_test_acum / cnt_datos_por_RO / parque2.PAutorizada
         
+        y_dif_acum_por_muestra_pu_PAut = y_dif_acum / cnt_datos_por_RO / parque2.PAutorizada
+        
+
         Error_medio = y_dif_acum.mean()
         
         MSE_test = np.square(y_dif_acum).mean()
@@ -206,6 +222,9 @@ if __name__ == '__main__':
         RMSE_test = MSE_test ** .5
         
         y_dif_acum_pu = np.divide(y_dif_acum,y_test_acum)
+
+        
+
 
         Error_medio_pu = np.divide(y_dif_acum,y_test_acum).mean()
 
@@ -222,17 +241,20 @@ if __name__ == '__main__':
 
         '''
         plt.figure()
-        plt.hist(y_dif_acum_pu, bins=100, cumulative=True, density = True)  
+        plt.hist(y_dif_acum, bins=100, cumulative=True, density = True)  
         plt.xlim(-1,1)
         plt.xticks(np.arange(-1, 1, step=0.1))
         plt.ylim(0,1)
         plt.yticks(np.arange(0, 1, step=0.1))
         '''
-
-    
-        filt_pat = X_Pats_n[i] < -1000
         
-        X_RO_n = X_Pats_n[i][~filt_pat].flatten()
+        plt.scatter(y_test_acum_por_muestra_pu_PAut,y_dif_acum_por_muestra_pu_PAut, marker = '.',color=(0,0,0,0.1))
+        plt.xlim(0,1)
+        plt.ylim(-1,1)
+        plt.xlabel('y_test_por_dato (pu_PAut)')
+        plt.ylabel('y_dif_por_dato (pu_PAut')
+        
+        X_RO_n = Pats_Data_n[i][~Pats_Filt[i]].flatten()
         
         X_RO_n = np.asmatrix(X_RO_n)
         
@@ -278,9 +300,6 @@ if __name__ == '__main__':
     
 
     graficas.clickplot(meds)
-    plt.show()
-    
-    
-    
+    plt.show()    
     
     
