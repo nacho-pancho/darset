@@ -13,6 +13,8 @@ import datos
 import graficas
 import filtros 
 import datetime
+import math
+
 
 from keras.layers import Dense, Dropout, LSTM
 
@@ -88,19 +90,16 @@ if __name__ == '__main__':
 
     delta = 5
     
-    dt_ini_calc = datetime.datetime(2018, 5, 27)
-    dt_fin_calc = datetime.datetime(2018, 5, 30)
+    dt_ini_calc = datetime.datetime(2018, 9, 9)
+    dt_fin_calc = datetime.datetime(2018, 9, 10)
 
     dt = t[1] - t[0]    
     k_ini_calc = round((dt_ini_calc - t[0])/dt)
     k_fin_calc = round((dt_fin_calc - t[0])/dt)
     
     Pats_Data_n = list()
-
     Pats_Filt = list()
-
-    Pats_Calc = list()
-    
+    Pats_Calc = list()   
     kini_calc = list()
    
     k = k_ini_calc
@@ -133,7 +132,7 @@ if __name__ == '__main__':
                 
     print(f"{len(Pats_Data_n) + 1} RO en el periodo {dt_ini_calc} a {dt_fin_calc}")
     
-    for i in range(len(Pats_Data_n)):
+    for i in range(1):#range(len(Pats_Data_n)):
         
         print(f"Calculando RO {i+1} de {len(Pats_Data_n)}")
         
@@ -167,7 +166,7 @@ if __name__ == '__main__':
         #model.add(Dense(n_features*5, activation='tanh', kernel_regularizer=l2_, bias_regularizer=l2_))
         #model.add(Dense(n_features*5, activation='tanh', kernel_regularizer=l2_, bias_regularizer=l2_))
         model.add(Dense(n_output, activation='sigmoid', kernel_regularizer=l2_, bias_regularizer=l2_))
-        model.compile(optimizer='adam', loss='mae', metrics=['mean_squared_error'])     
+        model.compile(optimizer='adam', loss='mse', metrics=['mean_squared_error'])     
 
         # simple early stopping
         es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=10)
@@ -203,41 +202,16 @@ if __name__ == '__main__':
         
         
         y_test_predict_acum = np.sum(y_test_predict, axis = 1)
+        y_test_predict_acum_MWh = y_test_predict_acum/6
 
         y_test_acum = np.sum(y_test, axis = 1)
+        y_test_acum_MWh = y_test_acum/6
         
         y_dif_acum = np.subtract(y_test_predict_acum, y_test_acum)        
-        Z = y_test.shape
-        cnt_datos_por_RO = Z[1]    
-
-        y_test_acum_por_muestra_pu_PAut = y_test_acum / cnt_datos_por_RO / parque2.PAutorizada
-        
-        y_dif_acum_por_muestra_pu_PAut = y_dif_acum / cnt_datos_por_RO / parque2.PAutorizada
-        
-
-        Error_medio = y_dif_acum.mean()
-        
-        MSE_test = np.square(y_dif_acum).mean()
-                
-        RMSE_test = MSE_test ** .5
-        
-        y_dif_acum_pu = np.divide(y_dif_acum,y_test_acum)
-
-        
+        y_dif_acum_MWh = y_dif_acum/6
 
 
-        Error_medio_pu = np.divide(y_dif_acum,y_test_acum).mean()
 
-        MSE_test_pu = np.square(y_dif_acum_pu).mean()        
-        RMSE_test_pu = MSE_test_pu ** .5
-        
-        print(f"MSE_test = {MSE_test} MW")
-        print(f"RMSE_test = {RMSE_test} MW")
-        print(f"EMed = {Error_medio} MW")
-        print(f"MSE_test = {MSE_test_pu*100} %")
-        print(f"RMSE_test = {RMSE_test_pu*100} %") 
-        print(f"EMed = {Error_medio_pu*100} %")
-        
 
         '''
         plt.figure()
@@ -247,27 +221,53 @@ if __name__ == '__main__':
         plt.ylim(0,1)
         plt.yticks(np.arange(0, 1, step=0.1))
         '''
+            
+
+        # calculo las dist empíricas para cada rango de ptos
+        sort = np.argsort(y_test_acum)
+        y_test_acum_MWh_sort = np.array(y_test_acum_MWh)[sort]
+        y_dif_acum_MWh_sort = np.array(y_dif_acum_MWh)[sort]
         
-        plt.scatter(y_test_acum_por_muestra_pu_PAut,y_dif_acum_por_muestra_pu_PAut, marker = '.',color=(0,0,0,0.1))
-        plt.xlim(0,1)
-        plt.ylim(-1,1)
-        plt.xlabel('y_test_por_dato (pu_PAut)')
-        plt.ylabel('y_dif_por_dato (pu_PAut')
+        NDatos_hist = 300
+        delta_datos= math.trunc(NDatos_hist/2)
         
-        X_RO_n = Pats_Data_n[i][~Pats_Filt[i]].flatten()
+        y_dif_acum_MWh_sort_PE70 = np.zeros(len(y_dif_acum_MWh_sort))
+        y_dif_acum_MWh_sort_PE30 = np.zeros(len(y_dif_acum_MWh_sort))
+        y_dif_acum_MWh_sort_PE50 = np.zeros(len(y_dif_acum_MWh_sort))
         
-        X_RO_n = np.asmatrix(X_RO_n)
+        for k in range(len(y_test_acum_MWh_sort)):
+            idx_izq = max(0, k-delta_datos) 
+            idx_der = min(len(y_test_acum_MWh_sort), k+delta_datos)
+            
+            y_dif_delta = y_dif_acum_MWh_sort[idx_izq:idx_der]
+            
+            y_dif_acum_MWh_sort_PE70[k] = np.quantile(y_dif_delta, 0.3) 
+            y_dif_acum_MWh_sort_PE30[k] = np.quantile(y_dif_delta, 0.7)
+            y_dif_acum_MWh_sort_PE50[k] = np.quantile(y_dif_delta, 0.5)
+            
         
-        y_RO_n = model.predict(X_RO_n)
+        plt.figure()
+        plt.scatter(y_test_acum_MWh,y_dif_acum_MWh, marker = '.',
+                    color=(0,0,0,0.1), label = 'Datos')
+        plt.plot(y_test_acum_MWh_sort, y_dif_acum_MWh_sort_PE70, label = 'PE70')
+        plt.plot(y_test_acum_MWh_sort, y_dif_acum_MWh_sort_PE50, label = 'PE50')
+        plt.plot(y_test_acum_MWh_sort, y_dif_acum_MWh_sort_PE30, label = 'PE30')
+        plt.legend()
+       #plt.xlim(0,1)
+        #plt.ylim(-1,1)
+        plt.grid()
+        plt.xlabel('y_test [MWh]')
+        plt.ylabel('y_dif [MWh]')
         
-        y_RO = y_RO_n * (max_pot-min_pot) + min_pot
-        
-        y_RO_= np.squeeze(y_RO)
         
         kini_RO = kini_calc[i] 
-        
+        X_RO_n = Pats_Data_n[i][~Pats_Filt[i]].flatten()
+        X_RO_n = np.asmatrix(X_RO_n)
+        y_RO_n = model.predict(X_RO_n)
+        y_RO = y_RO_n * (max_pot-min_pot) + min_pot
+        y_RO_= np.squeeze(y_RO)
         pot_estimada[kini_RO:kini_RO+y_RO_.size] = y_RO_
-    
+            
 
 
     #calculo la medida

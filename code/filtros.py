@@ -99,8 +99,9 @@ def Nrep(tipo):
 
 def filtrar_rango(v,min_v,max_v):
     filtro = numpy.zeros(len(v), dtype=bool)
+    tol = 0.05
     for i in range(len(v)):
-        if v[i]>max_v or v[i]<min_v:
+        if v[i]>max_v*(1+tol) or v[i]<min_v*(1-tol):
             filtro[i] = True    
     return filtro 
         

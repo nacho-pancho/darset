@@ -429,7 +429,7 @@ class Parque(object):
         filt_cgm = np.abs(self.pot.muestras - self.cgm.muestras) < (self.PAutorizada * 0.05)
         filt_cgm = filt_cgm & (self.cgm.muestras < 0.999 * self.PAutorizada )#* np.ones(len(self.cgm.muestras)))
         
-        Ndatos_afectados_RO = 3
+        Ndatos_afectados_RO = 2
         
         filt_cgm_ = copy.deepcopy(filt_cgm)
         
