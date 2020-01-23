@@ -137,6 +137,15 @@ if __name__ == '__main__':
     print(f"{len(Pats_Data_n) + 1} RO en el periodo {dt_ini_calc} a {dt_fin_calc}")
     
     for i in range(1):#range(len(Pats_Data_n)):
+
+        carpeta_ro = carpeta_central + str(i)  + '/'
+        if not os.path.exists(carpeta_ro):
+            os.mkdir(carpeta_ro)
+            print("Directory " , carpeta_ro ,  " Created ")
+        else:    
+            print("Directory " , carpeta_ro ,  " already exists")        
+
+        plt.savefig(carpeta_ro + 'errores.png')
         
         print(f"Calculando RO {i+1} de {len(Pats_Data_n)}")
         
@@ -176,7 +185,7 @@ if __name__ == '__main__':
         es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=15)
         # fit model
         history = model.fit(X_train_n, y_train_n, validation_data=(X_test_n, y_test_n), 
-                            epochs=3, verbose=1, callbacks=[es],initial_epoch = 1)
+                            epochs=100, verbose=1, callbacks=[es],initial_epoch = 1)
         # evaluate the model
         _, train_acc = model.evaluate(X_train_n, y_train_n, verbose=0)
         _, test_acc = model.evaluate(X_test_n, y_test_n, verbose=0)
@@ -190,6 +199,7 @@ if __name__ == '__main__':
         plt.plot(history.history['val_loss'], label='test')
         plt.legend()
         plt.show() 
+        plt.savefig(carpeta_ro + 'convergencia.png')
         
         
         
@@ -252,11 +262,19 @@ if __name__ == '__main__':
             y_dif_acum_MWh_sort_VE[k] = np.mean(y_dif_delta)
         
         E_est_MWh = sum(y_RO_)/6
-        E_est_MWh_PE70 = np.interp(E_est_MWh,y_all_acum_MWh_sort
+        E_dif_MWh_PE70 = np.interp(E_est_MWh,y_all_acum_MWh_sort
                                    , y_dif_acum_MWh_sort_PE70)      
-        E_est_MWh_PE30 = np.interp(E_est_MWh,y_all_acum_MWh_sort
+        E_dif_MWh_PE30 = np.interp(E_est_MWh,y_all_acum_MWh_sort
                                    , y_dif_acum_MWh_sort_PE30)
+        E_dif_MWh_VE = np.interp(E_est_MWh,y_all_acum_MWh_sort
+                                   , y_dif_acum_MWh_sort_VE)
+
         
+        ENS_VE = max(E_est_MWh-E_gen_RO,0)
+        
+        delta_70 = np.abs(E_dif_MWh_VE-E_dif_MWh_PE70)
+        
+        ENS_PE_70 = max(E_est_MWh-E_gen_RO-delta_70,0)
         
         plt.figure()
         plt.scatter(y_all_acum_MWh_sort,y_dif_all_acum_MWh, marker = '.',
@@ -275,22 +293,18 @@ if __name__ == '__main__':
         plt.xlabel('y_data [MWh]')
         plt.ylabel('y_dif [MWh]')
         
-        carpeta_ro = carpeta_central + str(i)  + '/'
-        if not os.path.exists(carpeta_ro):
-            os.mkdir(carpeta_ro)
-            print("Directory " , carpeta_ro ,  " Created ")
-        else:    
-            print("Directory " , carpeta_ro ,  " already exists")        
-
-        plt.savefig(carpeta_ro + 'errores.png')
 
         archi_ro = carpeta_ro + 'resumen'
        
         f = open(archi_ro,"w+")
         f.write('Estimacion [MWh] = ' + str(E_est_MWh) + ' MWh\n')
-        f.write('Estimacion_PE_70% [MWh] = ' + str(E_est_MWh_PE70) + ' MWh\n')
-        f.write('Estimacion_PE_30% [MWh] = ' + str(E_est_MWh_PE30) + ' MWh\n')
+        f.write('Error_PE_70% [MWh] = ' + str(E_dif_MWh_PE70) + ' MWh\n')
+        f.write('Error_PE_30% [MWh] = ' + str(E_dif_MWh_PE30) + ' MWh\n')
+        f.write('Error_VE% [MWh] = ' + str(E_dif_MWh_VE) + ' MWh\n')
+        f.write('Deta Error VE - PE70 [MWh] = ' + str(delta_70) + ' MWh\n')
         f.write('Energía Generada [MWh] = ' + str(E_gen_RO) + ' MWh\n')   
+        f.write('Energía No Suministrada VE [MWh] = ' + str(ENS_VE) + ' MWh\n')
+        f.write('Energía No Suministrada PE_70 [MWh] = ' + str(ENS_PE_70) + ' MWh\n')
         f.close()
 
     #calculo la medida
