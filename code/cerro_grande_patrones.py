@@ -14,6 +14,8 @@ import graficas
 import filtros 
 import datetime
 import math
+import os
+import copy
 
 
 from keras.layers import Dense, Dropout, LSTM
@@ -28,6 +30,7 @@ from keras.regularizers import l2
 if __name__ == '__main__':
     
     plt.close('all')
+    
     
 
     parque1 = archivos.leerArchivosCentral(5)
@@ -54,7 +57,8 @@ if __name__ == '__main__':
     vel_GEN_7 = parque2.medidores[0].get_medida('vel','gen')
     vel_SCADA_7 = parque2.medidores[0].get_medida('vel','scada')
     
-    
+    carpeta_central = archivos.path(parque2.id)
+
     t, M, F, nom_series = seriesAS.gen_series_analisis_serial(parque1, parque2,
                                                  nom_series_p1, nom_series_p2)    
 
@@ -84,14 +88,14 @@ if __name__ == '__main__':
     pot = M[:,-1]
    
     #inicializo la pot igual a la real, luego relleno huecos
-    pot_estimada = pot
+    pot_estimada = copy.copy(pot)
     
     filt_pot = F[:,-1]
 
     delta = 5
     
-    dt_ini_calc = datetime.datetime(2018, 9, 9)
-    dt_fin_calc = datetime.datetime(2018, 9, 10)
+    dt_ini_calc = datetime.datetime(2018, 5, 20)
+    dt_fin_calc = datetime.datetime(2018, 5, 21)
 
     dt = t[1] - t[0]    
     k_ini_calc = round((dt_ini_calc - t[0])/dt)
@@ -169,10 +173,10 @@ if __name__ == '__main__':
         model.compile(optimizer='adam', loss='mse', metrics=['mean_squared_error'])     
 
         # simple early stopping
-        es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=10)
+        es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=15)
         # fit model
         history = model.fit(X_train_n, y_train_n, validation_data=(X_test_n, y_test_n), 
-                            epochs=100, verbose=1, callbacks=[es],initial_epoch = 1)
+                            epochs=3, verbose=1, callbacks=[es],initial_epoch = 1)
         # evaluate the model
         _, train_acc = model.evaluate(X_train_n, y_train_n, verbose=0)
         _, test_acc = model.evaluate(X_test_n, y_test_n, verbose=0)
@@ -191,42 +195,42 @@ if __name__ == '__main__':
         
         y_test_predict_n = model.predict(X_test_n) 
         y_train_predict_n = model.predict(X_train_n) 
+
+        kini_RO = kini_calc[i] 
+        X_RO_n = Pats_Data_n[i][~Pats_Filt[i]].flatten()
+        X_RO_n = np.asmatrix(X_RO_n)
+        y_RO_n = model.predict(X_RO_n)
+        y_RO = y_RO_n * (max_pot-min_pot) + min_pot
+        y_RO_= np.squeeze(y_RO)
+        pot_estimada[kini_RO:kini_RO+y_RO_.size] = y_RO_        
+        
+        E_gen_RO = sum(pot[kini_RO:kini_RO+y_RO_.size])/6
         
         # desnormalizo 
         
         
         y_test_predict = y_test_predict_n * (max_pot-min_pot) + min_pot
         y_train_predict = y_train_predict_n * (max_pot-min_pot) + min_pot
+        y_predict_all = np.concatenate((y_test_predict, y_train_predict), axis=0)
+        
         
         y_test = y_test_n * (max_pot-min_pot) + min_pot
+        y_train = y_train_n * (max_pot-min_pot) + min_pot
+        y_all = np.concatenate((y_test, y_train), axis=0)
         
+        y_predict_all_acum = np.sum(y_predict_all, axis = 1)
+        y_predict_all_acum_MWh = y_predict_all_acum/6
+
+        y_all_acum = np.sum(y_all, axis = 1)
+        y_all_acum_MWh = y_all_acum/6
         
-        y_test_predict_acum = np.sum(y_test_predict, axis = 1)
-        y_test_predict_acum_MWh = y_test_predict_acum/6
+        y_dif_all_acum_MWh = np.subtract(y_predict_all_acum_MWh, y_all_acum_MWh)        
 
-        y_test_acum = np.sum(y_test, axis = 1)
-        y_test_acum_MWh = y_test_acum/6
-        
-        y_dif_acum = np.subtract(y_test_predict_acum, y_test_acum)        
-        y_dif_acum_MWh = y_dif_acum/6
-
-
-
-
-        '''
-        plt.figure()
-        plt.hist(y_dif_acum, bins=100, cumulative=True, density = True)  
-        plt.xlim(-1,1)
-        plt.xticks(np.arange(-1, 1, step=0.1))
-        plt.ylim(0,1)
-        plt.yticks(np.arange(0, 1, step=0.1))
-        '''
-            
 
         # calculo las dist empíricas para cada rango de ptos
-        sort = np.argsort(y_test_acum)
-        y_test_acum_MWh_sort = np.array(y_test_acum_MWh)[sort]
-        y_dif_acum_MWh_sort = np.array(y_dif_acum_MWh)[sort]
+        sort = np.argsort(y_all_acum_MWh)
+        y_all_acum_MWh_sort = np.array(y_all_acum_MWh)[sort]
+        y_dif_acum_MWh_sort = np.array(y_dif_all_acum_MWh)[sort]
         
         NDatos_hist = 300
         delta_datos= math.trunc(NDatos_hist/2)
@@ -234,41 +238,60 @@ if __name__ == '__main__':
         y_dif_acum_MWh_sort_PE70 = np.zeros(len(y_dif_acum_MWh_sort))
         y_dif_acum_MWh_sort_PE30 = np.zeros(len(y_dif_acum_MWh_sort))
         y_dif_acum_MWh_sort_PE50 = np.zeros(len(y_dif_acum_MWh_sort))
+        y_dif_acum_MWh_sort_VE = np.zeros(len(y_dif_acum_MWh_sort))
         
-        for k in range(len(y_test_acum_MWh_sort)):
+        for k in range(len(y_all_acum_MWh_sort)):
             idx_izq = max(0, k-delta_datos) 
-            idx_der = min(len(y_test_acum_MWh_sort), k+delta_datos)
+            idx_der = min(len(y_all_acum_MWh_sort), k+delta_datos)
             
             y_dif_delta = y_dif_acum_MWh_sort[idx_izq:idx_der]
             
             y_dif_acum_MWh_sort_PE70[k] = np.quantile(y_dif_delta, 0.3) 
             y_dif_acum_MWh_sort_PE30[k] = np.quantile(y_dif_delta, 0.7)
             y_dif_acum_MWh_sort_PE50[k] = np.quantile(y_dif_delta, 0.5)
-            
+            y_dif_acum_MWh_sort_VE[k] = np.mean(y_dif_delta)
+        
+        E_est_MWh = sum(y_RO_)/6
+        E_est_MWh_PE70 = np.interp(E_est_MWh,y_all_acum_MWh_sort
+                                   , y_dif_acum_MWh_sort_PE70)      
+        E_est_MWh_PE30 = np.interp(E_est_MWh,y_all_acum_MWh_sort
+                                   , y_dif_acum_MWh_sort_PE30)
+        
         
         plt.figure()
-        plt.scatter(y_test_acum_MWh,y_dif_acum_MWh, marker = '.',
+        plt.scatter(y_all_acum_MWh_sort,y_dif_all_acum_MWh, marker = '.',
                     color=(0,0,0,0.1), label = 'Datos')
-        plt.plot(y_test_acum_MWh_sort, y_dif_acum_MWh_sort_PE70, label = 'PE70')
-        plt.plot(y_test_acum_MWh_sort, y_dif_acum_MWh_sort_PE50, label = 'PE50')
-        plt.plot(y_test_acum_MWh_sort, y_dif_acum_MWh_sort_PE30, label = 'PE30')
+        plt.plot(y_all_acum_MWh_sort, y_dif_acum_MWh_sort_PE70, label = 'PE70')
+        plt.plot(y_all_acum_MWh_sort, y_dif_acum_MWh_sort_PE50, label = 'PE50')
+        plt.plot(y_all_acum_MWh_sort, y_dif_acum_MWh_sort_PE30, label = 'PE30')
+        plt.plot(y_all_acum_MWh_sort, y_dif_acum_MWh_sort_VE, label = 'VE')
+
+        plt.axvline(E_est_MWh, color='k', linestyle='--',label = 'ENS_estimada')
         plt.legend()
-       #plt.xlim(0,1)
+        
+        #plt.xlim(0,1)
         #plt.ylim(-1,1)
         plt.grid()
-        plt.xlabel('y_test [MWh]')
+        plt.xlabel('y_data [MWh]')
         plt.ylabel('y_dif [MWh]')
         
-        
-        kini_RO = kini_calc[i] 
-        X_RO_n = Pats_Data_n[i][~Pats_Filt[i]].flatten()
-        X_RO_n = np.asmatrix(X_RO_n)
-        y_RO_n = model.predict(X_RO_n)
-        y_RO = y_RO_n * (max_pot-min_pot) + min_pot
-        y_RO_= np.squeeze(y_RO)
-        pot_estimada[kini_RO:kini_RO+y_RO_.size] = y_RO_
-            
+        carpeta_ro = carpeta_central + str(i)  + '/'
+        if not os.path.exists(carpeta_ro):
+            os.mkdir(carpeta_ro)
+            print("Directory " , carpeta_ro ,  " Created ")
+        else:    
+            print("Directory " , carpeta_ro ,  " already exists")        
 
+        plt.savefig(carpeta_ro + 'errores.png')
+
+        archi_ro = carpeta_ro + 'resumen'
+       
+        f = open(archi_ro,"w+")
+        f.write('Estimacion [MWh] = ' + str(E_est_MWh) + ' MWh\n')
+        f.write('Estimacion_PE_70% [MWh] = ' + str(E_est_MWh_PE70) + ' MWh\n')
+        f.write('Estimacion_PE_30% [MWh] = ' + str(E_est_MWh_PE30) + ' MWh\n')
+        f.write('Energía Generada [MWh] = ' + str(E_gen_RO) + ' MWh\n')   
+        f.close()
 
     #calculo la medida
     tipoDato = 'pot'
