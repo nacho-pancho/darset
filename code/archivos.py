@@ -110,7 +110,17 @@ def path(ncentral):
     return RUTA_DATOS +'c'+ str(ncentral) + '/'
 
 ##############################################################################
-    
+
+def path_ro (nro_ro, carpeta_central):
+        
+    carpeta_ro = carpeta_central + str(nro_ro)  + '/'
+    if not os.path.exists(carpeta_ro):
+        os.mkdir(carpeta_ro)
+        print("Directory " , carpeta_ro ,  " Created ")
+    else:    
+        print("Directory " , carpeta_ro ,  " already exists")        
+    return carpeta_ro
+##############################################################################    
 def leerCampo(file):
     line = file.readline().strip()
     cols = line.split()

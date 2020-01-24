@@ -4,6 +4,12 @@ Created on Mon Dec 23 15:32:25 2019
 
 @author: fpalacio
 """
+from numpy.random import seed
+seed(1)
+from tensorflow import set_random_seed
+set_random_seed(2)
+
+
 import archivos
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,6 +23,13 @@ import math
 import os
 import copy
 
+import keras.backend as K
+
+def my_loss(y_true, y_pred):
+    
+    custom_loss = K.square(K.mean(y_pred, axis=1)-K.mean(y_true, axis=1))
+   
+    return custom_loss
 
 from keras.layers import Dense, Dropout, LSTM
 
@@ -28,6 +41,9 @@ from sklearn.model_selection import train_test_split
 from keras.regularizers import l2
 
 if __name__ == '__main__':
+
+
+
     
     plt.close('all')
     
@@ -94,8 +110,8 @@ if __name__ == '__main__':
 
     delta = 5
     
-    dt_ini_calc = datetime.datetime(2018, 5, 20)
-    dt_fin_calc = datetime.datetime(2018, 5, 21)
+    dt_ini_calc = datetime.datetime(2018, 10, 21)
+    dt_fin_calc = datetime.datetime(2018, 10, 22)
 
     dt = t[1] - t[0]    
     k_ini_calc = round((dt_ini_calc - t[0])/dt)
@@ -105,7 +121,9 @@ if __name__ == '__main__':
     Pats_Filt = list()
     Pats_Calc = list()   
     kini_calc = list()
-   
+    dtini_calc = list()
+    dtfin_calc = list()
+  
     k = k_ini_calc
     
     while k <= k_fin_calc:
@@ -113,12 +131,17 @@ if __name__ == '__main__':
         if filt_pot[k]:
             # Encuentro RO
             kiniRO = k
-            kini_calc.append(kiniRO)
+            kini_calc.append(kiniRO) 
+            dtiniRO = t[0] + kiniRO * dt
+            dtini_calc.append(dtiniRO)
             # Avanzo RO hasta salir 
             while (k <= k_fin_calc) and (filt_pot[k+1]):
                 k = k + 1
            
             kfinRO = k                  
+            dtfinRO = t[0] + kfinRO * dt
+            dtfin_calc.append(dtfinRO)
+            
             #Agrego sequencia con RO patron
             pat_data_n = M_n[(kiniRO - delta):(kfinRO + delta),:]
             pat_filt = F[(kiniRO - delta):(kfinRO + delta),:]
@@ -138,14 +161,8 @@ if __name__ == '__main__':
     
     for i in range(1):#range(len(Pats_Data_n)):
 
-        carpeta_ro = carpeta_central + str(i)  + '/'
-        if not os.path.exists(carpeta_ro):
-            os.mkdir(carpeta_ro)
-            print("Directory " , carpeta_ro ,  " Created ")
-        else:    
-            print("Directory " , carpeta_ro ,  " already exists")        
-
-        plt.savefig(carpeta_ro + 'errores.png')
+        carpeta_ro = archivos.path_ro(i+1, carpeta_central)
+        
         
         print(f"Calculando RO {i+1} de {len(Pats_Data_n)}")
         
@@ -182,10 +199,10 @@ if __name__ == '__main__':
         model.compile(optimizer='adam', loss='mse', metrics=['mean_squared_error'])     
 
         # simple early stopping
-        es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=15)
+        es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=30)
         # fit model
         history = model.fit(X_train_n, y_train_n, validation_data=(X_test_n, y_test_n), 
-                            epochs=100, verbose=1, callbacks=[es],initial_epoch = 1)
+                            epochs=100, verbose=1, callbacks=[es])
         # evaluate the model
         _, train_acc = model.evaluate(X_train_n, y_train_n, verbose=0)
         _, test_acc = model.evaluate(X_test_n, y_test_n, verbose=0)
@@ -198,6 +215,7 @@ if __name__ == '__main__':
         plt.plot(history.history['loss'], label='train')
         plt.plot(history.history['val_loss'], label='test')
         plt.legend()
+        plt.grid()
         plt.show() 
         plt.savefig(carpeta_ro + 'convergencia.png')
         
@@ -217,8 +235,7 @@ if __name__ == '__main__':
         E_gen_RO = sum(pot[kini_RO:kini_RO+y_RO_.size])/6
         
         # desnormalizo 
-        
-        
+
         y_test_predict = y_test_predict_n * (max_pot-min_pot) + min_pot
         y_train_predict = y_train_predict_n * (max_pot-min_pot) + min_pot
         y_predict_all = np.concatenate((y_test_predict, y_train_predict), axis=0)
@@ -238,8 +255,8 @@ if __name__ == '__main__':
 
 
         # calculo las dist empíricas para cada rango de ptos
-        sort = np.argsort(y_all_acum_MWh)
-        y_all_acum_MWh_sort = np.array(y_all_acum_MWh)[sort]
+        sort = np.argsort(y_predict_all_acum_MWh)
+        y_predict_all_acum_MWh_sort = np.array(y_predict_all_acum_MWh)[sort]
         y_dif_acum_MWh_sort = np.array(y_dif_all_acum_MWh)[sort]
         
         NDatos_hist = 300
@@ -250,9 +267,9 @@ if __name__ == '__main__':
         y_dif_acum_MWh_sort_PE50 = np.zeros(len(y_dif_acum_MWh_sort))
         y_dif_acum_MWh_sort_VE = np.zeros(len(y_dif_acum_MWh_sort))
         
-        for k in range(len(y_all_acum_MWh_sort)):
+        for k in range(len(y_predict_all_acum_MWh_sort)):
             idx_izq = max(0, k-delta_datos) 
-            idx_der = min(len(y_all_acum_MWh_sort), k+delta_datos)
+            idx_der = min(len(y_predict_all_acum_MWh_sort), k+delta_datos)
             
             y_dif_delta = y_dif_acum_MWh_sort[idx_izq:idx_der]
             
@@ -262,11 +279,11 @@ if __name__ == '__main__':
             y_dif_acum_MWh_sort_VE[k] = np.mean(y_dif_delta)
         
         E_est_MWh = sum(y_RO_)/6
-        E_dif_MWh_PE70 = np.interp(E_est_MWh,y_all_acum_MWh_sort
+        E_dif_MWh_PE70 = np.interp(E_est_MWh,y_predict_all_acum_MWh_sort
                                    , y_dif_acum_MWh_sort_PE70)      
-        E_dif_MWh_PE30 = np.interp(E_est_MWh,y_all_acum_MWh_sort
+        E_dif_MWh_PE30 = np.interp(E_est_MWh,y_predict_all_acum_MWh_sort
                                    , y_dif_acum_MWh_sort_PE30)
-        E_dif_MWh_VE = np.interp(E_est_MWh,y_all_acum_MWh_sort
+        E_dif_MWh_VE = np.interp(E_est_MWh,y_predict_all_acum_MWh_sort
                                    , y_dif_acum_MWh_sort_VE)
 
         
@@ -277,34 +294,36 @@ if __name__ == '__main__':
         ENS_PE_70 = max(E_est_MWh-E_gen_RO-delta_70,0)
         
         plt.figure()
-        plt.scatter(y_all_acum_MWh_sort,y_dif_all_acum_MWh, marker = '.',
+        plt.scatter(y_predict_all_acum_MWh_sort,y_dif_all_acum_MWh, marker = '.',
                     color=(0,0,0,0.1), label = 'Datos')
-        plt.plot(y_all_acum_MWh_sort, y_dif_acum_MWh_sort_PE70, label = 'PE70')
-        plt.plot(y_all_acum_MWh_sort, y_dif_acum_MWh_sort_PE50, label = 'PE50')
-        plt.plot(y_all_acum_MWh_sort, y_dif_acum_MWh_sort_PE30, label = 'PE30')
-        plt.plot(y_all_acum_MWh_sort, y_dif_acum_MWh_sort_VE, label = 'VE')
+        plt.plot(y_predict_all_acum_MWh_sort, y_dif_acum_MWh_sort_PE70, label = 'PE70')
+        plt.plot(y_predict_all_acum_MWh_sort, y_dif_acum_MWh_sort_PE50, label = 'PE50')
+        plt.plot(y_predict_all_acum_MWh_sort, y_dif_acum_MWh_sort_PE30, label = 'PE30')
+        plt.plot(y_predict_all_acum_MWh_sort, y_dif_acum_MWh_sort_VE, label = 'VE')
 
-        plt.axvline(E_est_MWh, color='k', linestyle='--',label = 'ENS_estimada')
+        plt.axvline(E_est_MWh, color='k', linestyle='--', label = 'ENS_estimada')
         plt.legend()
+        
+        plt.savefig(carpeta_ro + 'errores.png')
         
         #plt.xlim(0,1)
         #plt.ylim(-1,1)
         plt.grid()
-        plt.xlabel('y_data [MWh]')
-        plt.ylabel('y_dif [MWh]')
+        plt.xlabel('E_modelo [MWh]')
+        plt.ylabel('E_dif [MWh]')
         
 
         archi_ro = carpeta_ro + 'resumen'
        
         f = open(archi_ro,"w+")
-        f.write('Estimacion [MWh] = ' + str(E_est_MWh) + ' MWh\n')
-        f.write('Error_PE_70% [MWh] = ' + str(E_dif_MWh_PE70) + ' MWh\n')
-        f.write('Error_PE_30% [MWh] = ' + str(E_dif_MWh_PE30) + ' MWh\n')
-        f.write('Error_VE% [MWh] = ' + str(E_dif_MWh_VE) + ' MWh\n')
-        f.write('Deta Error VE - PE70 [MWh] = ' + str(delta_70) + ' MWh\n')
-        f.write('Energía Generada [MWh] = ' + str(E_gen_RO) + ' MWh\n')   
-        f.write('Energía No Suministrada VE [MWh] = ' + str(ENS_VE) + ' MWh\n')
-        f.write('Energía No Suministrada PE_70 [MWh] = ' + str(ENS_PE_70) + ' MWh\n')
+        f.write('Estimacion [MWh] = ' + str(round(E_est_MWh,3)) + ' MWh\n')
+        f.write('Error_PE_70% [MWh] = ' + str(round(E_dif_MWh_PE70,3)) + ' MWh\n')
+        f.write('Error_PE_30% [MWh] = ' + str(round(E_dif_MWh_PE30,3)) + ' MWh\n')
+        f.write('Error_VE [MWh] = ' + str(round(E_dif_MWh_VE,3)) + ' MWh\n')
+        f.write('Deta Error VE - PE70 [MWh] = ' + str(round(delta_70,3)) + ' MWh\n')
+        f.write('Energía Generada [MWh] = ' + str(round(E_gen_RO,3)) + ' MWh\n')   
+        f.write('Energía No Suministrada VE [MWh] = ' + str(round(ENS_VE,3)) + ' MWh\n')
+        f.write('Energía No Suministrada PE_70 [MWh] = ' + str(round(ENS_PE_70,3)) + ' MWh\n')
         f.close()
 
     #calculo la medida
@@ -312,7 +331,8 @@ if __name__ == '__main__':
     nrep = filtros.Nrep(tipoDato)
     pCG_mod = datos.Medida('estimacion',pot_estimada , t,
                            tipoDato,'pot_estimada', 0, 60, nrep)     
-    
+
+
     pot_scada_mw = parque1.pot
     pot_scada_cg = parque2.pot
     cgm_cg = parque2.cgm
@@ -327,16 +347,50 @@ if __name__ == '__main__':
     meds.append(vel_GEN_5)
     meds.append(vel_scada_5)
 
-    meds.append(vel_GEN_7)
-    meds.append(vel_SCADA_7)
+    #meds.append(vel_GEN_7)
+    #meds.append(vel_SCADA_7)
     
-    meds.append(vel_PRONOS_7)
+    #meds.append(vel_PRONOS_7)
     
     #meds.append(dir_pronos_5)
     #meds.append(dir_scada_5)
     
 
     graficas.clickplot(meds)
-    plt.show()    
+    plt.show()  
     
+    # Guardo capturas de pantalla de los datos y estimación de todas las RO
+
+    for i in range(1):#range(len(Pats_Data_n)):
+        
+        dtini_w = dtini_calc[i] - datetime.timedelta(minutes=delta*100)
+        dtfin_w = dtfin_calc[i] + datetime.timedelta(minutes=delta*100)
+        
+        graficas.window = [dtini_w, dtfin_w]
+        
+        graficas.clickplot_redraw()
+        
+        plt.savefig(carpeta_ro + 'datos.png')
+    
+
+
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
     

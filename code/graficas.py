@@ -121,7 +121,7 @@ def clickplot_redraw():
 
     for i in range(len(tipos)):
         plt.subplot( NGrafs, 1, i+1 )
-        plt.legend( legends[ tipos[i] ], loc='upper right' )
+        plt.legend( legends[ tipos[i] ], loc='upper right', prop={'size': 4} )
         plt.grid(True)
 
     #
@@ -144,7 +144,7 @@ def clickplot_redraw():
     #
     # actualizar el zoom del mapa
     #    
-    if 1: #if imprimir_map_zoom:
+    if imprimir_map_zoom:
         #print('mapa zoom',time.time()-t0)
         t0 = time.time()
         plt.subplot(NGrafs, 1, NGrafs-1)
@@ -153,7 +153,7 @@ def clickplot_redraw():
         plt.gca().get_xaxis().set_visible(False)
         plt.gca().get_yaxis().set_visible(False)
         plt.draw()
-    plt.tight_layout(pad=1.5)
+    plt.tight_layout()#pad=1.5)
     #print('listo',time.time()-t0)
         
 
@@ -231,6 +231,7 @@ def clickplot(_medidas,figsize=(8,6)):
     #
     
     clickfig = plt.figure(figsize=figsize,dpi=96)
+    
     nfiltros = 0
     for m in medidas:
         nfiltros = nfiltros + len (m.get_filtros())
@@ -251,6 +252,8 @@ def clickplot(_medidas,figsize=(8,6)):
     window_size = DEFAULT_WINDOW_SIZE
     window = (tini, tini+window_size)
     clickplot_redraw()
+    
+    return clickfig
 
 #---------------------------------------------------------------------------------
 
