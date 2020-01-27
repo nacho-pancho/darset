@@ -16,6 +16,8 @@ import pandas as pd
 import scipy.signal as signal
 import pickle
 import gzip
+import re
+
 
 ##############################################################################
 
@@ -91,6 +93,11 @@ def archiSCADA(ncentral):
 
 ##############################################################################
 
+def archi_ro_pendientes(ncentral):
+    return os.path.join(RUTA_DATOS,f'c{ncentral}/ro_pendientes_{ncentral}.txt')
+
+##############################################################################
+
 def archiGEN(ncentral):
     return RUTA_DATOS +'/c'+ str(ncentral) +'/c'+str(ncentral)+'_series10minGen.sas'
 
@@ -121,6 +128,7 @@ def path_ro (nro_ro, carpeta_central):
         print("Directory " , carpeta_ro ,  " already exists")        
     return carpeta_ro
 ##############################################################################    
+
 def leerCampo(file):
     line = file.readline().strip()
     cols = line.split()
@@ -537,3 +545,37 @@ def cargarCentral(id):
     with gzip.open(archi_central,'r') as input:
         parque = pickle.load(input)
         return parque
+    
+##############################################################################
+
+def leer_ro_pendientes(nidcentral):
+
+    archi_ro = archi_ro_pendientes(nidcentral)       
+
+    if not os.path.exists(archi_ro):
+        print(f"AVISO: no hay ro pendientes para esta central. Archivo {archi_ro} no encontrado.")
+        return None
+        exit
+
+    print(f"Leyendo archivo de ro faltantes para la central {nidcentral}: {archi_ro}")
+    
+    f = open(archi_ro, 'r')
+    
+    # Leo datos
+    lines = f.readlines()
+    
+    date_ini = []
+    date_fin = []
+    
+    for k in range(len(lines)):
+        line = lines[k]
+        cols = re.split('\t|\n', line)
+        
+        fmt = '%d-%m-%y %H:%M'
+        dtiniRO = datetime.datetime.strptime(cols[1], fmt )
+        dtfinRO = datetime.datetime.strptime(cols[2], fmt)
+              
+        date_ini.append(dtiniRO)
+        date_fin.append(dtfinRO)
+   
+    return date_ini, date_fin

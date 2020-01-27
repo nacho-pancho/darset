@@ -78,6 +78,11 @@ if __name__ == '__main__':
     t, M, F, nom_series = seriesAS.gen_series_analisis_serial(parque1, parque2,
                                                  nom_series_p1, nom_series_p2)    
 
+
+    dt_ini_calc, dt_fin_calc = archivos.leer_ro_pendientes(parque2.id)
+    
+
+
     # Normalizo datos 
     
     df_M = pd.DataFrame(M, index=t, columns=nom_series) 
@@ -110,64 +115,76 @@ if __name__ == '__main__':
 
     delta = 5
     
-    dt_ini_calc = datetime.datetime(2018, 5, 1)
-    dt_fin_calc = datetime.datetime(2018, 6, 1)
-
+    
     dt = t[1] - t[0]    
-    k_ini_calc = round((dt_ini_calc - t[0])/dt)
-    k_fin_calc = round((dt_fin_calc - t[0])/dt)
+    k_ini_calc = [round((dt_ - t[0])/dt) for dt_ in dt_ini_calc]
+    k_fin_calc = [round((dt_ - t[0])/dt) for dt_ in dt_fin_calc]
     
     Pats_Data_n = list()
     Pats_Filt = list()
     Pats_Calc = list()   
+    
+    cant_ros = 0
+
+
     kini_calc = list()
-    dtini_calc = list()
-    dtfin_calc = list()
-  
-    k = k_ini_calc
+    dtini_ro = list()
+    dtfin_ro = list()
+    kini_ro = list()
     
-    while k <= k_fin_calc:
+    for kcalc in range(len(k_ini_calc)):
+            
+        kini_calc = k_ini_calc[kcalc]
+        kfin_calc = k_fin_calc[kcalc]                 
         
-        if filt_pot[k]:
-            # Encuentro RO
-            kiniRO = k
-            kini_calc.append(kiniRO) 
-            dtiniRO = t[0] + kiniRO * dt
-            dtini_calc.append(dtiniRO)
-            # Avanzo RO hasta salir 
-            while (k <= k_fin_calc) and (filt_pot[k+1]):
-                k = k + 1
+        k = kini_calc
+        
+        while k <= kfin_calc:
            
-            kfinRO = k                  
-            dtfinRO = t[0] + kfinRO * dt
-            dtfin_calc.append(dtfinRO)
-            
-            #Agrego sequencia con RO patron
-            pat_data_n = M_n[(kiniRO - delta):(kfinRO + delta),:]
-            pat_filt = F[(kiniRO - delta):(kfinRO + delta),:]
-            
-            Pats_Data_n.append(pat_data_n)
-            Pats_Filt.append(pat_filt)
-                      
-            x_calc_n = np.full(len(pat_data_n), False)
-            x_calc_n[delta:-delta+1] = True
-            Pats_Calc.append(x_calc_n)
-
-            k = k + 1
-        else:
-            k = k + 1
+            if filt_pot[k]:
+                # Encuentro RO
+                kiniRO = k
+                kini_ro.append(kiniRO) 
+                dtiniRO = t[0] + kiniRO * dt
+                dtini_ro.append(dtiniRO)
+                # Avanzo RO hasta salir 
+                while (k <= kfin_calc) and (filt_pot[k+1]):
+                    k = k + 1
+               
+                kfinRO = k                  
+                dtfinRO = t[0] + kfinRO * dt
+                dtfin_ro.append(dtfinRO)
                 
-    print(f"{len(Pats_Data_n) + 1} RO en el periodo {dt_ini_calc} a {dt_fin_calc}")
+                #Agrego sequencia con RO patron
+                pat_data_n = M_n[(kiniRO - delta):(kfinRO + delta),:]
+                pat_filt = F[(kiniRO - delta):(kfinRO + delta),:]
+            
+                Pats_Data_n.append(pat_data_n)
+                Pats_Filt.append(pat_filt)
+                          
+                x_calc_n = np.full(len(pat_data_n), False)
+                x_calc_n[delta:-delta+1] = True
+                Pats_Calc.append(x_calc_n)
     
-    for i in range(19):#range(len(Pats_Data_n)):
+                k = k + 1
+            else:
+                k = k + 1  
+            
+            
+            
+            
+            
 
-        carpeta_ro = archivos.path_ro(i+1, carpeta_central)
+
+    for kRO in range(len(Pats_Data_n)):
+
+        carpeta_ro = archivos.path_ro(kRO+1, carpeta_central)
         
         
-        print(f"Calculando RO {i+1} de {len(Pats_Data_n)}")
+        print(f"Calculando RO {kRO+1} de {len(Pats_Data_n)}")
         
-        X_n,y_n = seriesAS.split_sequences_patrones(F, M_n, Pats_Data_n[i],
-                                                    Pats_Filt[i], Pats_Calc[i])
+        X_n,y_n = seriesAS.split_sequences_patrones(F, M_n, Pats_Data_n[kRO],
+                                                    Pats_Filt[kRO], Pats_Calc[kRO])
 
         train_pu = 0.7
         
@@ -216,7 +233,7 @@ if __name__ == '__main__':
         plt.plot(history.history['val_loss'], label='test')
         plt.legend()
         plt.grid()
-        plt.show() 
+        #plt.show() 
         plt.savefig(carpeta_ro + 'convergencia.png')
         
         
@@ -224,8 +241,8 @@ if __name__ == '__main__':
         y_test_predict_n = model.predict(X_test_n) 
         y_train_predict_n = model.predict(X_train_n) 
 
-        kini_RO = kini_calc[i] 
-        X_RO_n = Pats_Data_n[i][~Pats_Filt[i]].flatten()
+        kini_RO = kini_ro[kRO] 
+        X_RO_n = Pats_Data_n[kRO][~Pats_Filt[kRO]].flatten()
         X_RO_n = np.asmatrix(X_RO_n)
         y_RO_n = model.predict(X_RO_n)
         y_RO = y_RO_n * (max_pot-min_pot) + min_pot
@@ -303,19 +320,17 @@ if __name__ == '__main__':
 
         plt.axvline(E_est_MWh, color='k', linestyle='--', label = 'ENS_estimada')
         plt.legend()
-        
-        plt.savefig(carpeta_ro + 'errores.png')
-        
-        #plt.xlim(0,1)
-        #plt.ylim(-1,1)
         plt.grid()
         plt.xlabel('E_modelo [MWh]')
-        plt.ylabel('E_dif [MWh]')
-        
+        plt.ylabel('E_dif [MWh]')        
+        #plt.show()
+        plt.savefig(carpeta_ro + 'errores.png')
+
 
         archi_ro = carpeta_ro + 'resumen'
        
         f = open(archi_ro,"w+")
+        f.write('Período RO: ' + str(dtini_ro[kRO]) + ' a ' + str(dtfin_ro[kRO]) + '\n')
         f.write('Estimacion [MWh] = ' + str(round(E_est_MWh,3)) + ' MWh\n')
         f.write('Error_PE_70% [MWh] = ' + str(round(E_dif_MWh_PE70,3)) + ' MWh\n')
         f.write('Error_PE_30% [MWh] = ' + str(round(E_dif_MWh_PE30,3)) + ' MWh\n')
@@ -357,20 +372,20 @@ if __name__ == '__main__':
     
 
     graficas.clickplot(meds)
-    plt.show()  
+    #plt.show()  
     
     # Guardo capturas de pantalla de los datos y estimación de todas las RO
 
-    for i in range(19):#range(len(Pats_Data_n)):
+    for kRO in range(len(Pats_Data_n)):
         
-        dtini_w = dtini_calc[i] - datetime.timedelta(minutes=delta*100)
-        dtfin_w = dtfin_calc[i] + datetime.timedelta(minutes=delta*100)
+        dtini_w = dtini_ro [kRO] - datetime.timedelta(minutes=delta*100)
+        dtfin_w = dtfin_ro[kRO] + datetime.timedelta(minutes=delta*100)
         
         graficas.window = [dtini_w, dtfin_w]
         
         graficas.clickplot_redraw()
         
-        carpeta_ro = archivos.path_ro(i+1, carpeta_central)
+        carpeta_ro = archivos.path_ro(kRO+1, carpeta_central)
         plt.savefig(carpeta_ro + 'datos.png')
     
 
