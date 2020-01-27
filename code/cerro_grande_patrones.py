@@ -110,8 +110,8 @@ if __name__ == '__main__':
 
     delta = 5
     
-    dt_ini_calc = datetime.datetime(2018, 10, 21)
-    dt_fin_calc = datetime.datetime(2018, 10, 22)
+    dt_ini_calc = datetime.datetime(2018, 5, 1)
+    dt_fin_calc = datetime.datetime(2018, 6, 1)
 
     dt = t[1] - t[0]    
     k_ini_calc = round((dt_ini_calc - t[0])/dt)
@@ -159,7 +159,7 @@ if __name__ == '__main__':
                 
     print(f"{len(Pats_Data_n) + 1} RO en el periodo {dt_ini_calc} a {dt_fin_calc}")
     
-    for i in range(1):#range(len(Pats_Data_n)):
+    for i in range(19):#range(len(Pats_Data_n)):
 
         carpeta_ro = archivos.path_ro(i+1, carpeta_central)
         
@@ -361,7 +361,7 @@ if __name__ == '__main__':
     
     # Guardo capturas de pantalla de los datos y estimación de todas las RO
 
-    for i in range(1):#range(len(Pats_Data_n)):
+    for i in range(19):#range(len(Pats_Data_n)):
         
         dtini_w = dtini_calc[i] - datetime.timedelta(minutes=delta*100)
         dtfin_w = dtfin_calc[i] + datetime.timedelta(minutes=delta*100)
@@ -370,6 +370,7 @@ if __name__ == '__main__':
         
         graficas.clickplot_redraw()
         
+        carpeta_ro = archivos.path_ro(i+1, carpeta_central)
         plt.savefig(carpeta_ro + 'datos.png')
     
 
