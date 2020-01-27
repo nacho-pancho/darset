@@ -124,8 +124,6 @@ if __name__ == '__main__':
     Pats_Filt = list()
     Pats_Calc = list()   
     
-    cant_ros = 0
-
 
     kini_calc = list()
     dtini_ro = list()
@@ -169,10 +167,6 @@ if __name__ == '__main__':
                 k = k + 1
             else:
                 k = k + 1  
-            
-            
-            
-            
             
 
 
