@@ -393,7 +393,8 @@ if __name__ == '__main__':
 
     # guardo resumen RO
     
-    df_ro.to_csv(carpeta_central + 'resumen.txt', index=True, sep='\t') 
+    df_ro.to_csv(carpeta_central + 'resumen.txt', index=True, sep='\t',
+                 float_format='%.2f') 
 
         
         
