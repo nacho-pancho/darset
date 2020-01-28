@@ -83,15 +83,26 @@ if __name__ == '__main__':
     
 
 
+    # creo df donde voy a guardar los resultados de las RO
+    columns_ro = ['dt_ini', 'dt_fin', 'Estimacion [MWh]', 'Error_PE_70% [MWh]',
+                  'Error_PE_30% [MWh]', 'Error_VE [MWh]', 'Delta Error VE - PE70 [MWh]',
+                  'EG [MWh]', 'ENS VE [MWh]', 'ENS PE_70 [MWh]']
+        
+    df_ro = pd.DataFrame(columns=columns_ro)    
+  
+    
+
+
     # Normalizo datos 
     
     df_M = pd.DataFrame(M, index=t, columns=nom_series) 
     df_F = pd.DataFrame(F, index=t, columns=nom_series)
     
-    df_M = df_M[(df_F == 0).all(axis=1)]
+    df_M_ = df_M[(df_F == 0).all(axis=1)]
     
     
-    stats = df_M.describe()
+    
+    stats = df_M_.describe()
     stats = stats.transpose()
 
     M_max = np.tile(stats['max'].values,(len(M),1))
@@ -125,7 +136,6 @@ if __name__ == '__main__':
     Pats_Calc = list()   
     
 
-    kini_calc = list()
     dtini_ro = list()
     dtfin_ro = list()
     kini_ro = list()
@@ -138,7 +148,7 @@ if __name__ == '__main__':
         k = kini_calc
         
         while k <= kfin_calc:
-           
+            #print (k)
             if filt_pot[k]:
                 # Encuentro RO
                 kiniRO = k
@@ -213,7 +223,7 @@ if __name__ == '__main__':
         es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=30)
         # fit model
         history = model.fit(X_train_n, y_train_n, validation_data=(X_test_n, y_test_n), 
-                            epochs=100, verbose=1, callbacks=[es])
+                            epochs=2, verbose=1, callbacks=[es])
         # evaluate the model
         _, train_acc = model.evaluate(X_train_n, y_train_n, verbose=0)
         _, test_acc = model.evaluate(X_test_n, y_test_n, verbose=0)
@@ -321,20 +331,18 @@ if __name__ == '__main__':
         plt.savefig(carpeta_ro + 'errores.png')
 
 
-        archi_ro = carpeta_ro + 'resumen'
-       
-        f = open(archi_ro,"w+")
-        f.write('Período RO: ' + str(dtini_ro[kRO]) + ' a ' + str(dtfin_ro[kRO]) + '\n')
-        f.write('Estimacion [MWh] = ' + str(round(E_est_MWh,3)) + ' MWh\n')
-        f.write('Error_PE_70% [MWh] = ' + str(round(E_dif_MWh_PE70,3)) + ' MWh\n')
-        f.write('Error_PE_30% [MWh] = ' + str(round(E_dif_MWh_PE30,3)) + ' MWh\n')
-        f.write('Error_VE [MWh] = ' + str(round(E_dif_MWh_VE,3)) + ' MWh\n')
-        f.write('Deta Error VE - PE70 [MWh] = ' + str(round(delta_70,3)) + ' MWh\n')
-        f.write('Energía Generada [MWh] = ' + str(round(E_gen_RO,3)) + ' MWh\n')   
-        f.write('Energía No Suministrada VE [MWh] = ' + str(round(ENS_VE,3)) + ' MWh\n')
-        f.write('Energía No Suministrada PE_70 [MWh] = ' + str(round(ENS_PE_70,3)) + ' MWh\n')
-        f.close()
+        archi_ro = carpeta_ro + 'resumen.txt'
 
+        calculos_ro = [dtini_ro[kRO], dtfin_ro[kRO], E_est_MWh, E_dif_MWh_PE70,
+                       E_dif_MWh_PE30, delta_70, E_dif_MWh_VE, E_gen_RO, 
+                       ENS_VE, ENS_PE_70]
+        s = pd.Series(calculos_ro,index=columns_ro)
+        s.to_csv(archi_ro, index=True, sep='\t') 
+        
+        df_ro = df_ro.append(s,ignore_index=True)
+        
+        
+        
     #calculo la medida
     tipoDato = 'pot'
     nrep = filtros.Nrep(tipoDato)
@@ -372,7 +380,7 @@ if __name__ == '__main__':
 
     for kRO in range(len(Pats_Data_n)):
         
-        dtini_w = dtini_ro [kRO] - datetime.timedelta(minutes=delta*100)
+        dtini_w = dtini_ro[kRO] - datetime.timedelta(minutes=delta*100)
         dtfin_w = dtfin_ro[kRO] + datetime.timedelta(minutes=delta*100)
         
         graficas.window = [dtini_w, dtfin_w]
@@ -383,11 +391,10 @@ if __name__ == '__main__':
         plt.savefig(carpeta_ro + 'datos.png')
     
 
+    # guardo resumen RO
+    
+    df_ro.to_csv(carpeta_central + 'resumen.txt', index=True, sep='\t') 
 
-        
-        
-        
-        
         
         
         
