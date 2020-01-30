@@ -223,7 +223,7 @@ if __name__ == '__main__':
         es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=30)
         # fit model
         history = model.fit(X_train_n, y_train_n, validation_data=(X_test_n, y_test_n), 
-                            epochs=100, verbose=1, callbacks=[es])
+                            epochs=3, verbose=1, callbacks=[es])
         # evaluate the model
         _, train_acc = model.evaluate(X_train_n, y_train_n, verbose=0)
         _, test_acc = model.evaluate(X_test_n, y_test_n, verbose=0)
@@ -238,6 +238,7 @@ if __name__ == '__main__':
         plt.legend()
         plt.grid()
         #plt.show() 
+        
         plt.savefig(carpeta_ro + 'convergencia.png')
         
         
