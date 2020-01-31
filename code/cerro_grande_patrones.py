@@ -339,7 +339,7 @@ if __name__ == '__main__':
         
         pot_estimada_PE70[kini_RO:kini_RO+y_RO_.size] = pPE70
         
-        # aaaaaaasdfsdfaasdfasdfasdasdfasdfasdfasdf
+        # aaaaaaasdfsdfaasdfasdfasdasdfasdfasdfasdfasdfasdf
         plt.figure()
         plt.scatter(y_predict_all_acum_MWh_sort,y_dif_all_acum_MWh, marker = '.',
                     color=(0,0,0,0.1), label = 'Datos')
