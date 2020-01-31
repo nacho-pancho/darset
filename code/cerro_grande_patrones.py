@@ -107,20 +107,19 @@ if __name__ == '__main__':
 
     M_max = np.tile(stats['max'].values,(len(M),1))
     M_min = np.tile(stats['min'].values,(len(M),1))
-    
-    M_n = (M - M_min )/(M_max - M_min)
+
+    M_n = (M - M_min)/(M_max - M_min)
         
     max_pot = stats.at['potSCADA_7', 'max']
     min_pot = stats.at['potSCADA_7', 'min']        
-
-
-    
+   
     # Busco secuencias de patrones que quiero calcular su pot
     
     pot = M[:,-1]
    
     #inicializo la pot igual a la real, luego relleno huecos
     pot_estimada = copy.copy(pot)
+    pot_estimada_PE70 = copy.copy(pot)
     
     filt_pot = F[:,-1]
 
@@ -180,7 +179,7 @@ if __name__ == '__main__':
             
 
 
-    for kRO in range(len(Pats_Data_n)):
+    for kRO in range(7,8):# range(len(Pats_Data_n)):
 
         carpeta_ro = archivos.path_ro(kRO+1, carpeta_central)
         
@@ -223,7 +222,7 @@ if __name__ == '__main__':
         es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=30)
         # fit model
         history = model.fit(X_train_n, y_train_n, validation_data=(X_test_n, y_test_n), 
-                            epochs=3, verbose=1, callbacks=[es])
+                            epochs=100, verbose=1, callbacks=[es])
         # evaluate the model
         _, train_acc = model.evaluate(X_train_n, y_train_n, verbose=0)
         _, test_acc = model.evaluate(X_test_n, y_test_n, verbose=0)
@@ -241,8 +240,7 @@ if __name__ == '__main__':
         
         plt.savefig(carpeta_ro + 'convergencia.png')
         
-        
-        
+    
         y_test_predict_n = model.predict(X_test_n) 
         y_train_predict_n = model.predict(X_train_n) 
 
@@ -307,13 +305,40 @@ if __name__ == '__main__':
                                    , y_dif_acum_MWh_sort_PE30)
         E_dif_MWh_VE = np.interp(E_est_MWh,y_predict_all_acum_MWh_sort
                                    , y_dif_acum_MWh_sort_VE)
-
-        
+                
         ENS_VE = max(E_est_MWh-E_gen_RO,0)
         
         delta_70 = np.abs(E_dif_MWh_VE-E_dif_MWh_PE70)
+
+        E_est_MWh_PE70 = E_est_MWh - delta_70
         
-        ENS_PE_70 = max(E_est_MWh-E_gen_RO-delta_70,0)
+        ENS_PE_70 = max(E_est_MWh_PE70-E_gen_RO,0)
+        
+        pPE70 = y_RO_ * E_est_MWh_PE70 / E_est_MWh
+        
+        # Esta función topea la potencia y redistribuye el resto en las horas
+        # en las que no aplica el tope
+        
+        # aca tengo que hacer una funcion que distribuya ENS_PE_70 de modo 
+        # que cuando sume (PE_70_calc - PGen) =  ENS_PE_70        
+        
+        
+        '''
+        PAut = parque2.PAutorizada 
+        
+        filt_mayor_PAut = (pPE70 >= PAut)
+        
+        while np.any(filt_mayor_PAut):
+            recorte =np.sum(pPE70[filt_mayor_PAut]) 
+            pPE70[filt_mayor_PAut] = PAut
+            E_sin_recorte = np.sum(pPE70[~filt_mayor_PAut])
+            factor = (E_sin_recorte + recorte)/E_sin_recorte
+            pPE70[~filt_mayor_PAut] = pPE70[~filt_mayor_PAut] * factor
+            filt_mayor_PAut = pPE70 >= PAut
+        '''
+        
+        pot_estimada_PE70[kini_RO:kini_RO+y_RO_.size] = pPE70
+        
         
         plt.figure()
         plt.scatter(y_predict_all_acum_MWh_sort,y_dif_all_acum_MWh, marker = '.',
@@ -335,20 +360,23 @@ if __name__ == '__main__':
         archi_ro = carpeta_ro + 'resumen.txt'
 
         calculos_ro = [dtini_ro[kRO], dtfin_ro[kRO], E_est_MWh, E_dif_MWh_PE70,
-                       E_dif_MWh_PE30, delta_70, E_dif_MWh_VE, E_gen_RO, 
+                       E_dif_MWh_PE30, E_dif_MWh_VE, delta_70, E_gen_RO, 
                        ENS_VE, ENS_PE_70]
-        s = pd.Series(calculos_ro,index=columns_ro)
+        s = pd.Series(calculos_ro, index=columns_ro)
         s.to_csv(archi_ro, index=True, sep='\t') 
         
         df_ro = df_ro.append(s,ignore_index=True)
         
         
         
-    #calculo la medida
+    # creo la potencia estimada
     tipoDato = 'pot'
     nrep = filtros.Nrep(tipoDato)
     pCG_mod = datos.Medida('estimacion',pot_estimada , t,
                            tipoDato,'pot_estimada', 0, 60, nrep)     
+    # potencia 10min con probabilidad 70% de ser excedida
+    pCG_mod_PE70 = datos.Medida('estimacion',pot_estimada_PE70 , t,
+                           tipoDato,'pot_estimada_PE_70', 0, 60, nrep)     
 
 
     pot_scada_mw = parque1.pot
@@ -361,6 +389,8 @@ if __name__ == '__main__':
     #meds.append(pot_scada_mw)
     meds.append(cgm_cg)
     meds.append(pCG_mod)
+    meds.append(pCG_mod_PE70)
+
     
     meds.append(vel_GEN_5)
     meds.append(vel_scada_5)
@@ -379,7 +409,7 @@ if __name__ == '__main__':
     
     # Guardo capturas de pantalla de los datos y estimación de todas las RO
 
-    for kRO in range(len(Pats_Data_n)):
+    for kRO in range(7,8):#range(len(Pats_Data_n)):
         
         dtini_w = dtini_ro[kRO] - datetime.timedelta(minutes=delta*100)
         dtfin_w = dtfin_ro[kRO] + datetime.timedelta(minutes=delta*100)
