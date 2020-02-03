@@ -4,33 +4,49 @@ Created on Mon Dec 23 15:32:25 2019
 
 @author: fpalacio
 """
-from numpy.random import seed
-seed(1)
-from tensorflow import set_random_seed
-set_random_seed(2)
-
+# semilla de noseque de PYthon
 
 import archivos
 import matplotlib.pyplot as plt
-import numpy as np
 import gen_series_analisis_serial as seriesAS
 import pandas as pd
 import datos
 import graficas
 import filtros 
 import datetime
-import math
-import os
 import copy
+import math
+import tensorflow as tf
+import numpy as np
+import random
 
-import keras.backend as K
 
-def my_loss(y_true, y_pred):
-    
-    custom_loss = K.square(K.mean(y_pred, axis=1)-K.mean(y_true, axis=1))
-   
-    return custom_loss
 
+# 1. Set `PYTHONHASHSEED` environment variable at a fixed value
+import os
+# Seed value (can actually be different for each attribution step)
+seed_value= 1231987
+os.environ['PYTHONHASHSEED']=str(seed_value)
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ['CUDA_VISIBLE_DEVICES'] = ''
+os.environ['OMP_NUM_THREADS'] = '1'
+
+# 3. Set `numpy` pseudo-random generator at a fixed value
+np.random.seed(seed_value)
+
+# 2. Set `python` built-in pseudo-random generator at a fixed value
+random.seed(seed_value)
+
+# 4. Set `tensorflow` pseudo-random generator at a fixed value
+tf.set_random_seed(seed_value)
+
+# 5. Configure a new global `tensorflow` session
+from keras import backend as K
+session_conf = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
+sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
+K.set_session(sess)
+
+import keras
 from keras.layers import Dense, Dropout, LSTM
 
 from keras.models import Sequential
@@ -40,15 +56,19 @@ from sklearn.model_selection import train_test_split
 # import regularizer
 from keras.regularizers import l2
 
+def my_loss(y_true, y_pred):
+    
+    custom_loss = K.square(K.mean(y_pred, axis=1)-K.mean(y_true, axis=1))
+   
+    return custom_loss
+
+
+
 if __name__ == '__main__':
-
-
 
     
     plt.close('all')
-    
-    
-
+        
     parque1 = archivos.leerArchivosCentral(5)
     parque1.registrar() 
     medidor1 = parque1.medidores[0]
@@ -72,6 +92,9 @@ if __name__ == '__main__':
     vel_PRONOS_7 = parque2.medidores[0].get_medida('vel','pronos')
     vel_GEN_7 = parque2.medidores[0].get_medida('vel','gen')
     vel_SCADA_7 = parque2.medidores[0].get_medida('vel','scada')
+    dir_PRONOS_7 = parque2.medidores[0].get_medida('dir','pronos')
+
+
     
     carpeta_central = archivos.path(parque2.id)
 
@@ -180,7 +203,7 @@ if __name__ == '__main__':
 
 
     for kRO in range(7,8):# range(len(Pats_Data_n)):
-
+ 
         carpeta_ro = archivos.path_ro(kRO+1, carpeta_central)
         
         
@@ -193,6 +216,9 @@ if __name__ == '__main__':
         
         X_train_n, X_test_n, y_train_n, y_test_n = train_test_split(
                                 X_n, y_n, test_size=1-train_pu, random_state=42)
+        # verificado, respeta seed
+        #print(X_train_n[0:8])
+        
         
         '''
         k_train = round(len(X_n)*train_pu)
@@ -209,18 +235,48 @@ if __name__ == '__main__':
         #defino la red
         
         l2_ = l2(0.000001)
+
+        init_seed = 42699930
+        initializer = keras.initializers.RandomUniform(minval=-0.05, maxval=0.05,
+                                                       seed=init_seed)
+        initializer_b = keras.initializers.RandomUniform(minval=-0.01, maxval=0.01,
+                                                       seed=init_seed)
+
         
         model = Sequential()
-        model.add(Dense(n_output*5, input_dim=n_features, kernel_regularizer=l2_, bias_regularizer=l2_))
-        model.add(Dense(n_output*10, input_dim=n_features, kernel_regularizer=l2_, bias_regularizer=l2_))
-        #model.add(Dense(n_features*5, activation='tanh', kernel_regularizer=l2_, bias_regularizer=l2_))
-        #model.add(Dense(n_features*5, activation='tanh', kernel_regularizer=l2_, bias_regularizer=l2_))
-        model.add(Dense(n_output, activation='sigmoid', kernel_regularizer=l2_, bias_regularizer=l2_))
+        model.add(Dense(n_output*5, input_dim=n_features,
+                        kernel_regularizer=l2_, bias_regularizer=l2_,
+                        kernel_initializer = initializer,
+                        bias_initializer= initializer_b))
+
+        model.add(Dense(n_output*1, activation = 'tanh',
+                        kernel_regularizer=l2_, bias_regularizer=l2_,
+                        kernel_initializer = initializer,
+                        bias_initializer= initializer_b))
+
+        model.add(Dense(n_output*1, activation = 'sigmoid',
+                        kernel_regularizer=l2_, bias_regularizer=l2_,
+                        kernel_initializer = initializer,
+                        bias_initializer= initializer_b))
+        
+        
+        
         model.compile(optimizer='adam', loss='mse', metrics=['mean_squared_error'])     
+        #model.compile(optimizer='sgd', loss='mse', metrics=['mean_squared_error'])     
+        
+        # verificado, respeta seed
+        #w = model.get_weights()
+        #print(w[0])
+
+        #b = model.get_bias()
+        #print(b[0])
+
 
         # simple early stopping
         es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=30)
         # fit model
+        
+        
         history = model.fit(X_train_n, y_train_n, validation_data=(X_test_n, y_test_n), 
                             epochs=100, verbose=1, callbacks=[es])
         # evaluate the model
@@ -272,7 +328,18 @@ if __name__ == '__main__':
         y_all_acum_MWh = y_all_acum/6
         
         y_dif_all_acum_MWh = np.subtract(y_predict_all_acum_MWh, y_all_acum_MWh)        
+        
+        error_pu = np.mean(y_dif_all_acum_MWh)/np.mean(y_all_acum_MWh)
+        
+        print('Error medio [p.u] = ' , error_pu)
+        
+        std_pu = np.std(y_dif_all_acum_MWh)/np.mean(y_all_acum_MWh)
 
+        print('std [p.u] = ' , std_pu)
+
+        b_v = (error_pu ** 2 + std_pu ** 2) ** (1/2)
+        
+        print('bias-variance [p.u] = ', b_v)
 
         # calculo las dist empíricas para cada rango de ptos
         sort = np.argsort(y_predict_all_acum_MWh)
@@ -400,7 +467,7 @@ if __name__ == '__main__':
     
     #meds.append(vel_PRONOS_7)
     
-    #meds.append(dir_pronos_5)
+    meds.append(dir_PRONOS_7)
     #meds.append(dir_scada_5)
     
 
