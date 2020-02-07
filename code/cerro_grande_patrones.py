@@ -244,16 +244,18 @@ if __name__ == '__main__':
 
         
         model = Sequential()
+        
         model.add(Dense(n_output*5, input_dim=n_features,
                         kernel_regularizer=l2_, bias_regularizer=l2_,
                         kernel_initializer = initializer,
                         bias_initializer= initializer_b))
-
+        '''
         model.add(Dense(n_output*10, activation = 'tanh',
                         kernel_regularizer=l2_, bias_regularizer=l2_,
                         kernel_initializer = initializer,
                         bias_initializer= initializer_b))
-
+        '''
+        
         model.add(Dense(n_output*1, activation = 'sigmoid',
                         kernel_regularizer=l2_, bias_regularizer=l2_,
                         kernel_initializer = initializer,
