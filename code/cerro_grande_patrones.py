@@ -22,7 +22,7 @@ import random
 
 
 
-# 1. Set `PYTHONHASHSEED` environment variable at a fixed value
+# 1. Set `PYTHONHASHSEED` envcondaironment variable at a fixed value
 import os
 # Seed value (can actually be different for each attribution step)
 seed_value= 1231987
@@ -38,13 +38,13 @@ np.random.seed(seed_value)
 random.seed(seed_value)
 
 # 4. Set `tensorflow` pseudo-random generator at a fixed value
-tf.set_random_seed(seed_value)
+tf.random.set_seed(seed_value)
 
 # 5. Configure a new global `tensorflow` session
 from keras import backend as K
-session_conf = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
-sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
-K.set_session(sess)
+#session_conf = tf.config.experimental (intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
+#sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
+#K.set_session(sess)
 
 import keras
 from keras.layers import Dense, Dropout, LSTM
@@ -249,7 +249,7 @@ if __name__ == '__main__':
                         kernel_initializer = initializer,
                         bias_initializer= initializer_b))
 
-        model.add(Dense(n_output*1, activation = 'tanh',
+        model.add(Dense(n_output*10, activation = 'tanh',
                         kernel_regularizer=l2_, bias_regularizer=l2_,
                         kernel_initializer = initializer,
                         bias_initializer= initializer_b))

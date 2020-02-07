@@ -2,13 +2,14 @@
 #
 # Funciones d
 #
+from PIL import Image,ImageDraw,ImageFont
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import datetime
 from windrose import WindroseAxes
 import time
-from PIL import Image,ImageDraw,ImageFont
+
 import filtros
 
 #=================================================================================
