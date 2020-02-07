@@ -215,7 +215,7 @@ if __name__ == '__main__':
             
 
 
-    for kRO in range(0,1):# range(len(Pats_Data_n)):
+    for kRO in range(7,8):# range(len(Pats_Data_n)):
  
         carpeta_ro = archivos.path_ro(kRO+1, carpeta_central)
         
@@ -274,7 +274,7 @@ if __name__ == '__main__':
                         kernel_initializer = initializer,
                         bias_initializer= initializer_b))
         
-        N_MIXES = 10
+        N_MIXES = 100
         model.add(mdn.MDN(n_output, N_MIXES))        
         
         #model.compile(optimizer='adam', loss='mse', metrics=['mean_squared_error'])     
@@ -302,7 +302,8 @@ if __name__ == '__main__':
                             epochs=100, verbose=1, callbacks=[es])
         '''
 
-        history = model.fit(X_train_n, y_train_n, epochs=100, verbose=1)
+        history = model.fit(X_train_n, y_train_n, validation_data=(X_test_n, y_test_n), 
+                            epochs=100, verbose=1, callbacks=[es])
 
         
         # evaluate the model
@@ -530,7 +531,7 @@ if __name__ == '__main__':
     
     # Guardo capturas de pantalla de los datos y estimación de todas las RO
 
-    for kRO in range(0,1):#range(len(Pats_Data_n)):
+    for kRO in range(7,8):#range(len(Pats_Data_n)):
         
         dtini_w = dtini_ro[kRO] - datetime.timedelta(minutes=delta*100)
         dtfin_w = dtfin_ro[kRO] + datetime.timedelta(minutes=delta*100)
