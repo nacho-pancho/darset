@@ -18,7 +18,7 @@ import copy
 import math
 import numpy as np
 import random
-import mdn
+#import mdn
 
 
 
@@ -39,24 +39,8 @@ np.random.seed(seed_value)
 random.seed(seed_value)
 
 # 4. Set `tensorflow` pseudo-random generator at a fixed value
-'''
-import tensorflow as tf
-tf.random.set_seed(seed_value)
-
-# 5. Configure a new global `tensorflow` session
-from keras import backend as K
-#session_conf = tf.config.experimental (intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
-#sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
-#K.set_session(sess)
-
-import keras
-from keras.layers import Dense, Dropout, LSTM
-from keras.models import Sequential
-from keras.callbacks import EarlyStopping
-from keras.regularizers import l2
-'''
-
 import tensorflow.compat.v1 as tf
+
 tf.random.set_random_seed(seed_value)
 from tensorflow.compat.v1 import keras
 from tensorflow.compat.v1.keras.callbacks import EarlyStopping
