@@ -215,7 +215,7 @@ if __name__ == '__main__':
             
 
 
-    for kRO in range(7,8):# range(len(Pats_Data_n)):
+    for kRO in  range(len(Pats_Data_n)): #range(7,8):
  
         carpeta_ro = archivos.path_ro(kRO+1, carpeta_central)
         
@@ -258,32 +258,37 @@ if __name__ == '__main__':
         
         model = Sequential()
         
-        model.add(Dense(np.trunc(n_output/10), input_dim=n_features,#, activation = 'tanh',
+        model.add(Dense(int(n_output), input_dim=n_features,#, activation = 'tanh',
                         kernel_regularizer=l2_, bias_regularizer=l2_,
                         kernel_initializer = initializer,
                         bias_initializer= initializer_b))
-        '''
-        model.add(Dense(n_output, activation = 'tanh',
+        
+        model.add(Dense(int(n_output), activation = 'tanh',
                         kernel_regularizer=l2_, bias_regularizer=l2_,
                         kernel_initializer = initializer,
                         bias_initializer= initializer_b))
-        '''
+        
         
         model.add(Dense(n_output, activation = 'sigmoid',
                         kernel_regularizer=l2_, bias_regularizer=l2_,
                         kernel_initializer = initializer,
                         bias_initializer= initializer_b))
+       
+        '''
+        N_MIXES = int(n_output*3)
         
-        N_MIXES = 100
         model.add(mdn.MDN(n_output, N_MIXES))        
+        '''
         
         #model.compile(optimizer='adam', loss='mse', metrics=['mean_squared_error'])     
+        '''
         model.compile(optimizer=keras.optimizers.Adam(), loss=mdn.get_mixture_loss_func(n_output, N_MIXES))
+        '''
         
         print(model.summary())
             
         
-        #model.compile(optimizer='sgd', loss='mse', metrics=['mean_squared_error'])     
+        model.compile(optimizer='adam', loss='mse', metrics=['mean_squared_error'])     
         
         # verificado, respeta seed
         #w = model.get_weights()
@@ -297,15 +302,10 @@ if __name__ == '__main__':
         es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=30)
         # fit model
         
-        '''
-        history = model.fit(X_train_n, y_train_n, validation_data=(X_test_n, y_test_n), 
-                            epochs=100, verbose=1, callbacks=[es])
-        '''
-
-        history = model.fit(X_train_n, y_train_n, validation_data=(X_test_n, y_test_n), 
-                            epochs=100, verbose=1, callbacks=[es])
-
         
+        history = model.fit(X_train_n, y_train_n, validation_data=(X_test_n, y_test_n), 
+                            epochs=100, verbose=1, callbacks=[es])
+       
         # evaluate the model
         '''
         _, train_acc = model.evaluate(X_train_n, y_train_n, verbose=0)
@@ -326,14 +326,12 @@ if __name__ == '__main__':
         plt.savefig(carpeta_ro + 'convergencia.png')
         
         '''
-        
-        
-        
+       
         y_test_predict_n = model.predict(X_test_n) 
         y_train_predict_n = model.predict(X_train_n) 
 
         
-        
+        '''
         y_test_predict_n = np.apply_along_axis(mdn.sample_from_output,1,y_test_predict_n,
                                                n_output,N_MIXES)
         y_test_predict_n = y_test_predict_n[:,0,:]
@@ -342,22 +340,20 @@ if __name__ == '__main__':
         y_train_predict_n = np.apply_along_axis(mdn.sample_from_output,1,y_train_predict_n,
                                                n_output,N_MIXES)
         y_train_predict_n = y_train_predict_n[:,0,:]
+        '''
 
-
-
-        
-        
-
-        
+ 
         kini_RO = kini_ro[kRO] 
         X_RO_n = Pats_Data_n[kRO][~Pats_Filt[kRO]].flatten()
         X_RO_n = np.asmatrix(X_RO_n)
 
         y_RO_n = model.predict(X_RO_n)
+        
+        '''
         y_RO_n = np.apply_along_axis(mdn.sample_from_output,1,y_RO_n,
                                                n_output,N_MIXES)
         y_RO_n = y_RO_n[:,0,:]
-
+        '''        
 
         y_RO = y_RO_n * (max_pot-min_pot) + min_pot
         y_RO_= np.squeeze(y_RO)
@@ -531,7 +527,7 @@ if __name__ == '__main__':
     
     # Guardo capturas de pantalla de los datos y estimación de todas las RO
 
-    for kRO in range(7,8):#range(len(Pats_Data_n)):
+    for kRO in range(len(Pats_Data_n)): #range(7,8):
         
         dtini_w = dtini_ro[kRO] - datetime.timedelta(minutes=delta*100)
         dtfin_w = dtfin_ro[kRO] + datetime.timedelta(minutes=delta*100)
