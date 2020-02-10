@@ -199,7 +199,8 @@ if __name__ == '__main__':
             
 
 
-    for kRO in  range(len(Pats_Data_n)): #range(7,8):
+    #for kRO in  range(len(Pats_Data_n)): #range(7,8):
+    for kRO in  range(7,8):
  
         carpeta_ro = archivos.path_ro(kRO+1, carpeta_central)
         
@@ -241,23 +242,39 @@ if __name__ == '__main__':
 
         
         model = Sequential()
-        
-        model.add(Dense(int(n_output), input_dim=n_features,#, activation = 'tanh',
+        k1 = 0.5
+        k2 = 1.0
+
+        model.add(Dense(int(k1*n_output), input_dim=n_features,#, activation = 'tanh',
                         kernel_regularizer=l2_, bias_regularizer=l2_,
                         kernel_initializer = initializer,
                         bias_initializer= initializer_b))
         
-        model.add(Dense(int(n_output), activation = 'tanh',
+        model.add(Dense(int(k2*n_output), activation = 'tanh',
                         kernel_regularizer=l2_, bias_regularizer=l2_,
                         kernel_initializer = initializer,
                         bias_initializer= initializer_b))
-        
-        
+x
         model.add(Dense(n_output, activation = 'sigmoid',
                         kernel_regularizer=l2_, bias_regularizer=l2_,
                         kernel_initializer = initializer,
                         bias_initializer= initializer_b))
-       
+    
+        '''
+        pregunta 1:
+        (k1,k2) optimos??
+        grid search: probamos k1 y k2 en cierto rango
+        evaluamos b_v y nos quedamos con el mejor en cada caso
+        (para un agujero solo)
+
+        pregunta 2:
+        orden optimo?
+        por que 2 capas?
+        por que no sqrt(n_output)?
+        por que no cte?
+
+        '''
+
         '''
         N_MIXES = int(n_output*3)
         
@@ -511,7 +528,8 @@ if __name__ == '__main__':
     
     # Guardo capturas de pantalla de los datos y estimación de todas las RO
 
-    for kRO in range(len(Pats_Data_n)): #range(7,8):
+    #for kRO in range(len(Pats_Data_n)): #range(7,8):
+    for kRO in range(7,8):
         
         dtini_w = dtini_ro[kRO] - datetime.timedelta(minutes=delta*100)
         dtfin_w = dtfin_ro[kRO] + datetime.timedelta(minutes=delta*100)
