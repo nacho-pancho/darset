@@ -7,6 +7,7 @@ Created on Tue Feb 11 18:30:25 2020
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
 
 # 1. Set `PYTHONHASHSEED` envcondaironment variable at a fixed value
 import os
@@ -62,12 +63,18 @@ def normalizar_datos(M, F, t, nom_series):
 
     M_n = (M - M_min)/(M_max - M_min)
         
-    max_pot = stats.at['potSCADA_7', 'max']
-    min_pot = stats.at['potSCADA_7', 'min']        
+    max_pot = stats.at[ nom_series[-1], 'max']
+    min_pot = stats.at[ nom_series[-1], 'min']        
 
-    return M_n, max_pot, min_pot  
+    return M_n, max_pot, min_pot
 
 
+def desnormalizar_datos(datos, min_, max_):
+    
+    for kvect in range(len(datos)): 
+        datos[kvect] = datos[kvect] * (max_-min_) + min_
+
+    return datos       
 # Esta función crea RO y sus patrones para posteriormente ser calculados
 
 def patrones_ro(delta, F, M_n, t, dt_ini_calc, dt_fin_calc):
@@ -130,7 +137,7 @@ def patrones_ro(delta, F, M_n, t, dt_ini_calc, dt_fin_calc):
     return Pats_Data_n, Pats_Filt, Pats_Calc, dtini_ro, dtfin_ro, kini_ro
 
 
-def estimar_ro(train_pu, X_n, y_n, X_RO_n):
+def estimar_ro(train_pu, X_n, y_n, X_RO_n, carpeta_ro):
 
         
         X_train_n, X_test_n, y_train_n, y_test_n = train_test_split(
@@ -217,11 +224,12 @@ def estimar_ro(train_pu, X_n, y_n, X_RO_n):
                             epochs=100, verbose=1, callbacks=[es])
        
         # evaluate the model
-        '''
+        
         _, train_acc = model.evaluate(X_train_n, y_train_n, verbose=0)
         _, test_acc = model.evaluate(X_test_n, y_test_n, verbose=0)
 
         print('Train: %.3f, Test: %.3f' % (train_acc, test_acc))        
+        
         
         #print(model.summary())
         
@@ -235,7 +243,7 @@ def estimar_ro(train_pu, X_n, y_n, X_RO_n):
         
         plt.savefig(carpeta_ro + 'convergencia.png')
         
-        '''
+        
        
         y_test_predict_n = model.predict(X_test_n) 
         y_train_predict_n = model.predict(X_train_n) 

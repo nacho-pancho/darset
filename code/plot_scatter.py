@@ -32,7 +32,7 @@ def plot_meds(M,F,nom,xnom,ynom,_fig=None):
     else:
         fig = _fig
     plt.scatter(x_med_ok, y_med_ok, marker = '.',color=(0,0,0,0.1))
-    plt.axis([0, 18, 0, 53])
+    #plt.axis([0, 18, 0, 53])
     return fig
 
 #if __name__ == '__main__':

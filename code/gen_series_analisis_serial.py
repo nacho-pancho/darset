@@ -131,8 +131,10 @@ def gen_series_analisis_serial(parque1, parque2, nom_series_p1, nom_series_p2,
          F2_[:,icol] = F2[:,x_col]
          icol = icol + 1    
 
+    '''
     nom_series_p1 = [s + '_' + str(parque1.id) for s in nom_series_p1]
     nom_series_p2 = [s + '_' + str(parque2.id) for s in nom_series_p2]
+    '''
     nom_series_tot = nom_series_p1 + nom_series_p2
 
     

@@ -21,7 +21,11 @@ import re
 
 ##############################################################################
 
-RUTA_DATOS = '../data/'
+# cuando trabajamos en DARSET
+#RUTA_DATOS = '../data/'
+
+# cuando trabajamos en ADME
+RUTA_DATOS = 'Y:/modelado_ro_RNN/'
 
 
 ##############################################################################
@@ -120,15 +124,27 @@ def path(ncentral):
 
 def path_ro (nro_ro, carpeta_central):
         
-    carpeta_ro = carpeta_central + str(nro_ro)  + '/'
+    carpeta_ro = carpeta_central + 'res/' + str(nro_ro)  + '/'
     if not os.path.exists(carpeta_ro):
-        os.mkdir(carpeta_ro)
+        os.makedirs(carpeta_ro)
         print("Directory " , carpeta_ro ,  " Created ")
     else:    
         print("Directory " , carpeta_ro ,  " already exists")        
     return carpeta_ro
+
 ##############################################################################    
 
+def path_carpeta_datos(carpeta_central):
+    carpeta_datos = carpeta_central + 'datos/'
+    if not os.path.exists(carpeta_datos):
+        os.mkdir(carpeta_datos)
+        print("Directory " , carpeta_datos ,  " Created ")
+    else:    
+        print("Directory " , carpeta_datos ,  " already exists")        
+    return carpeta_datos
+   
+##############################################################################
+    
 def leerCampo(file):
     line = file.readline().strip()
     cols = line.split()
@@ -139,6 +155,7 @@ def leerCampo(file):
 
 
 def leerArchi(nidCentral,tipoArchi):    
+
     if tipoArchi == 'scada':
         archi = archiSCADA(nidCentral)
     elif tipoArchi == 'gen':
@@ -183,7 +200,7 @@ def leerArchi(nidCentral,tipoArchi):
 
     ubicacion = datos.Ubicacion(meteo_utm_zona,meteo_utm_huso,meteo_utm_xe,meteo_utm_yn,ident)
     
-    line=f.readline().strip()
+    line = f.readline().strip()
     cols = line.split()
     PAutorizada = float(cols[0])
     print('\tpotencia autorizada:',PAutorizada)
@@ -240,7 +257,7 @@ def leerArchi(nidCentral,tipoArchi):
         if tipoDato is None:
             continue
         meds = data[:,i+1]
-        nombre = tipoDato + ident
+        nombre = tipoDato + ident + '_' + str(nidCentral)
         minmax = filtros.min_max(tipoDato,PAutorizada,cant_molinos)
         nrep = filtros.Nrep(tipoDato)
         
@@ -260,11 +277,11 @@ def leerArchi(nidCentral,tipoArchi):
             
         if (tipoDato == 'dir') and (vel != None):
             
-            velx, vely = velxy_from_veldir(vel, med, ident)    
+            velx, vely = velxy_from_veldir(vel, med, ident, nidCentral)    
             medidas.append(velx)
             medidas.append(vely)
             
-            cosdir, sindir = cosin_from_dir(med, ident)
+            cosdir, sindir = cosin_from_dir(med, ident, nidCentral)
             medidas.append(cosdir)
             medidas.append(sindir)            
 
@@ -398,7 +415,7 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
         if tipoDato is None:
             break
         meds = data[:,i+1]
-        nombre = tipoDato + ident
+        nombre = tipoDato + ident + '_' + str(nidCentral)
         minmax = filtros.min_max(tipoDato,PAutorizada,1000)
         nrep = filtros.Nrep(tipoDato)
         
@@ -431,11 +448,11 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
             
         if (tipoDato == 'dir') and (vel != None):
             
-            velx, vely = velxy_from_veldir(vel, med, ident)               
+            velx, vely = velxy_from_veldir(vel, med, ident, nidCentral)               
             medidas.append(velx)
             medidas.append(vely)
             
-            cosdir, sindir = cosin_from_dir(med, ident)
+            cosdir, sindir = cosin_from_dir(med, ident, nidCentral)
             medidas.append(cosdir)
             medidas.append(sindir)                
        
@@ -448,7 +465,7 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
 
 ##############################################################################
 
-def velxy_from_veldir(vel, dir_, ident):
+def velxy_from_veldir(vel, dir_, ident, nidCentral):
 
     proc = vel.procedencia
     velx = vel.muestras * [m.cos(m.radians(k)) for k in dir_.muestras]
@@ -458,16 +475,16 @@ def velxy_from_veldir(vel, dir_, ident):
     vely = np.where(dir_.muestras > -1, vely, -99999999)
 
     
-    med_velx = datos.Medida(proc,np.power(velx, 3),vel.tiempo,'vel','velx' + ident,
+    med_velx = datos.Medida(proc,np.power(velx, 3),vel.tiempo,'vel','velx' + ident + '_' + str(nidCentral),
                        vel.minval ** 3,vel.maxval ** 3,vel.nrep)
     
-    med_vely = datos.Medida(proc,np.power(vely, 3),vel.tiempo,'vel','vely' + ident,
+    med_vely = datos.Medida(proc,np.power(vely, 3),vel.tiempo,'vel','vely' + ident + '_' + str(nidCentral),
                        vel.minval ** 3,vel.maxval ** 3,vel.nrep)
     return med_velx, med_vely
 
 ##############################################################################
 
-def cosin_from_dir(dir_, ident):
+def cosin_from_dir(dir_, ident, nid):
 
     proc = dir_.procedencia
     
@@ -484,10 +501,10 @@ def cosin_from_dir(dir_, ident):
     
     
     
-    med_cos = datos.Medida(proc,cos,dir_.tiempo,tipomed_cos,tipomed_cos + ident,
+    med_cos = datos.Medida(proc,cos,dir_.tiempo,tipomed_cos,tipomed_cos + ident + '_' + str(nid),
                        min_,max_,2)
     
-    med_sin = datos.Medida(proc,sin,dir_.tiempo,tipomed_sin,tipomed_sin + ident,
+    med_sin = datos.Medida(proc,sin,dir_.tiempo,tipomed_sin,tipomed_sin + ident + '_' + str(nid),
                        min_,max_,2)
 
     return med_cos, med_sin    

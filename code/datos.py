@@ -76,7 +76,7 @@ class Medida(object):
 
     def __init__(self,procedencia,muestras,tiempo,tipo,nombre,minval,maxval,nrep):
         t0 = tiempo[0]
-        #print(f"Medida {procedencia} de tipo {tipo}, nombre {nombre}, comenzando en tiempo {t0}")
+        # print(f"Medida {procedencia} de tipo {tipo}, nombre {nombre}, comenzando en tiempo {t0}")
         self.procedencia = procedencia
         self.muestras = muestras
         self.tiempo = tiempo

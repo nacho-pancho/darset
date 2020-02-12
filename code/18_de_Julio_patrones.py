@@ -18,6 +18,7 @@ import copy
 import math
 import numpy as np
 import modelo_RNN as modelo
+import plot_scatter as pltxy
 #import mdn
 
 
@@ -25,41 +26,45 @@ import modelo_RNN as modelo
 if __name__ == '__main__':
 
     
-    flg_estimar_RO = True
+    flg_estimar_RO = False
 
     
     plt.close('all')
 
     # lectura de los datos del parque1 que es el proporciona al parque2 los 
     # datos meteorológicos para el cálculo de las RO.
-        
-    parque1 = archivos.leerArchivosCentral(5)
+    
+    # Kiyu    
+    parque1 = archivos.leerArchivosCentral(9)
     parque1.registrar() 
     medidor1 = parque1.medidores[0]
     filtros1 = parque1.get_filtros()
     M1, F1, nom1, t1 = parque1.exportar_medidas()
     #nom_series_p1 = ['velGEN','dirGEN','velPRONOS','dirPRONOS','potSCADA']
-    nom_series_p1 = ['velGEN','cosdirGEN','sindirGEN']
-    vel_GEN_5 = parque1.medidores[0].get_medida('vel','gen')
-    vel_scada_5 = parque1.medidores[0].get_medida('vel','scada')
-    dir_scada_5 = parque1.medidores[0].get_medida('dir','scada')
-    dir_pronos_5 = parque1.medidores[0].get_medida('dir','pronos')
+    nom_series_p1 = ['velGEN_9','cosdirGEN_9','sindirGEN_9']
+    vel_GEN_p1 = parque1.medidores[0].get_medida('vel','gen')
+    vel_scada_p1 = parque1.medidores[0].get_medida('vel','scada')
+    dir_scada_p1 = parque1.medidores[0].get_medida('dir','scada')
+    dir_pronos_p1 = parque1.medidores[0].get_medida('dir','pronos')
 
     # lectura de los datos del parque2 al cual se le van a calcular las RO.
-
-    parque2 = archivos.leerArchivosCentral(7)
+    # 18 de Julio
+    parque2 = archivos.leerArchivosCentral(57)
     parque2.registrar()
     medidor2 = parque2.medidores[0]
     filtros2 = parque2.get_filtros()
     M2, F2, nom2, t2 = parque2.exportar_medidas()
     #nom_series_p2 = ['velPRONOS','dirPRONOS','potSCADA']
     #nom_series_p2 = ['velGEN','potSCADA']
-    nom_series_p2 = ['cosdirPRONOS','sindirPRONOS','potSCADA']
-    vel_PRONOS_7 = parque2.medidores[0].get_medida('vel','pronos')
-    vel_GEN_7 = parque2.medidores[0].get_medida('vel','gen')
-    vel_SCADA_7 = parque2.medidores[0].get_medida('vel','scada')
-    dir_PRONOS_7 = parque2.medidores[0].get_medida('dir','pronos')
+    nom_series_p2 = ['cosdirPRONOS_57','sindirPRONOS_57','potSCADA_57']
+    vel_PRONOS_p2 = parque2.medidores[0].get_medida('vel','pronos')
+    vel_GEN_p2 = parque2.medidores[0].get_medida('vel','gen')
+    vel_SCADA_p2 = parque2.medidores[0].get_medida('vel','scada')
+    dir_PRONOS_p2 = parque2.medidores[0].get_medida('dir','pronos')
 
+    dt_ini_calc, dt_fin_calc = archivos.leer_ro_pendientes(parque2.id)
+    carpeta_central = archivos.path(parque2.id)
+    delta_print_datos = 200
 
     if flg_estimar_RO:
         
@@ -67,11 +72,10 @@ if __name__ == '__main__':
     
         t, M, F, nom_series = seriesAS.gen_series_analisis_serial(parque1, parque2,
                                                      nom_series_p1, nom_series_p2)    
-    
-   
-        dt_ini_calc, dt_fin_calc = archivos.leer_ro_pendientes(parque2.id)
         
-    
+        pltxy.plot_meds(M,F,nom_series,'velGEN_9','potSCADA_57')
+
+
     
         # creo df donde voy a guardar los resultados de las RO
         columns_ro = ['dt_ini', 'dt_fin', 'Estimacion [MWh]', 'Error_PE_70% [MWh]',
@@ -99,7 +103,7 @@ if __name__ == '__main__':
                
                 
         #for kRO in  range(len(Pats_Data_n)): #range(7,8):
-        for kRO in range(7,9):
+        for kRO in range(10,15):
      
             carpeta_ro = archivos.path_ro( kRO + 1, carpeta_central)
             
@@ -179,7 +183,7 @@ if __name__ == '__main__':
             
             
             
-            E_est_MWh = sum(y_RO_e)/6        
+            E_est_MWh = np.sum(y_RO_e)/6        
             E_dif_MWh_PE70 = np.interp(E_est_MWh,y_e_all_acum_MWh_sort
                                        , y_dif_acum_MWh_sort_PE70)      
             E_dif_MWh_PE30 = np.interp(E_est_MWh,y_e_all_acum_MWh_sort
@@ -257,39 +261,40 @@ if __name__ == '__main__':
         # creo la potencia estimada
         tipoDato = 'pot'
         nrep = filtros.Nrep(tipoDato)
-        pCG_mod = datos.Medida('estimacion',pot_estimada , t,
-                               tipoDato,'pot_estimada', 0, 60, nrep)     
+        pot_p2_mod = datos.Medida('estimacion',pot_estimada , t,
+                               tipoDato,'pot_estimada', parque2.pot.minval, parque2.pot.maxval, nrep)     
         # potencia 10min con probabilidad 70% de ser excedida
-        pCG_mod_PE70 = datos.Medida('estimacion',pot_estimada_PE70 , t,
-                               tipoDato,'pot_estimada_PE_70', 0, 60, nrep)     
+        pot_p2_mod_PE70 = datos.Medida('estimacion',pot_estimada_PE70 , t,
+                               tipoDato,'pot_estimada_PE_70', parque2.pot.minval, parque2.pot.maxval, nrep)     
 
    
 
-    pot_scada_mw = parque1.pot
-    pot_scada_cg = parque2.pot
-    cgm_cg = parque2.cgm
+    pot_scada_p1 = parque1.pot
+    pot_scada_p2 = parque2.pot
+    cgm_p2 = parque2.cgm
     
     meds = list()
     
-    meds.append(pot_scada_cg)
-    #meds.append(pot_scada_mw)
-    meds.append(cgm_cg)
+    meds.append(pot_scada_p2)
+    #meds.append(pot_scada_p1)
+    meds.append(cgm_p2)
     
     if flg_estimar_RO:
-        meds.append(pCG_mod)
-        meds.append(pCG_mod_PE70)
+        meds.append(pot_p2_mod)
+        meds.append(pot_p2_mod_PE70)
 
     
-    meds.append(vel_GEN_5)
-    meds.append(vel_scada_5)
+    meds.append(vel_GEN_p1)
+    meds.append(vel_scada_p1)
 
     #meds.append(vel_GEN_7)
     #meds.append(vel_SCADA_7)
     
     #meds.append(vel_PRONOS_7)
     
-    meds.append(dir_PRONOS_7)
-    #meds.append(dir_scada_5)
+    meds.append(dir_PRONOS_p2)
+    meds.append(dir_pronos_p1)
+    meds.append(dir_scada_p1)
     
 
     graficas.clickplot(meds)
@@ -297,12 +302,13 @@ if __name__ == '__main__':
     
     # Guardo capturas de pantalla de los datos y estimación de todas las RO
 
-    #for kRO in range(len(Pats_Data_n)): #range(7,8):
+     #range(7,8):
 
     if flg_estimar_RO:
-        for kRO in range(7,9):            
-            dtini_w = dtini_ro[kRO] - datetime.timedelta(minutes=delta*100)
-            dtfin_w = dtfin_ro[kRO] + datetime.timedelta(minutes=delta*100)
+        for kRO in range(10,15):
+        #for kRO in range(len(Pats_Data_n)):            
+            dtini_w = dtini_ro[kRO] - datetime.timedelta(minutes=delta_print_datos)
+            dtfin_w = dtfin_ro[kRO] + datetime.timedelta(minutes=delta_print_datos)
             
             graficas.window = [dtini_w, dtfin_w]
             
@@ -310,22 +316,16 @@ if __name__ == '__main__':
             
             carpeta_ro = archivos.path_ro(kRO+1, carpeta_central)
             plt.savefig(carpeta_ro + 'datos.png')
-    
-
-
+    else:
+        for kcalc in range(len(dt_ini_calc)):
+        #for kRO in range(len(Pats_Data_n)):            
+            dtini_w = dt_ini_calc[kcalc] - datetime.timedelta(minutes=delta_print_datos)
+            dtfin_w = dt_fin_calc[kcalc] + datetime.timedelta(minutes=delta_print_datos)
+            
+            graficas.window = [dtini_w, dtfin_w]
+            
+            graficas.clickplot_redraw()
+            
+            carpeta_datos = archivos.path_carpeta_datos(carpeta_central) 
+            plt.savefig(carpeta_datos + str(kcalc) + '.png' )
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    
