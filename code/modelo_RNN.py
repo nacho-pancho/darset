@@ -297,7 +297,8 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
         # creo df donde voy a guardar los resultados de las RO
         columns_ro = ['dt_ini', 'dt_fin', 'Estimacion [MWh]', 'Error_PE_70% [MWh]',
                       'Error_PE_30% [MWh]', 'Error_VE [MWh]', 'Delta Error VE - PE70 [MWh]',
-                      'EG [MWh]', 'ENS VE [MWh]', 'ENS PE_70 [MWh]']
+                      'EG [MWh]', 'ENS VE [MWh]', 'ENS PE_70 [MWh]', 'k1_opt', 'k2_opt',
+                       'error_pu_opt', 'std_pu_opt', 'b_v_pu_opt']
             
         df_ro = pd.DataFrame(columns=columns_ro)    
     
@@ -320,7 +321,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
                
                 
         #for kRO in  range(len(Pats_Data_n)): #range(7,8):
-        for kRO in range(1,10):
+        for kRO in range(0,15):
      
             carpeta_ro = archivos.path_ro( kRO + 1, carpeta_central)
             
@@ -337,6 +338,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             train_pu = 0.7
             
             k1_lst = [0.25, 0.5, 1, 2]
+            #k1_lst = [0.25, 0.5]
             k2_lst = [0.25, 0.5, 1, 2]
             #k2_lst = [0.25]
             
@@ -394,6 +396,8 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
                     print(f"k1: {k1}, k2: {k2}, b_v: {b_v}")
                     
                     if b_v < b_v_opt:
+                        k1_opt = k1
+                        k2_opt = k2
                         b_v_opt = b_v
                         error_pu_opt = error_pu
                         std_pu_opt = std_pu                        
@@ -403,7 +407,8 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
                         
             
             df_iter_k.to_csv(carpeta_ro + 'iter_k1k2.txt', index=True, sep='\t',
-                     float_format='%.2f')        
+                     float_format='%.2f')
+            
             
             b_v = b_v_opt
             error_pu = error_pu_opt       
@@ -503,7 +508,9 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
     
             calculos_ro = [dtini_ro[kRO], dtfin_ro[kRO], E_est_MWh, E_dif_MWh_PE70,
                            E_dif_MWh_PE30, E_dif_MWh_VE, delta_70, E_gen_RO, 
-                           ENS_VE, ENS_PE_70]
+                           ENS_VE, ENS_PE_70, k1_opt, k2_opt, error_pu_opt, 
+                           std_pu_opt, b_v_opt]                     
+            
             s = pd.Series(calculos_ro, index=columns_ro)
             s.to_csv(archi_ro, index=True, sep='\t') 
             
@@ -513,7 +520,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
         # guardo resumen RO
         
         df_ro.to_csv(carpeta_central + 'resumen.txt', index=True, sep='\t',
-                     float_format='%.2f') 
+                     float_format='%.4f') 
     
             
         # creo la potencia estimada
@@ -537,7 +544,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
     # Guardo capturas de pantalla de los datos y estimación de todas las RO
 
     if flg_estimar_RO:
-        for kRO in range(1,10):
+        for kRO in range(0,1):
         #for kRO in range(len(Pats_Data_n)):            
             dtini_w = dtini_ro[kRO] - datetime.timedelta(minutes=delta_print_datos)
             dtfin_w = dtfin_ro[kRO] + datetime.timedelta(minutes=delta_print_datos)
