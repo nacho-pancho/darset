@@ -277,7 +277,8 @@ def estimar_ro(train_pu, X_n, y_n, X_RO_n, carpeta_ro, k1, k2):
                                                n_output,N_MIXES)
         y_RO_n = y_RO_n[:,0,:]
         '''        
-
+        
+        
         return  y_test_predict_n, y_test_n, y_train_predict_n, y_train_n, np.squeeze(y_RO_predict_n)   
 
 def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_ini_calc,
@@ -320,8 +321,8 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             patrones_ro(delta, F, M_n, t, dt_ini_calc, dt_fin_calc)       
                
                 
-        #for kRO in  range(len(Pats_Data_n)): #range(7,8):
-        for kRO in range(0,15):
+        for kRO in  range(len(Pats_Data_n)): #range(7,8):
+        #for kRO in range(0,15):
      
             carpeta_ro = archivos.path_ro( kRO + 1, carpeta_central)
             
@@ -544,8 +545,8 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
     # Guardo capturas de pantalla de los datos y estimación de todas las RO
 
     if flg_estimar_RO:
-        for kRO in range(0,1):
-        #for kRO in range(len(Pats_Data_n)):            
+        #for kRO in range(0,15):
+        for kRO in range(len(Pats_Data_n)):            
             dtini_w = dtini_ro[kRO] - datetime.timedelta(minutes=delta_print_datos)
             dtfin_w = dtfin_ro[kRO] + datetime.timedelta(minutes=delta_print_datos)
             
