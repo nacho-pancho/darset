@@ -322,7 +322,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
                
                 
         #for kRO in  range(len(Pats_Data_n)):
-        for kRO in range(19,20):
+        for kRO in range(20,21):
      
             carpeta_ro = archivos.path_ro( kRO + 1, carpeta_central)
             
@@ -545,7 +545,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
     # Guardo capturas de pantalla de los datos y estimación de todas las RO
 
     if flg_estimar_RO:
-        for kRO in range(19,20):
+        for kRO in range(20,21):
         #for kRO in range(len(Pats_Data_n)):            
             dtini_w = dtini_ro[kRO] - datetime.timedelta(minutes=delta_print_datos)
             dtfin_w = dtfin_ro[kRO] + datetime.timedelta(minutes=delta_print_datos)
