@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 if __name__ == '__main__':
 
     
-    flg_estimar_RO = False
+    flg_estimar_RO = True
 
     
     plt.close('all')
