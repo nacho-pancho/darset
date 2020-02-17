@@ -22,10 +22,10 @@ import re
 ##############################################################################
 
 # cuando trabajamos en DARSET
-RUTA_DATOS = '../data/'
+#RUTA_DATOS = '../data/'
 
 # cuando trabajamos en ADME
-#RUTA_DATOS = 'Y:/modelado_ro_RNN/'
+RUTA_DATOS = 'Y:/modelado_ro_RNN/'
 
 
 ##############################################################################
@@ -475,11 +475,11 @@ def velxy_from_veldir(vel, dir_, ident, nidCentral):
     vely = np.where(dir_.muestras > -1, vely, -99999999)
 
     
-    med_velx = datos.Medida(proc,np.power(velx, 3),vel.tiempo,'vel','velx' + ident + '_' + str(nidCentral),
-                       vel.minval ** 3,vel.maxval ** 3,vel.nrep)
+    med_velx = datos.Medida(proc, velx, vel.tiempo,'vel','velx' + ident + '_' + str(nidCentral),
+                       vel.minval, vel.maxval, vel.nrep)
     
-    med_vely = datos.Medida(proc,np.power(vely, 3),vel.tiempo,'vel','vely' + ident + '_' + str(nidCentral),
-                       vel.minval ** 3,vel.maxval ** 3,vel.nrep)
+    med_vely = datos.Medida(proc,vely, vel.tiempo,'vel','vely' + ident + '_' + str(nidCentral),
+                       vel.minval, vel.maxval, vel.nrep)
     return med_velx, med_vely
 
 ##############################################################################

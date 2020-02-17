@@ -321,8 +321,8 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             patrones_ro(delta, F, M_n, t, dt_ini_calc, dt_fin_calc)       
                
                 
-        for kRO in  range(len(Pats_Data_n)): #range(7,8):
-        #for kRO in range(0,15):
+        #for kRO in  range(len(Pats_Data_n)):
+        for kRO in range(19,20):
      
             carpeta_ro = archivos.path_ro( kRO + 1, carpeta_central)
             
@@ -338,10 +338,10 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             
             train_pu = 0.7
             
-            k1_lst = [0.25, 0.5, 1, 2]
-            #k1_lst = [0.25, 0.5]
-            k2_lst = [0.25, 0.5, 1, 2]
-            #k2_lst = [0.25]
+            #k1_lst = [0.25, 0.5, 1, 2]
+            k1_lst = [2]
+            #k2_lst = [0.25, 0.5, 1, 2]
+            k2_lst = [2]
             
            
             # itero hasta encontrar k1 y k2 óptimo
@@ -545,8 +545,8 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
     # Guardo capturas de pantalla de los datos y estimación de todas las RO
 
     if flg_estimar_RO:
-        #for kRO in range(0,15):
-        for kRO in range(len(Pats_Data_n)):            
+        for kRO in range(19,20):
+        #for kRO in range(len(Pats_Data_n)):            
             dtini_w = dtini_ro[kRO] - datetime.timedelta(minutes=delta_print_datos)
             dtfin_w = dtfin_ro[kRO] + datetime.timedelta(minutes=delta_print_datos)
             
@@ -557,8 +557,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             carpeta_ro = archivos.path_ro(kRO+1, carpeta_central)
             plt.savefig(carpeta_ro + 'datos.png')
     else:
-        for kcalc in range(len(dt_ini_calc)):
-        #for kRO in range(len(Pats_Data_n)):            
+        for kcalc in range(len(dt_ini_calc)):           
             dtini_w = dt_ini_calc[kcalc] - datetime.timedelta(minutes=delta_print_datos)
             dtfin_w = dt_fin_calc[kcalc] + datetime.timedelta(minutes=delta_print_datos)
             
