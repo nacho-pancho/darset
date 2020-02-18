@@ -17,15 +17,16 @@ import scipy.signal as signal
 import pickle
 import gzip
 import re
+import pandas as pd
 
 
 ##############################################################################
 
 # cuando trabajamos en DARSET
-RUTA_DATOS = '../data/'
+#RUTA_DATOS = '../data/'
 
 # cuando trabajamos en ADME
-#RUTA_DATOS = 'Y:/modelado_ro_RNN/'
+RUTA_DATOS = 'Y:/modelado_ro_RNN/'
 
 
 ##############################################################################
@@ -595,3 +596,44 @@ def leer_ro_pendientes(nidcentral):
         date_fin.append(dtfinRO)
    
     return date_ini, date_fin
+
+def generar_ens_dte(pot_estim, pot_gen, dt, nidcentral):
+
+    dif_pot = pot_estim - pot_gen
+    #d = {'ens': dif_pot, 'pot_estim': pot_estim, 'pot_gen': pot_gen}
+    d = {'ens': dif_pot}
+    
+    df = pd.DataFrame(data=d, index=dt)
+    
+    
+    carpeta = path(nidcentral)
+    df.to_csv(carpeta + 'ens_10min.txt', index=True, sep='\t', 
+              float_format='%.4f')
+    
+    df_desf = df.shift(periods=-1, fill_value=-99999999)    
+    df_h = df_desf.resample('H').sum()
+        
+    df_h['hora'] = pd.Series(df_h.index.hour, index=df_h.index)
+    df_h['dia'] = pd.Series(df_h.index.strftime('%d-%m-%Y'), index=df_h.index)
+    
+  
+    df_h.set_index(['dia', 'hora'], inplace=True) 
+    df_h.unstack('hora', inplace=True) 
+    
+    df_h.to_csv(carpeta + 'ens_60min.txt', index=True, sep='\t', 
+                float_format='%.4f')
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
