@@ -26,9 +26,9 @@ import os
 seed_value= 1231987
 
 os.environ['PYTHONHASHSEED']=str(seed_value)
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ['CUDA_VISIBLE_DEVICES'] = ''
-os.environ['OMP_NUM_THREADS'] = '1'
+#os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+#os.environ['CUDA_VISIBLE_DEVICES'] = ''
+#os.environ['OMP_NUM_THREADS'] = '1'
 
 # 3. Set `numpy` pseudo-random generator at a fixed value
 np.random.seed(seed_value)
@@ -86,8 +86,9 @@ def desnormalizar_datos(datos, min_, max_):
         datos[kvect] = datos[kvect] * (max_-min_) + min_
 
     return datos       
-# Esta función crea RO y sus patrones para posteriormente ser calculados
 
+
+# Esta función crea RO y sus patrones para posteriormente ser calculados
 def patrones_ro(delta, F, M_n, t, dt_ini_calc, dt_fin_calc):
 
     filt_pot = F[:,-1]
@@ -224,7 +225,7 @@ def estimar_ro(train_pu, X_n, y_n, X_RO_n, carpeta_ro, k1, k2):
 
 
         # simple early stopping
-        es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=30)
+        es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=10)
         # fit model
         
         
@@ -296,7 +297,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
 
     
         # creo df donde voy a guardar los resultados de las RO
-        columns_ro = ['dt_ini', 'dt_fin', 'Estimacion [MWh]', 'Error_PE_70% [MWh]',
+        columns_ro = ['dt_ini', 'dt_fin', 'largo','Estimacion [MWh]', 'Error_PE_70% [MWh]',
                       'Error_PE_30% [MWh]', 'Error_VE [MWh]', 'Delta Error VE - PE70 [MWh]',
                       'EG [MWh]', 'ENS VE [MWh]', 'ENS PE_70 [MWh]', 'k1_opt', 'k2_opt',
                        'error_pu_opt', 'std_pu_opt', 'b_v_pu_opt']
@@ -319,11 +320,17 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
         delta = 5 # agrega delta datos 10min antes y despues de las RO encontradas
         Pats_Data_n, Pats_Filt, Pats_Calc, dtini_ro, dtfin_ro, kini_ro = \
             patrones_ro(delta, F, M_n, t, dt_ini_calc, dt_fin_calc)       
-               
-                
-        #for kRO in  range(len(Pats_Data_n)):
-        for kRO in range(20,21):
-     
+        n_ro = len(Pats_Data_n)
+        largos_ro = np.array(dtfin_ro) - np.array(dtini_ro)
+        indices = np.argsort(largos_ro)
+        diome = int(n_ro/2)
+        
+        print(indices[0],largos_ro[indices[0]])
+        print(indices[diome],largos_ro[indices[diome]])
+        print(indices[-1],largos_ro[indices[-1]])
+        ros = list()
+        ros = indices[5:]
+        for kRO in ros:
             carpeta_ro = archivos.path_ro( kRO + 1, carpeta_central)
             
             
@@ -337,12 +344,12 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             X_RO_n = np.asmatrix(X_RO_n)  
             
             train_pu = 0.7
-            
-            #k1_lst = [0.25, 0.5, 1, 2]
-            k1_lst = [2]
-            #k2_lst = [0.25, 0.5, 1, 2]
-            k2_lst = [2]
-            
+
+            # el mejor esta dando  en (3,3), tope de escala por ahora!
+            # k1_lst = [0.25, 0.5, 1, 2, 3]
+            #k2_lst = [0.25, 0.5, 1, 2, 3]
+            k1_lst = [3]
+            k2_lst = [3]
            
             # itero hasta encontrar k1 y k2 óptimo
             b_v_opt = 99999
@@ -393,8 +400,8 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
                     
                     df_iter_k.loc[k_idx] = [k1, k2, error_pu, std_pu, b_v]
                     k_idx = k_idx + 1
-                    
-                    print(f"k1: {k1}, k2: {k2}, b_v: {b_v}")
+                    L = largos_ro[kRO]
+                    print(f"ro: {kRO} L: {L} k1: {k1}, k2: {k2}, b_v: {b_v}")
                     
                     if b_v < b_v_opt:
                         k1_opt = k1
@@ -507,7 +514,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
     
             archi_ro = carpeta_ro + 'resumen.txt'
     
-            calculos_ro = [dtini_ro[kRO], dtfin_ro[kRO], E_est_MWh, E_dif_MWh_PE70,
+            calculos_ro = [dtini_ro[kRO], dtfin_ro[kRO], dtfin_ro[kRO]-dtini_ro[kRO], E_est_MWh, E_dif_MWh_PE70,
                            E_dif_MWh_PE30, E_dif_MWh_VE, delta_70, E_gen_RO, 
                            ENS_VE, ENS_PE_70, k1_opt, k2_opt, error_pu_opt, 
                            std_pu_opt, b_v_opt]                     
@@ -545,7 +552,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
     # Guardo capturas de pantalla de los datos y estimación de todas las RO
 
     if flg_estimar_RO:
-        for kRO in range(20,21):
+        for kRO in ros:
         #for kRO in range(len(Pats_Data_n)):            
             dtini_w = dtini_ro[kRO] - datetime.timedelta(minutes=delta_print_datos)
             dtfin_w = dtfin_ro[kRO] + datetime.timedelta(minutes=delta_print_datos)
