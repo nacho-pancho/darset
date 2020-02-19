@@ -615,15 +615,23 @@ def generar_ens_dte(pot_estim, pot_gen, dt, nidcentral):
     
     print(df_h)    
     df_h['hora'] = pd.Series(df_h.index.hour, index=df_h.index)
-    df_h['dia'] = pd.Series(df_h.index.strftime('%d-%m-%y'), index=df_h.index)
     
-  
-    df_h.set_index(['dia', 'hora'], inplace=True) 
+    dia = df_h.index.day
+    mes = df_h.index.month
+    anio = df_h.index.year
+    
+    dia_dt = [datetime.datetime(anio, mes, dia) for anio, mes, dia
+              in zip(anio, mes, dia)]
+    
+    df_h['dia'] = pd.Series(dia_dt, index=df_h.index)
+    
+    
+    df_h.set_index(['dia', 'hora'], inplace=True)
     df_h = df_h.unstack('hora') 
     print(df_h)
     
     df_h.to_csv(carpeta + 'ens_60min.txt', index=True, sep='\t', 
-                float_format='%.4f')
+                float_format='%.4f', date_format='%d-%m-%Y')
     
     
     
