@@ -628,9 +628,9 @@ def generar_ens_dte(pot_estim, pot_gen, dt, nidcentral):
     
     df_h.set_index(['dia', 'hora'], inplace=True)
     df_h = df_h.unstack('hora') 
-    print(df_h)
+    #print(df_h)
     
-    df_h.to_csv(carpeta + 'ens_60min.txt', index=True, sep='\t', 
+    df_h.to_csv(carpeta + 'ens_DTE.txt', index=True, sep='\t', 
                 float_format='%.4f', date_format='%d-%m-%Y')
     
     
