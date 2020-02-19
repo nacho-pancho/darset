@@ -47,7 +47,7 @@ window = None
 window_size = DEFAULT_WINDOW_SIZE
 medidas = None
 tipos = None
-viridis = cm.get_cmap('viridis')
+viridis = cm.get_cmap('rainbow')
 tcenter = None
 alarm_map = None
 alarm_map_zoom = None
@@ -122,7 +122,7 @@ def clickplot_redraw():
 
     for i in range(len(tipos)):
         plt.subplot( NGrafs, 1, i+1 )
-        plt.legend( legends[ tipos[i] ], loc='upper right', prop={'size': 4} )
+        plt.legend( legends[ tipos[i] ], loc='upper right', prop={'size': 8} )
         plt.grid(True)
 
     #

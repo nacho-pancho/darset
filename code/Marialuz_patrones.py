@@ -20,7 +20,7 @@ if __name__ == '__main__':
 
     
     flg_estimar_RO = True
-
+    
     
     plt.close('all')
 
@@ -32,8 +32,6 @@ if __name__ == '__main__':
     parque1.registrar() 
     medidor1 = parque1.medidores[0]
     
-    parque1.medidores[0].get_medida('vel','gen').desfasar(1)
-    parque1.medidores[0].get_medida('dir','gen').desfasar(1)
     
     filtros1 = parque1.get_filtros()
     

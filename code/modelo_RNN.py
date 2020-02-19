@@ -283,7 +283,7 @@ def estimar_ro(train_pu, X_n, y_n, X_RO_n, carpeta_ro, k1, k2):
         return  y_test_predict_n, y_test_n, y_train_predict_n, y_train_n, np.squeeze(y_RO_predict_n)   
 
 def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_ini_calc,
-            dt_fin_calc, delta_print_datos, meds_plot_p1, meds_plot_p2): 
+            dt_fin_calc, delta_print_datos, meds_plot_p1, meds_plot_p2, flg_print_datos = False): 
 
     
     nid_parque = parque2.id 
@@ -333,7 +333,8 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
 
         ros = list()        
         #ros = indices[1:2]
-        ros = indices
+        #ros = indices
+        ros = [5] 
         
         for kRO in ros:
             carpeta_ro = archivos.path_ro(kRO + 1, carpeta_central)
@@ -571,8 +572,8 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             graficas.clickplot_redraw()
             
             carpeta_ro = archivos.path_ro(kRO+1, carpeta_central)
-            plt.savefig(carpeta_ro + 'datos.png')
-    else:
+            plt.savefig(carpeta_ro + 'datos.png', dpi=300)
+    elif flg_print_datos:
         for kcalc in range(len(dt_ini_calc)):           
             dtini_w = dt_ini_calc[kcalc] - datetime.timedelta(minutes=delta_print_datos)
             dtfin_w = dt_fin_calc[kcalc] + datetime.timedelta(minutes=delta_print_datos)
