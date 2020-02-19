@@ -285,7 +285,9 @@ def estimar_ro(train_pu, X_n, y_n, X_RO_n, carpeta_ro, k1, k2):
 def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_ini_calc,
             dt_fin_calc, delta_print_datos, meds_plot_p1, meds_plot_p2): 
 
-    carpeta_central = archivos.path(parque2.id)    
+    
+    nid_parque = parque2.id 
+    carpeta_central = archivos.path(nid_parque)    
     
     if flg_estimar_RO:
             
@@ -328,11 +330,13 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
         print(indices[0],largos_ro[indices[0]])
         print(indices[diome],largos_ro[indices[diome]])
         print(indices[-1],largos_ro[indices[-1]])
-        ros = list()
-        ros = indices
+
+        ros = list()        
+        ros = indices[1:2]
+        #ros = indices
         
         for kRO in ros:
-            carpeta_ro = archivos.path_ro( kRO + 1, carpeta_central)
+            carpeta_ro = archivos.path_ro(kRO + 1, carpeta_central)
             
             
             print(f"Calculando RO {kRO+1} de {len(Pats_Data_n)}")
@@ -540,7 +544,11 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
         # potencia 10min con probabilidad 70% de ser excedida
         pot_p2_mod_PE70 = datos.Medida('estimacion',pot_estimada_PE70 , t,
                                tipoDato,'pot_estimada_PE_70', parque2.pot.minval, parque2.pot.maxval, nrep)     
-
+        
+        # imprimo el detalle de la energía no suministrada por hora (formato DTE)
+        # divido entre 6 para pasar de MW a MWh
+        archivos.generar_ens_dte(pot_estimada_PE70/6, pot/6, t, nid_parque)
+        
    
     meds = meds_plot_p1 + meds_plot_p2
 
@@ -577,3 +585,4 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             plt.savefig(carpeta_datos + str(kcalc) + '.png' )
         
    
+    
