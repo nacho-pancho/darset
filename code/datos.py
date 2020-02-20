@@ -430,13 +430,14 @@ class Parque(object):
         filt_cgm = np.abs(self.pot.muestras - self.cgm.muestras) <= 2 # MW
         filt_cgm = filt_cgm & (self.cgm.muestras < 0.999 * self.PAutorizada )#* np.ones(len(self.cgm.muestras)))
         
-        Ndatos_afectados_RO = 3
+        Ndatos_afectados_RO_izq = 1
+        Ndatos_afectados_RO_der = 5
         
         filt_cgm_ = copy.deepcopy(filt_cgm)
         
-        for k in range(Ndatos_afectados_RO,len(filt_cgm)-Ndatos_afectados_RO):            
+        for k in range(Ndatos_afectados_RO_izq, len(filt_cgm)-Ndatos_afectados_RO_der):            
             if filt_cgm_[k] == 1:
-                filt_cgm[k-Ndatos_afectados_RO:k+Ndatos_afectados_RO] = 1
+                filt_cgm[k-Ndatos_afectados_RO_izq:k+Ndatos_afectados_RO_der] = 1
 
             
             

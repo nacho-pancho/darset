@@ -314,8 +314,9 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
         pot = M[:,-1]
        
         # inicializo la pot igual a la real, luego relleno huecos
-        pot_estimada = copy.copy(pot)
-        pot_estimada_PE70 = copy.copy(pot)
+        pot_estimada = np.zeros(len(pot))
+        pot_estimada_PE70 = np.zeros(len(pot))
+
         
         # Busco secuencias de patrones que quiero calcular su pot
         
@@ -334,7 +335,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
         ros = list()        
         #ros = indices[1:2]
         #ros = indices
-        ros = [5] 
+        ros = [4] 
         
         for kRO in ros:
             carpeta_ro = archivos.path_ro(kRO + 1, carpeta_central)
