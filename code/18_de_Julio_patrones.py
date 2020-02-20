@@ -12,6 +12,7 @@ import numpy as np
 import modelo_RNN as modelo
 import plot_scatter as pltxy
 import matplotlib.pyplot as plt
+import datetime
 #import mdn
 
 
@@ -27,33 +28,45 @@ if __name__ == '__main__':
     # lectura de los datos del parque1 que es el proporciona al parque2 los 
     # datos meteorológicos para el cálculo de las RO.
     
-    # Kiyu    
-    parque1 = archivos.leerArchivosCentral(5)
+    # Melowind  
+    nid_p1 = 5
+    parque1 = archivos.leerArchivosCentral(nid_p1)
     parque1.registrar() 
     medidor1 = parque1.medidores[0]
     filtros1 = parque1.get_filtros()
     M1, F1, nom1, t1 = parque1.exportar_medidas()
     #nom_series_p1 = ['velGEN','dirGEN','velPRONOS','dirPRONOS','potSCADA']
-    nom_series_p1 = ['velxGEN_5','velxGEN_5']
+    nom_series_p1 = ['velxGEN','velxGEN']
+    nom_series_p1 = [s + '_' + str(nid_p1) for s in nom_series_p1]
     vel_GEN_p1 = parque1.medidores[0].get_medida('vel','gen')
+    dir_GEN_p1 = parque1.medidores[0].get_medida('dir','gen')
     vel_scada_p1 = parque1.medidores[0].get_medida('vel','scada')
     dir_scada_p1 = parque1.medidores[0].get_medida('dir','scada')
+    vel_pronos_p1 = parque1.medidores[0].get_medida('vel','pronos')
     dir_pronos_p1 = parque1.medidores[0].get_medida('dir','pronos')
-    meds_plot_p1 = [vel_GEN_p1, vel_scada_p1, dir_scada_p1, dir_pronos_p1]
+    meds_plot_p1 = [vel_GEN_p1, dir_GEN_p1, vel_scada_p1, dir_scada_p1, vel_pronos_p1, dir_pronos_p1]
 
     # lectura de los datos del parque2 al cual se le van a calcular las RO.
     # 18 de Julio
-    parque2 = archivos.leerArchivosCentral(57)
+    nid_p2 = 57
+    parque2 = archivos.leerArchivosCentral(nid_p2)
+    
+    tini = datetime.datetime(2019, 5, 1)  
+    tfin = datetime.datetime(2019, 12, 31)
+    archi = archivos.archi_ro_pendientes(nid_p2)
+    parque2.calcular_liq_pendientes(tini, tfin, archi)
+    
     parque2.registrar()
     medidor2 = parque2.medidores[0]
     filtros2 = parque2.get_filtros()
     M2, F2, nom2, t2 = parque2.exportar_medidas()
     #nom_series_p2 = ['velPRONOS','dirPRONOS','potSCADA']
     #nom_series_p2 = ['velGEN','potSCADA']
-    nom_series_p2 = ['velxPRONOS_57', 'velyPRONOS_57', 'potSCADA_57']
+    nom_series_p2 = ['velxPRONOS', 'velyPRONOS', 'potSCADA']
+    nom_series_p2 = [s + '_' + str(nid_p2) for s in nom_series_p2]
     vel_PRONOS_p2 = parque2.medidores[0].get_medida('vel','pronos')
-    vel_GEN_p2 = parque2.medidores[0].get_medida('vel','gen')
-    vel_SCADA_p2 = parque2.medidores[0].get_medida('vel','scada')
+    #vel_GEN_p2 = parque2.medidores[0].get_medida('vel','gen')
+    #vel_SCADA_p2 = parque2.medidores[0].get_medida('vel','scada')
     dir_PRONOS_p2 = parque2.medidores[0].get_medida('dir','pronos')
     meds_plot_p2 = [vel_PRONOS_p2, dir_PRONOS_p2, parque2.pot,
                     parque2.cgm]
