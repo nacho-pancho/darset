@@ -28,14 +28,16 @@ if __name__ == '__main__':
     # lectura de los datos del parque1 que es el proporciona al parque2 los 
     # datos meteorológicos para el cálculo de las RO.
     
-    # Kiyu    
-    parque1 = archivos.leerArchivosCentral(9)    
+    # Kiyu
+    nid_p1 = 9
+    parque1 = archivos.leerArchivosCentral(nid_p1)    
     parque1.registrar() 
     medidor1 = parque1.medidores[0]
     filtros1 = parque1.get_filtros()
     M1, F1, nom1, t1 = parque1.exportar_medidas()
     #nom_series_p1 = ['velGEN','dirGEN','velPRONOS','dirPRONOS','potSCADA']
-    nom_series_p1 = ['velxGEN_9','velxGEN_9']
+    nom_series_p1 = ['velxGEN','velxGEN']
+    nom_series_p1 = [s + '_' + str(nid_p1) for s in nom_series_p1]
     vel_GEN_p1 = parque1.medidores[0].get_medida('vel','gen')
     vel_scada_p1 = parque1.medidores[0].get_medida('vel','scada')
     dir_scada_p1 = parque1.medidores[0].get_medida('dir','scada')
@@ -44,11 +46,12 @@ if __name__ == '__main__':
 
     # lectura de los datos del parque2 al cual se le van a calcular las RO.
     # Libertad
-    parque2 = archivos.leerArchivosCentral(23)
+    nid_p2 = 23
+    parque2 = archivos.leerArchivosCentral(nid_p2)
     
     tini = datetime.datetime(2019, 5, 1)  
     tfin = datetime.datetime(2019, 12, 31)
-    archi = archivos.archi_ro_pendientes(23)
+    archi = archivos.archi_ro_pendientes(nid_p2)
     parque2.calcular_liq_pendientes(tini, tfin, archi)
     
     parque2.registrar()
@@ -57,7 +60,9 @@ if __name__ == '__main__':
     M2, F2, nom2, t2 = parque2.exportar_medidas()
     #nom_series_p2 = ['velPRONOS','dirPRONOS','potSCADA']
     #nom_series_p2 = ['velGEN','potSCADA']
-    nom_series_p2 = ['velxPRONOS_23', 'velyPRONOS_23', 'potSCADA_23']
+    nom_series_p2 = ['velxPRONOS', 'velyPRONOS', 'potSCADA']
+    nom_series_p2 = [s + '_' + str(nid_p2) for s in nom_series_p2]
+    
     vel_PRONOS_p2 = parque2.medidores[0].get_medida('vel','pronos')
     vel_GEN_p2 = parque2.medidores[0].get_medida('vel','gen')
     vel_SCADA_p2 = parque2.medidores[0].get_medida('vel','scada')
