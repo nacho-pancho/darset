@@ -335,7 +335,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
         ros = list()        
         #ros = indices[1:2]
         #ros = indices
-        ros = [4] 
+        ros = [10] 
         
         for kRO in ros:
             carpeta_ro = archivos.path_ro(kRO + 1, carpeta_central)
