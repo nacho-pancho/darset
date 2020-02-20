@@ -45,6 +45,8 @@ import datos as d
 import scipy.stats as r
 import archivos as arch
 import copy
+from itertools import compress
+import matplotlib.pyplot as plt
 
 FUERA_DE_RANGO = -1e20
 
@@ -146,7 +148,27 @@ class Medida(object):
         if self._filtros is None:
             self.calcular_filtros()
         return self._filtros
-    
+
+    def get_muestra_t(self, t):
+        
+        t1 = self.tiempo[1]
+        t0 = self.tiempo[0]
+        
+        dt = (t1 - t0)
+        k_m = round((t - t0)/dt)
+        
+        return self.muestras[k_m]
+
+    def get_muestras_y_t(self, tini, tfin):
+        
+        filt_dt = (np.array(self.tiempo) >= tini) & (np.array(self.tiempo) <= tfin)         
+                
+        t_v = list(compress(self.tiempo, filt_dt))
+        m_v = [self.get_muestra_t(t) for t in t_v]
+                
+        return t_v, np.array(m_v)
+
+        
     
 #    def reset_filtros(self,NMuestras):
 #        """
@@ -454,6 +476,35 @@ class Parque(object):
 
         return None
 
+    def calcular_liq_pendientes(self, tini, tfin, archi):
+                
+        t_ini_calc = list()
+        t_fin_calc = list()
+        
+        t_cgm, m_cgm = self.cgm.get_muestras_y_t(tini, tfin)
+        
+        flg_ro = m_cgm < 0.999 * self.PAutorizada
+                
+        k = 0         
+        while k < len(flg_ro):
+            #(f"k: {k}, largo = {len(flg_ro)}") 
+            if flg_ro[k]:
+                t_ini_calc.append(t_cgm[k])
+                while ((k+1) < len(flg_ro)) and (flg_ro[k+1]):
+                    k = k+1
+                t_fin_calc.append(t_cgm[k])                
+            k = k+1     
+        
+        f = open(archi,"w+")
+        for k in range(len(t_fin_calc)):
+            f.write(str(k+1) +  '\t')
+            f.write(t_ini_calc[k].strftime('%d-%m-%y %H:%M') +  '\t')
+            f.write(t_fin_calc[k].strftime('%d-%m-%y %H:%M') +  '\n')
+    
+                                                        
+        f.close() 
+        
+        
 
     def decorrelacion(self):
         """
