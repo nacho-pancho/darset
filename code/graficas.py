@@ -14,15 +14,12 @@ import filtros
 
 #=================================================================================
 
-def rosa_de_los_vientos(self):
+def rosa_de_los_vientos(vel, dir_):
     '''
     muestra el resumen de direcciones y velocidades
     del viento en esta medida en todo su período
     como una rosa de los vientos
     '''
-    vel = self.get_medida('vel')
-    dir_ = self.get_medida('dir')
-    
     filtro = vel.filtrada() | dir_.filtrada()
     
     wd = dir_.muestras[filtro < 1]
