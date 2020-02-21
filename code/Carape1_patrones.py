@@ -42,15 +42,14 @@ if __name__ == '__main__':
     nom_series_p1 = ['velxSCADA', 'velySCADA']
     nom_series_p1 = [s + '_' + str(nid_p1) for s in nom_series_p1]
     vel_GEN_p1 = parque1.medidores[0].get_medida('vel','gen')
-    dir_GEN_p1 = parque1.medidores[0].get_medida('dir','gen')
     vel_scada_p1 = parque1.medidores[0].get_medida('vel','scada')
     dir_scada_p1 = parque1.medidores[0].get_medida('dir','scada')
     dir_pronos_p1 = parque1.medidores[0].get_medida('dir','pronos')
-    meds_plot_p1 = [vel_GEN_p1, vel_scada_p1, dir_scada_p1, dir_pronos_p1, dir_GEN_p1]
+    meds_plot_p1 = [vel_GEN_p1, vel_scada_p1, dir_scada_p1, dir_pronos_p1]
 
     # lectura de los datos del parque2 al cual se le van a calcular las RO.
     # Carape2
-    nid_p2 = 39
+    nid_p2 = 8
     parque2 = archivos.leerArchivosCentral(nid_p2)
     
     '''

@@ -23,6 +23,7 @@ if __name__ == '__main__':
     
     flg_estimar_RO = True
 
+
     
     plt.close('all')
 
@@ -31,26 +32,27 @@ if __name__ == '__main__':
     
     # no puedo usar carape 1 xq en la mayoria de las RO faltantes de C2
     # no tengo datos
-    # maldonado 2 tampoco cubre los huevos, al menos una de sus torres
-    nid_p1 = 45
+    # Artilleros
+    nid_p1 = 36
     parque1 = archivos.leerArchivosCentral(nid_p1)    
     parque1.registrar() 
     medidor1 = parque1.medidores[0]
     filtros1 = parque1.get_filtros()
     M1, F1, nom1, t1 = parque1.exportar_medidas()
     #nom_series_p1 = ['velGEN','dirGEN','velPRONOS','dirPRONOS','potSCADA']
-    nom_series_p1 = ['velxSCADA', 'velySCADA']
+    nom_series_p1 = ['velxGEN', 'velyGEN']
     nom_series_p1 = [s + '_' + str(nid_p1) for s in nom_series_p1]
     vel_GEN_p1 = parque1.medidores[0].get_medida('vel','gen')
     dir_GEN_p1 = parque1.medidores[0].get_medida('dir','gen')
     vel_scada_p1 = parque1.medidores[0].get_medida('vel','scada')
+    vel_pronos_p1 = parque1.medidores[0].get_medida('vel','pronos')
     dir_scada_p1 = parque1.medidores[0].get_medida('dir','scada')
     dir_pronos_p1 = parque1.medidores[0].get_medida('dir','pronos')
-    meds_plot_p1 = [vel_GEN_p1, vel_scada_p1, dir_scada_p1, dir_pronos_p1, dir_GEN_p1]
+    meds_plot_p1 = [vel_GEN_p1, dir_GEN_p1, dir_pronos_p1, vel_pronos_p1]
 
     # lectura de los datos del parque2 al cual se le van a calcular las RO.
-    # Carape2
-    nid_p2 = 39
+    # Kiyu
+    nid_p2 = 9
     parque2 = archivos.leerArchivosCentral(nid_p2)
     
     '''
@@ -88,4 +90,4 @@ if __name__ == '__main__':
 
     modelo.main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, 
                    dt_ini_calc, dt_fin_calc, delta_print_datos, meds_plot_p1,
-                   meds_plot_p2, True)
+                   meds_plot_p2, False)

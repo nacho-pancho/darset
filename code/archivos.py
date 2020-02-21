@@ -252,6 +252,7 @@ def leerArchi(nidCentral,tipoArchi):
     print('\tLeyendo medidas')
     pot = None
     cgm = None
+    dis = None
     medidas = []
     for i in range(nSeries):
         tipoDato = filtros.str_to_tipo(tipos[i])
@@ -428,7 +429,7 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
                 meds_sin_m = signal.resample_poly(meds_sin,up=60,down=muestreo_mins)
                 meds_cos_m = signal.resample_poly(meds_cos,up=60,down=muestreo_mins)
                             
-                meds_m = [m.atan2(s,c) for s,c in zip(meds_sin_m,meds_cos_m)]
+                meds_m = [m.atan2(s,c) for s,c in zip(meds_sin_m, meds_cos_m)]
                 meds_m = [m.degrees(k) for k in meds_m]
 
                 for k in range(len(meds_m)):
