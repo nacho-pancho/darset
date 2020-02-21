@@ -128,9 +128,6 @@ def path_ro (nro_ro, carpeta_central):
     carpeta_ro = carpeta_central + 'res/' + str(nro_ro)  + '/'
     if not os.path.exists(carpeta_ro):
         os.makedirs(carpeta_ro)
-        print("Directory " , carpeta_ro ,  " Created ")
-    else:    
-        print("Directory " , carpeta_ro ,  " already exists")        
     return carpeta_ro
 
 ##############################################################################    
@@ -139,9 +136,6 @@ def path_carpeta_datos(carpeta_central):
     carpeta_datos = carpeta_central + 'datos/'
     if not os.path.exists(carpeta_datos):
         os.mkdir(carpeta_datos)
-        print("Directory " , carpeta_datos ,  " Created ")
-    else:    
-        print("Directory " , carpeta_datos ,  " already exists")        
     return carpeta_datos
    
 ##############################################################################
@@ -149,7 +143,7 @@ def path_carpeta_datos(carpeta_central):
 def leerCampo(file):
     line = file.readline().strip()
     cols = line.split()
-    print('Campo',cols[1:],'Valor',cols[0])
+    #print('Campo',cols[1:],'Valor',cols[0])
     return cols[0]    
 
 ##############################################################################
@@ -245,7 +239,7 @@ def leerArchi(nidCentral,tipoArchi):
         return None
         exit
     
-    print('\tconvirtiendo etiquetas de  tiempo a DateTime')
+    #print('\tconvirtiendo etiquetas de  tiempo a DateTime')
     dtini_10min = dt_to_dt10min(tiempo[0])
     tiempo = fechaInitoDateTimeN(dtini_10min,len(tiempo))
     
@@ -365,7 +359,7 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
     # Leo datos de las estaciones
     
     line=f.readline()
-    print(line)
+    #print(line)
     cols = line.split()
     nSeries = int(cols[0])
     
@@ -413,7 +407,7 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
     for i in range(nSeries):
 
         tipoDato = filtros.str_to_tipo(tipos[i])
-        print(tipoDato)
+        #print(tipoDato)
         if tipoDato is None:
             break
         meds = data[:,i+1]
@@ -614,7 +608,7 @@ def generar_ens_dte(pot_estim, pot_gen, dt, nidcentral):
     df_desf = df.shift(periods=-1, fill_value=-99999999)    
     df_h = df_desf.resample('H').sum()
     
-    print(df_h)    
+    #print(df_h)    
     df_h['hora'] = pd.Series(df_h.index.hour, index=df_h.index)
     
     dia = df_h.index.day

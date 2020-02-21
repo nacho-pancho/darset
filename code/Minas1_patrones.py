@@ -30,8 +30,9 @@ if __name__ == '__main__':
     # lectura de los datos del parque1 que es el proporciona al parque2 los 
     # datos meteorológicos para el cálculo de las RO.
     
-    # Artilleros
-    nid_p1 = 36
+
+    # Maldonado2, ojo que hay 2 RO en las q no hay datos para estimar 29, solo pronos
+    nid_p1 = 45
     parque1 = archivos.leerArchivosCentral(nid_p1)    
     parque1.registrar() 
     medidor1 = parque1.medidores[0]
@@ -50,7 +51,7 @@ if __name__ == '__main__':
 
     # lectura de los datos del parque2 al cual se le van a calcular las RO.
     # Kiyu
-    nid_p2 = 9
+    nid_p2 = 29
     parque2 = archivos.leerArchivosCentral(nid_p2)
     
     '''

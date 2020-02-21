@@ -237,7 +237,7 @@ class Medidor(object):
 
     def __init__(self, nombre, medidas, ubicacion):
         nm = len(medidas)
-        print(f"Medidor {nombre} con {nm} medidas ubicado en {ubicacion}")
+        #print(f"Medidor {nombre} con {nm} medidas ubicado en {ubicacion}")
         self.nombre = nombre
         self._medidas = medidas
         self.ubicacion = ubicacion
@@ -272,7 +272,7 @@ class Medidor(object):
             t0 = t[0]
             t1 = t[-1]
             nom = self._medidas[i].nombre
-            print(f"{nom} {t0} {t1}")
+            #print(f"{nom} {t0} {t1}")
             if t0 < tmin:
                 tmin = t0
             if t1 > tmax:
