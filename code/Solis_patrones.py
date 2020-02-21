@@ -28,8 +28,8 @@ if __name__ == '__main__':
     # lectura de los datos del parque1 que es el proporciona al parque2 los 
     # datos meteorológicos para el cálculo de las RO.
     
-    # kiyú 
-    nid_p1 = 9
+    # Minas  
+    nid_p1 = 29
     parque1 = archivos.leerArchivosCentral(nid_p1) 
     parque1.registrar() 
     medidor1 = parque1.medidores[0]          
@@ -48,8 +48,8 @@ if __name__ == '__main__':
     meds_plot_p1 = [vel_GEN_p1, dir_GEN_p1, vel_scada_p1, dir_scada_p1, vel_pronos_p1, dir_pronos_p1]
 
     # lectura de los datos del parque2 al cual se le van a calcular las RO.
-    # Villa Rodriguez
-    nid_p2 = 58
+    # Solis de Mataojo
+    nid_p2 = 56
     parque2 = archivos.leerArchivosCentral(nid_p2)
     
     tini = datetime.datetime(2019, 5, 1)  

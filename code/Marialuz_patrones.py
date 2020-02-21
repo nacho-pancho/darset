@@ -12,6 +12,7 @@ import numpy as np
 import modelo_RNN as modelo
 import plot_scatter as pltxy
 import matplotlib.pyplot as plt
+import datetime
 #import mdn
 
 
@@ -27,12 +28,13 @@ if __name__ == '__main__':
     # lectura de los datos del parque1 que es el proporciona al parque2 los 
     # datos meteorológicos para el cálculo de las RO.
     
-    # Florida 1   
+    # Florida 1   (podría ser con kiyú también)
     nid_p1 = 30
     parque1 = archivos.leerArchivosCentral(nid_p1)    
     parque1.registrar() 
     medidor1 = parque1.medidores[0]    
     filtros1 = parque1.get_filtros()
+    
     M1, F1, nom1, t1 = parque1.exportar_medidas()
     #nom_series_p1 = ['velGEN','dirGEN','velPRONOS','dirPRONOS','potSCADA']
     nom_series_p1 = ['velxGEN','velxGEN']
@@ -63,6 +65,7 @@ if __name__ == '__main__':
     #nom_series_p2 = ['velGEN','potSCADA']
     nom_series_p2 = ['velxPRONOS', 'velyPRONOS', 'potSCADA']
     nom_series_p2 = [s + '_' + str(nid_p2) for s in nom_series_p2]
+    
     vel_PRONOS_p2 = parque2.medidores[0].get_medida('vel','pronos')
     #vel_GEN_p2 = parque2.medidores[0].get_medida('vel','gen')
     #vel_SCADA_p2 = parque2.medidores[0].get_medida('vel','scada')
