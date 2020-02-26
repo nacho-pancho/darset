@@ -131,6 +131,7 @@ def archiPRONOS(ncentral):
 
 def archiSMEC(ncentral):
     #return os.path.join(RUTA_DATOS,f'c{ncentral}/archivos/medidasSMEC.txt')
+    cnid = 'c'+ str(ncentral) 
     return RUTA_DATOS + cnid + '/archivos/medidasSMEC.txt'
 ##############################################################################
 
