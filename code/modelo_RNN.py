@@ -334,9 +334,9 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
 
         ros = list()        
         #ros = indices[1:2]
-        ros = indices
+        #ros = indices
         #ros = range(0, min(2,n_ro))
-        #ros = [4]
+        ros = [4]
         
         for kRO in ros:
             carpeta_ro = archivos.path_ro(kRO + 1, carpeta_central)
@@ -409,7 +409,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
                     df_iter_k.loc[k_idx] = [k1, k2, error_pu, std_pu, b_v]
                     k_idx = k_idx + 1
                     L = largos_ro[kRO]
-                    #print(f"ro: {kRO} L: {L} k1: {k1}, k2: {k2}, b_v: {b_v}")
+                    print(f"ro: {kRO} L: {L} k1: {k1}, k2: {k2}, b_v: {b_v}")
                     
                     if b_v < b_v_opt:
                         k1_opt = k1
