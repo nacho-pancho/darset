@@ -95,24 +95,21 @@ def archiFILTROS(ncentral):
 ##############################################################################
 
 def archiSCADA(ncentral):
-    f = os.path.join(RUTA_DATOS,f'c{ncentral}/archivos/c{ncentral}_series10min.sas')
+    #f = os.path.join(RUTA_DATOS,f'c{ncentral}/archivos/')
     
-    text_file = open("sample.txt", "w")
-    n = text_file.write(f)
-    text_file.close()
-
+    cnid = 'c'+ str(ncentral) 
     
-    return f
+    return RUTA_DATOS + cnid + '/archivos/' + cnid + '_series10min.sas'
 
 
 ##############################################################################
 
 def archi_ro_pendientes(ncentral):
-    f = os.path.join(RUTA_DATOS,f'c{ncentral}/archivos/ro_pendientes_{ncentral}.txt')
+    #f = os.path.join(RUTA_DATOS,f'c{ncentral}/archivos/ro_pendientes_{ncentral}.txt')
     
-    print(sys.stdout.write(f))
+    cnid = 'c'+ str(ncentral) 
     
-    return f
+    return RUTA_DATOS + cnid + '/archivos/ro_pendientes_' + str(ncentral) + '.txt'
 
 ##############################################################################
 
