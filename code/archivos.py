@@ -172,10 +172,10 @@ def leerArchi(nidCentral,tipoArchi):
     elif tipoArchi == 'gen':
         archi = archiGEN(nidCentral)
     else:
-        print(f"ERROR: tipo de archivo desconocido")
+        print('ERROR: tipo de archivo desconocido')
         return None
 
-    print(f"LEYENDO ARCHIVO {tipoArchi} DE CENTRAL {nidCentral}: {archi}")
+    print('LEYENDO ARCHIVO ' + tipoArchi + ' DE CENTRAL ' + str(nidCentral) + ':' +archi)
 
     if not os.path.exists(archi):
         print("ERROR: archivo no existente.")
@@ -315,7 +315,7 @@ def leerArchiSMEC(nidCentral):
         return None,None
         exit        
 
-    print(f"Leyendo archivo SMEC  para la central {nidCentral}")
+    print('Leyendo archivo SMEC para la central' +  str(nidCentral))
 
     # Leo muestras (todas las celdas tienen que tener un valor)
     f = open(archi_SMEC, 'r')
@@ -364,11 +364,11 @@ def leerArchiPRONOS(nidCentral,muestreo_mins):
     archi_pronos = archiPRONOS(nidCentral)       
 
     if not os.path.exists(archi_pronos):
-        print(f"AVISO: no hay pronósticos para esta central. Archivo {archi_pronos} no encontrado.")
+        print('AVISO: no hay pronósticos para esta central. Archivo ' + archi_pronos + 'no encontrado.')
         return None
         exit
 
-    print(f"Leyendo archivo de pronósticos para la central {nidCentral}: {archi_pronos}")
+    print('Leyendo archivo de pronósticos para la central ' + str(nidCentral) + ':' + str(archi_pronos))
     
     f = open(archi_pronos, 'r')
     
@@ -528,7 +528,7 @@ def leerArchivosCentral (nidCentral):
     #
     archip = archiPICKLE(nidCentral)
     if os.path.exists(archip):
-        print(f'INFO: cargando datos de parque de {archip}')
+        print('INFO: cargando datos de parque de ' + archip)
         return cargarCentral(nidCentral)
     #
     # si no, generamos todo desde 0 en base a los distintos archivos
@@ -581,11 +581,11 @@ def leer_ro_pendientes(nidcentral):
     archi_ro = archi_ro_pendientes(nidcentral)       
 
     if not os.path.exists(archi_ro):
-        print(f"AVISO: no hay ro pendientes para esta central. Archivo {archi_ro} no encontrado.")
+        print('AVISO: no hay ro pendientes para esta central. Archivo ' + archi_ro + ' no encontrado.')
         return None
         exit
 
-    print(f"Leyendo archivo de ro faltantes para la central {nidcentral}: {archi_ro}")
+    print('Leyendo archivo de ro faltantes para la central ' + str(nidcentral) + ':' + archi_ro)
     
     f = open(archi_ro, 'r')
     
