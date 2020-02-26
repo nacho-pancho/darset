@@ -23,10 +23,10 @@ import pandas as pd
 ##############################################################################
 
 # cuando trabajamos en DARSET
-#RUTA_DATOS = '../data/'
+RUTA_DATOS = '../data/'
 
 # cuando trabajamos en ADME
-RUTA_DATOS = 'Y:/modelado_ro_RNN/'
+#RUTA_DATOS = 'Y:/modelado_ro_RNN/'
 
 
 ##############################################################################
