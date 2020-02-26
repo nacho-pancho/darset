@@ -18,6 +18,7 @@ import pickle
 import gzip
 import re
 import pandas as pd
+import sys
 
 
 ##############################################################################
@@ -101,7 +102,9 @@ def archiSCADA(ncentral):
 
 def archi_ro_pendientes(ncentral):
     f = os.path.join(RUTA_DATOS,f'c{ncentral}/archivos/ro_pendientes_{ncentral}.txt')
-    print(f)
+    
+    print(sys.stdout.write(f))
+    
     return f
 
 ##############################################################################
