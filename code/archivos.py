@@ -96,7 +96,12 @@ def archiFILTROS(ncentral):
 
 def archiSCADA(ncentral):
     f = os.path.join(RUTA_DATOS,f'c{ncentral}/archivos/c{ncentral}_series10min.sas')
-    print(sys.stdout.write(f))
+    
+    text_file = open("sample.txt", "w")
+    n = text_file.write(f)
+    text_file.close()
+
+    
     return f
 
 
