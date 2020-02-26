@@ -247,7 +247,7 @@ class Medidor(object):
         for m in self._medidas:
             if (m.tipo == tipo) and (m.procedencia == proc):
                 return m
-        print(f"AVISO: medida de tipo {tipo} y procedencia {proc} no encontrada.")
+        print('AVISO: medida de tipo ' + tipo + ' y procedencia ' + proc + ' no encontrada')
         return None
 
 
