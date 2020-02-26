@@ -230,7 +230,7 @@ def estimar_ro(train_pu, X_n, y_n, X_RO_n, carpeta_ro, k1, k2):
         
         
         history = model.fit(X_train_n, y_train_n, validation_data=(X_test_n, y_test_n), 
-                            epochs=100, verbose=0, callbacks=[es])
+                            epochs=100, verbose=1, callbacks=[es])
        
         # evaluate the model
         
