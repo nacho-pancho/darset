@@ -24,10 +24,10 @@ import sys
 ##############################################################################
 
 # cuando trabajamos en DARSET
-#RUTA_DATOS = '../data/'
+RUTA_DATOS = '../data/'
 
 # cuando trabajamos en ADME
-RUTA_DATOS = 'Y:/modelado_ro_RNN/'
+#RUTA_DATOS = 'Y:/modelado_ro_RNN/'
 
 
 ##############################################################################
@@ -95,7 +95,9 @@ def archiFILTROS(ncentral):
 ##############################################################################
 
 def archiSCADA(ncentral):
-    return os.path.join(RUTA_DATOS,f'c{ncentral}/archivos/c{ncentral}_series10min.sas')
+    f = os.path.join(RUTA_DATOS,f'c{ncentral}/archivos/c{ncentral}_series10min.sas')
+    print(sys.stdout.write(f))
+    return f
 
 
 ##############################################################################
