@@ -199,7 +199,7 @@ def corr_medidas(x,y,NDatosCorr,NDatosDesf,addFiltro_y):
     Las medidas deben estar sincronizadas
     """
     if x.tiempo[0] != y.tiempo[0]:
-        print(f'ERROR: medidas deben estar registradas para calcular correlacion!')
+        print('ERROR: medidas deben estar registradas para calcular correlacion!')
         return None
 
     if ((x.tipo == 'dir') and (y.tipo == 'dir')):
