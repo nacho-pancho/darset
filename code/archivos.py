@@ -114,17 +114,24 @@ def archi_ro_pendientes(ncentral):
 ##############################################################################
 
 def archiGEN(ncentral):
-    return os.path.join(RUTA_DATOS,f'c{ncentral}/archivos/c{ncentral}_series10minGen.sas')
+    #return os.path.join(RUTA_DATOS,f'c{ncentral}/archivos/c{ncentral}_series10minGen.sas')
+    cnid = 'c'+ str(ncentral) 
+    
+    return RUTA_DATOS + cnid + '/archivos/' + cnid + '_series10minGen.sas'    
 
 ##############################################################################
 
 def archiPRONOS(ncentral):
-    return os.path.join(RUTA_DATOS,f'c{ncentral}/archivos/c{ncentral}_series60min_pronos.sas')
-
+    #return os.path.join(RUTA_DATOS,f'c{ncentral}/archivos/c{ncentral}_series60min_pronos.sas')
+    cnid = 'c'+ str(ncentral) 
+    
+    return RUTA_DATOS + cnid + '/archivos/' + cnid + '_series60min_pronos.sas'  
+    
 ##############################################################################
 
 def archiSMEC(ncentral):
-    return os.path.join(RUTA_DATOS,f'c{ncentral}/archivos/medidasSMEC.txt')
+    #return os.path.join(RUTA_DATOS,f'c{ncentral}/archivos/medidasSMEC.txt')
+    return RUTA_DATOS + cnid + '/archivos/medidasSMEC.txt'
 ##############################################################################
 
 def path(ncentral):
