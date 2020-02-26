@@ -96,10 +96,13 @@ def archiFILTROS(ncentral):
 def archiSCADA(ncentral):
     return os.path.join(RUTA_DATOS,f'c{ncentral}/archivos/c{ncentral}_series10min.sas')
 
+
 ##############################################################################
 
 def archi_ro_pendientes(ncentral):
-    return os.path.join(RUTA_DATOS,f'c{ncentral}/archivos/ro_pendientes_{ncentral}.txt')
+    f = os.path.join(RUTA_DATOS,f'c{ncentral}/archivos/ro_pendientes_{ncentral}.txt')
+    print(f)
+    return f
 
 ##############################################################################
 
