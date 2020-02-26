@@ -95,13 +95,13 @@ def archiFILTROS(ncentral):
 ##############################################################################
 
 def archiSCADA(ncentral):
-    return os.path.join(RUTA_DATOS,f'c{ncentral}/archivos/c{ncentral}_series10min.sas')
+    return os.path.join(RUTA_DATOS,f"c{ncentral}/archivos/c{ncentral}_series10min.sas")
 
 
 ##############################################################################
 
 def archi_ro_pendientes(ncentral):
-    f = os.path.join(RUTA_DATOS,f'c{ncentral}/archivos/ro_pendientes_{ncentral}.txt')
+    f = os.path.join(RUTA_DATOS,f"c{ncentral}/archivos/ro_pendientes_{ncentral}.txt")
     
     print(sys.stdout.write(f))
     
@@ -110,17 +110,17 @@ def archi_ro_pendientes(ncentral):
 ##############################################################################
 
 def archiGEN(ncentral):
-    return os.path.join(RUTA_DATOS,f'c{ncentral}/archivos/c{ncentral}_series10minGen.sas')
+    return os.path.join(RUTA_DATOS,f"c{ncentral}/archivos/c{ncentral}_series10minGen.sas")
 
 ##############################################################################
 
 def archiPRONOS(ncentral):
-    return os.path.join(RUTA_DATOS,f'c{ncentral}/archivos/c{ncentral}_series60min_pronos.sas')
+    return os.path.join(RUTA_DATOS,f"c{ncentral}/archivos/c{ncentral}_series60min_pronos.sas")
 
 ##############################################################################
 
 def archiSMEC(ncentral):
-    return os.path.join(RUTA_DATOS,f'c{ncentral}/archivos/medidasSMEC.txt')
+    return os.path.join(RUTA_DATOS,f"c{ncentral}/archivos/medidasSMEC.txt")
 ##############################################################################
 
 def path(ncentral):
