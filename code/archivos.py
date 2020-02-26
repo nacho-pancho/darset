@@ -241,17 +241,17 @@ def leerArchi(nidCentral,tipoArchi):
     for i in range(len(tiempo)-1):
         dt.append(tiempo[i+1]-tiempo[i])
     dtmin,dtmed,dtmax = np.min(dt),np.median(dt),np.max(dt)
-    print(f"\tdt: min{dtmin} med={dtmed} max={dtmax}")
+    #print(f"\tdt: min{dtmin} med={dtmed} max={dtmax}")
     dt.append(dt[-1])
     dtposta = datetime.timedelta(minutes=10)
     dtcero = datetime.timedelta(0)
     if dtmin == dtcero: # 
         trep = tiempo[dt == dtcero]
-        print(f"ERROR: tiempos repetidos {trep}")
+        print('ERROR: tiempos repetidos ' + str(trep))
         return None
         exit
     elif dtmax > 1.1*dtposta:
-        print(f"ERROR: tiempos faltantes!")
+        print('ERROR: tiempos faltantes!')
         return None
         exit
     
