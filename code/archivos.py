@@ -609,7 +609,7 @@ def leer_ro_pendientes(nidcentral):
    
     return date_ini, date_fin
 
-def generar_ens_dte(pot_estim, pot_gen, dt, nidcentral):
+def generar_ens_dte(pot_estim, pot_gen, dt, carpeta):
 
     dif_pot = pot_estim - pot_gen
     #d = {'ens': dif_pot, 'pot_estim': pot_estim, 'pot_gen': pot_gen}
@@ -617,8 +617,6 @@ def generar_ens_dte(pot_estim, pot_gen, dt, nidcentral):
     
     df = pd.DataFrame(data=d, index=dt)
     
-    
-    carpeta = path(nidcentral)
     df.to_csv(carpeta + 'ens_10min.txt', index=True, sep='\t', 
               float_format='%.4f')
     

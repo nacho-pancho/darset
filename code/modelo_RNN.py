@@ -244,6 +244,9 @@ def estimar_ro(train_pu, X_n, y_n, X_RO_n, carpeta_ro, k1, k2):
         #print(model.summary())
         
         # plot training history
+        
+        '''
+        
         plt.figure()
         plt.plot(history.history['loss'], label='train')
         plt.plot(history.history['val_loss'], label='test')
@@ -253,7 +256,7 @@ def estimar_ro(train_pu, X_n, y_n, X_RO_n, carpeta_ro, k1, k2):
         
         plt.savefig(carpeta_ro + 'convergencia.png')
         
-        '''
+        
        
         y_test_predict_n = model.predict(X_test_n) 
         y_train_predict_n = model.predict(X_train_n) 
@@ -535,7 +538,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
     
         # guardo resumen RO
         
-        df_ro.to_csv(carpeta_central + 'resumen.txt', index=True, sep='\t',
+        df_ro.to_csv(carpeta_central + 'resultados/resumen.txt', index=True, sep='\t',
                      float_format='%.4f') 
     
             
@@ -550,7 +553,8 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
         
         # imprimo el detalle de la energía no suministrada por hora (formato DTE)
         # divido entre 6 para pasar de MW a MWh
-        archivos.generar_ens_dte(pot_estimada_PE70/6, pot/6, t, nid_parque)
+        archivos.generar_ens_dte(pot_estimada_PE70/6, pot/6, t,
+                                 carpeta_central + 'resultados/')
         
    
     meds = meds_plot_p1 + meds_plot_p2
