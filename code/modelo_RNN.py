@@ -19,6 +19,8 @@ import copy
 import math
 import numpy as np
 import plot_scatter as pltxy
+import matplotlib
+matplotlib.use('Agg')
 
 # 1. Set `PYTHONHASHSEED` envcondaironment variable at a fixed value
 import os
