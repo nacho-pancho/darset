@@ -23,8 +23,6 @@ if __name__ == '__main__':
     
     flg_estimar_RO = True
 
-
-    
     plt.close('all')
 
     # lectura de los datos del parque1 que es el proporciona al parque2 los 

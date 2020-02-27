@@ -334,9 +334,9 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
         print(indices[diome],largos_ro[indices[diome]])
         print(indices[-1],largos_ro[indices[-1]])
 
-        ros = list()        
+        #ros = list()        
         #ros = indices[1:2]
-        #ros = indices
+        ros = indices
         #ros = range(0, min(2,n_ro))
         #ros = [4]
         

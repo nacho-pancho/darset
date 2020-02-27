@@ -626,7 +626,11 @@ def leer_ro_pendientes(nidcentral):
 
 def generar_ens_dte(pot_estim, pot_gen, dt, carpeta):
 
-    dif_pot = pot_estim - pot_gen
+    dif_pot_ = pot_estim - pot_gen
+    
+    dif_pot = np.where((pot_estim > 0) & (dif_pot_ >= 0), dif_pot_, 0)
+    
+    
     #d = {'ens': dif_pot, 'pot_estim': pot_estim, 'pot_gen': pot_gen}
     d = {'ens': dif_pot}
     
