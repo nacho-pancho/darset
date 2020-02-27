@@ -22,10 +22,10 @@ import sys
 
 
 ##############################################################################
-if sys.platform.startswith('linux')
+if sys.platform.startswith('linux'):
     # cuando trabajamos en linux
     RUTA_DATOS = '../data/'
-else
+else:
     # cuando trabajamos en win
     RUTA_DATOS = 'Y:/modelado_ro_RNN/'
     
