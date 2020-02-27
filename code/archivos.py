@@ -22,12 +22,14 @@ import sys
 
 
 ##############################################################################
+if sys.platform.startswith('linux')
+    # cuando trabajamos en linux
+    RUTA_DATOS = '../data/'
+else
+    # cuando trabajamos en win
+    RUTA_DATOS = 'Y:/modelado_ro_RNN/'
+    
 
-# cuando trabajamos en DARSET
-RUTA_DATOS = '../data/'
-
-# cuando trabajamos en ADME
-#RUTA_DATOS = 'Y:/modelado_ro_RNN/'
 
 
 ##############################################################################
