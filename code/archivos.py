@@ -137,26 +137,39 @@ def archiSMEC(ncentral):
     return RUTA_DATOS + cnid + '/archivos/medidasSMEC.txt'
 ##############################################################################
 
-def path(ncentral):
-    return RUTA_DATOS +'c'+ str(ncentral) + '/'
+def path_central(ncentral):
+    carpeta_central = RUTA_DATOS +'c'+ str(ncentral) + '/'
+    if not os.path.exists(carpeta_central):
+        os.makedirs(carpeta_central)
+    return carpeta_central
 
 ##############################################################################
 
-def path_ro (nro_ro, carpeta_central):
-        
-    carpeta_ro = carpeta_central + 'resultados/' + str(nro_ro)  + '/'
+def path_ro (nro_ro, ncentral):
+    carpeta_res = path_carpeta_resultados(ncentral)    
+    carpeta_ro = carpeta_res + str(nro_ro)  + '/'
     if not os.path.exists(carpeta_ro):
         os.makedirs(carpeta_ro)
     return carpeta_ro
 
 ##############################################################################    
 
-def path_carpeta_datos(carpeta_central):
+def path_carpeta_datos(ncentral):
+    carpeta_central = path_central(ncentral)
     carpeta_datos = carpeta_central + 'datos/'
     if not os.path.exists(carpeta_datos):
         os.mkdir(carpeta_datos)
     return carpeta_datos
-   
+
+##############################################################################
+
+def path_carpeta_resultados(nidcentral):
+    carpeta_central = path_central(nidcentral)
+    carpeta_res = carpeta_central + 'resultados/'
+    if not os.path.exists(carpeta_res):
+        os.mkdir(carpeta_res)
+    return carpeta_res
+     
 ##############################################################################
     
 def leerCampo(file):

@@ -33,6 +33,7 @@ if __name__ == '__main__':
     # no puedo usar carape 1 xq en la mayoria de las RO faltantes de C2
     # no tengo datos
     # maldonado 2 tampoco cubre los huecos, al menos una de sus torres
+    # Luz de loma
     nid_p1 = 28
     parque1 = archivos.leerArchivosCentral(nid_p1)    
     parque1.registrar() 
@@ -51,8 +52,8 @@ if __name__ == '__main__':
     meds_plot_p1 = [vel_GEN_p1, dir_GEN_p1, dir_pronos_p1, vel_pronos_p1]
 
     # lectura de los datos del parque2 al cual se le van a calcular las RO.
-    # Florida1
-    nid_p2 = 30
+    # Pastorale
+    nid_p2 = 60
     parque2 = archivos.leerArchivosCentral(nid_p2)
     
     '''

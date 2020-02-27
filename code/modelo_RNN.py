@@ -289,8 +289,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             dt_fin_calc, delta_print_datos, meds_plot_p1, meds_plot_p2, flg_print_datos = False): 
 
     
-    nid_parque = parque2.id 
-    carpeta_central = archivos.path(nid_parque)    
+    nid_parque = parque2.id   
     
     if flg_estimar_RO:
             
@@ -342,7 +341,8 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
         #ros = [4]
         
         for kRO in ros:
-            carpeta_ro = archivos.path_ro(kRO + 1, carpeta_central)
+            
+            carpeta_ro = archivos.path_ro(kRO + 1, nid_parque)
             
             
             print(f"Calculando RO {kRO+1} de {len(Pats_Data_n)}")
@@ -538,7 +538,8 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
     
         # guardo resumen RO
         
-        df_ro.to_csv(carpeta_central + 'resultados/resumen.txt', index=True, sep='\t',
+        path_resultados = archivos.path_carpeta_resultados(nid_parque)
+        df_ro.to_csv( path_resultados + 'resumen.txt', index=True, sep='\t',
                      float_format='%.4f') 
     
             
@@ -553,8 +554,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
         
         # imprimo el detalle de la energía no suministrada por hora (formato DTE)
         # divido entre 6 para pasar de MW a MWh
-        archivos.generar_ens_dte(pot_estimada_PE70/6, pot/6, t,
-                                 carpeta_central + 'resultados/')
+        archivos.generar_ens_dte(pot_estimada_PE70/6, pot/6, t, path_resultados)
         
    
     meds = meds_plot_p1 + meds_plot_p2
@@ -577,7 +577,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             
             graficas.clickplot_redraw()
             
-            carpeta_ro = archivos.path_ro(kRO+1, carpeta_central)
+            carpeta_ro = archivos.path_ro(kRO+1, nid_parque)
             plt.savefig(carpeta_ro + 'datos.png', dpi=300)
     elif flg_print_datos:
         for kcalc in range(len(dt_ini_calc)):           
@@ -588,7 +588,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             
             graficas.clickplot_redraw()
             
-            carpeta_datos = archivos.path_carpeta_datos(carpeta_central) 
+            carpeta_datos = archivos.path_carpeta_datos(nid_parque) 
             plt.savefig(carpeta_datos + str(kcalc) + '.png' )
         
    
