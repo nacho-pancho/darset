@@ -28,8 +28,8 @@ if __name__ == '__main__':
     # lectura de los datos del parque1 que es el proporciona al parque2 los 
     # datos meteorológicos para el cálculo de las RO.
     
-    # Florida 1   (podría ser con kiyú también)
-    nid_p1 = 30
+    # kiyu   (podría ser con florida1 también)
+    nid_p1 = 9
     parque1 = archivos.leerArchivosCentral(nid_p1)    
     parque1.registrar() 
     medidor1 = parque1.medidores[0]    
@@ -37,7 +37,7 @@ if __name__ == '__main__':
     
     M1, F1, nom1, t1 = parque1.exportar_medidas()
     #nom_series_p1 = ['velGEN','dirGEN','velPRONOS','dirPRONOS','potSCADA']
-    nom_series_p1 = ['velxGEN','velxGEN']
+    nom_series_p1 = ['velxGEN','velyGEN']
     nom_series_p1 = [s + '_' + str(nid_p1) for s in nom_series_p1]    
     vel_GEN_p1 = parque1.medidores[0].get_medida('vel','gen')
     dir_GEN_p1 = parque1.medidores[0].get_medida('dir','gen')
@@ -63,7 +63,7 @@ if __name__ == '__main__':
     M2, F2, nom2, t2 = parque2.exportar_medidas()
     #nom_series_p2 = ['velPRONOS','dirPRONOS','potSCADA']
     #nom_series_p2 = ['velGEN','potSCADA']
-    nom_series_p2 = ['velxPRONOS', 'velyPRONOS', 'potSCADA']
+    nom_series_p2 = ['potSCADA']
     nom_series_p2 = [s + '_' + str(nid_p2) for s in nom_series_p2]
     
     vel_PRONOS_p2 = parque2.medidores[0].get_medida('vel','pronos')
