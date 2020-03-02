@@ -369,8 +369,10 @@ def leerArchiSMEC(nidCentral):
     minmax = filtros.min_max(tipoDato,50,100)
     nrep = filtros.Nrep(tipoDato)
   
-    med_10min = datos.Medida('smec',muestras10min,dt_10min,'pot','potSMEC10m',minmax[0],minmax[1],nrep)
-    med_15min = datos.Medida('smec',muestras15min,dt_15min,'pot','potSMEC15m',minmax[0],minmax[1],nrep)
+    med_10min = datos.Medida('smec',muestras10min,dt_10min,'pot','potSMEC10m',
+                             minmax[0],minmax[1],nrep)
+    med_15min = datos.Medida('smec',muestras15min,dt_15min,'pot','potSMEC15m',
+                             minmax[0],minmax[1],nrep)
 
     return med_10min, med_15min
 
@@ -639,7 +641,7 @@ def generar_ens_dte(pot_estim, pot_gen, dt, carpeta):
     df.to_csv(carpeta + 'ens_10min.txt', index=True, sep='\t', 
               float_format='%.4f')
     
-    df_desf = df.shift(periods=-1, fill_value=-99999999)    
+    df_desf = df.shift(periods=-1, fill_value=0)    
     df_h = df_desf.resample('H').sum()
     
     #print(df_h)    
@@ -663,14 +665,46 @@ def generar_ens_dte(pot_estim, pot_gen, dt, carpeta):
                 float_format='%.4f', date_format='%d-%m-%Y')
     
     
+def generar_ens_topeada(nidCentral, Ptope):
+    
+    archi_gen = path_central(nidCentral) + 'archivos/medidasSMEC.txt'
+    f = lambda s: datetime.datetime.strptime(s,'%d/%m/%Y')
+    gen = pd.read_csv(archi_gen, index_col = 0, skiprows=1, sep = '\t',
+                      date_parser = f) 
+    gen = gen.drop(['Acumulado'], axis=1)
+
+    f = lambda s: datetime.datetime.strptime(s,'%d-%m-%Y')
+    carpeta_res = path_carpeta_resultados(nidCentral) 
+    ens = pd.read_csv(carpeta_res + 'ens_DTE.txt', 
+                      index_col = 0, skiprows=2, sep = '\t', date_parser = f)    
+
+    m = (ens >= 0)
+
+    ens = ens.where(m, 0)
+    
+    #print(ens)
+    
+    ens.columns = gen.columns
+    gen.index.rename('dia', inplace = True)
+    
+    suma = gen.add(ens, fill_value=0)
+    suma = Ptope - suma
+    #print(suma)
+    
+    m = (suma < 0)
+    recorte = suma.where(m, 0)
+    
+    print(f"recorte/ens_ini [%]= {-recorte.values.sum()/ens.values.sum()*100}")
     
     
+    ens_recorte = ens.add(recorte, fill_value=0)
+    #print(ens_recorte)
     
-    
-    
-    
-    
-    
+    m = (ens_recorte > 0)
+    ens_recorte = ens_recorte.where(m, 0)
+   
+    ens_recorte.to_csv(carpeta_res + 'ens_DTE_topeo_iny.txt', index=True, sep='\t', 
+                float_format='%.4f', date_format='%d-%m-%Y')
     
     
     
