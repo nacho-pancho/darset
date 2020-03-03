@@ -557,7 +557,8 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
         # imprimo el detalle de la energía no suministrada por hora (formato DTE)
         # divido entre 6 para pasar de MW a MWh
         archivos.generar_ens_dte(pot_estimada_PE70/6, pot/6, t, path_resultados)
-        
+        # imprimo la ens topeada para que pinyectada + pnosuministrada < Ptope = Pautorizada
+        archivos.generar_ens_topeada(nid_parque, parque2.PAutorizada)
    
     meds = meds_plot_p1 + meds_plot_p2
 

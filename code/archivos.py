@@ -560,13 +560,16 @@ def leerArchivosCentral (nidCentral):
     else:
         print("AVISO: No hay archivo GEN para esta central.")
     
+    '''
+    Comento esto xq los archivos SMEC que hay en las carpetas son horarios y el proc espera
+    15 minutales
     med_10min, med_15min = leerArchiSMEC(nidCentral)
     if med_10min is not None:
         parque.pot_SMEC = med_10min.desfasar(-1) # por que se desfasaba?
 
     else:
         print("AVISO: No hay archivo SMEC para esta central.")
-
+    '''    
     medidor_pronos10min = leerArchiPRONOS(nidCentral,10)    
     if medidor_pronos10min is not None:
         parque.medidores[0].agregar_meds(medidor_pronos10min._medidas)
