@@ -57,7 +57,7 @@ def str_to_tipo(s):
 # este dato debería ser parte de Medida
 def min_max(tipo,PotAut,NMolinos):
     if tipo == 'vel':
-        return [0,20]
+        return [0,25]
     elif tipo == 'dir':
         return [0,360]
     elif tipo == 'pot':
