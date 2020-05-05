@@ -644,7 +644,7 @@ def generar_ens_dte(pot_estim, pot_gen, dt, carpeta, nid_dbSMEC = 999):
     df.index.name = 'Fecha'
     
     df.to_csv(carpeta + 'RO_DTE_' + str(nid_dbSMEC) + '_3.txt', index=True, sep='\t', 
-              float_format='%.4f', date_format='%d-%m-%Y')
+              float_format='%.4f', date_format='%d-%m-%Y %H:%M')
     
     df_desf = df.shift(periods=-1, fill_value=0)    
     df_h = df_desf.resample('H').sum()
