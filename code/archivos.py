@@ -22,15 +22,16 @@ import sys
 
 
 ##############################################################################
+'''
 if sys.platform.startswith('linux'):
     # cuando trabajamos en linux
     RUTA_DATOS = '../data/'
 else:
     # cuando trabajamos en win
     RUTA_DATOS = 'Y:/modelado_ro_RNN/'
-    
+'''    
 
-
+RUTA_DATOS = '../data/'
 
 ##############################################################################
 
@@ -629,7 +630,7 @@ def leer_ro_pendientes(nidcentral):
    
     return date_ini, date_fin
 
-def generar_ens_dte(pot_estim, pot_gen, dt, carpeta):
+def generar_ens_dte(pot_estim, pot_gen, dt, carpeta, nid_dbSMEC = 999):
 
     dif_pot_ = pot_estim - pot_gen
     
@@ -637,12 +638,13 @@ def generar_ens_dte(pot_estim, pot_gen, dt, carpeta):
     
     
     #d = {'ens': dif_pot, 'pot_estim': pot_estim, 'pot_gen': pot_gen}
-    d = {'ens': dif_pot}
+    d = {'ENS_MWh': dif_pot}
     
     df = pd.DataFrame(data=d, index=dt)
+    df.index.name = 'Fecha'
     
-    df.to_csv(carpeta + 'ens_10min.txt', index=True, sep='\t', 
-              float_format='%.4f')
+    df.to_csv(carpeta + 'RO_DTE_' + str(nid_dbSMEC) + '_3.txt', index=True, sep='\t', 
+              float_format='%.4f', date_format='%d-%m-%Y %H:%M')
     
     df_desf = df.shift(periods=-1, fill_value=0)    
     df_h = df_desf.resample('H').sum()

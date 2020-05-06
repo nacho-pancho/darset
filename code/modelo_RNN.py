@@ -20,7 +20,7 @@ import math
 import numpy as np
 import plot_scatter as pltxy
 import matplotlib
-matplotlib.use('Agg')
+#matplotlib.use('Agg')
 
 # 1. Set `PYTHONHASHSEED` envcondaironment variable at a fixed value
 import os
@@ -95,6 +95,7 @@ def patrones_ro(delta, F, M_n, t, dt_ini_calc, dt_fin_calc):
 
     filt_pot = F[:,-1]
     
+    print(t)
     dt = t[1] - t[0]    
 
     k_ini_calc = [round((dt_ - t[0])/dt) for dt_ in dt_ini_calc]
@@ -140,7 +141,7 @@ def patrones_ro(delta, F, M_n, t, dt_ini_calc, dt_fin_calc):
                 Pats_Filt.append(pat_filt)
                           
                 x_calc_n = np.full(len(pat_data_n), False)
-                x_calc_n[delta:-delta+1] = True
+                x_calc_n[delta:-delta] = True
                 Pats_Calc.append(x_calc_n)
     
                 k = k + 1
