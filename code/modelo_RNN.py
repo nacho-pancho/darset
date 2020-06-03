@@ -480,7 +480,8 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             
             delta_70 = np.abs(E_dif_MWh_VE-E_dif_MWh_PE70)
     
-            E_est_MWh_PE70 = E_est_MWh - delta_70
+            #E_est_MWh_PE70 = E_est_MWh - delta_70
+            E_est_MWh_PE70 = E_est_MWh + E_dif_MWh_PE70           
             
             ENS_PE_70 = max(E_est_MWh_PE70-E_gen_RO,0)
             
