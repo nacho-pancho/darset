@@ -230,7 +230,7 @@ def estimar_ro(X_train_n, y_train_n, X_test_n, y_test_n, X_RO_n, carpeta_ro, k1,
         
         
         history = model.fit(X_train_n, y_train_n, validation_data=(X_test_n, y_test_n), 
-                            epochs=10, verbose=1, callbacks=[es])
+                            epochs=100, verbose=1, callbacks=[es])
        
         # evaluate the model
         
@@ -595,9 +595,17 @@ def ejemplos_modelo_test (y_e, y_r, t, y_RO_e, NDatos_delta, NEjemplos):
     y_e_acum_delta = y_e_acum_sort[idx_izq:idx_der][:]
     y_r_acum_delta = y_r_acum_sort[idx_izq:idx_der][:]
     
-    y_difPUABS_delta = np.subtract(y_e_acum_delta, y_r_acum_delta) 
-    y_difPUABS_delta = np.divide(y_difPUABS_delta, y_r_acum_delta)
-    y_difPUABS_delta = np.absolute(y_difPUABS_delta)
+    #y_difPUABS_delta = np.subtract(y_e_acum_delta, y_r_acum_delta) 
+    #y_difPUABS_delta = np.divide(y_difPUABS_delta, y_r_acum_delta)
+    #y_difPUABS_delta = np.absolute(y_difPUABS_delta)
+    
+    y_difPUABS_delta = np.subtract(y_e_delta, y_r_delta) 
+    y_difPUABS_delta = np.square(y_difPUABS_delta)
+    #print(y_difPUABS_delta.shape)
+    y_difPUABS_delta = np.mean(y_difPUABS_delta, axis=1)
+    y_difPUABS_delta = np.sqrt(y_difPUABS_delta)
+    y_difPUABS_delta = np.divide(y_difPUABS_delta, np.mean(y_r_delta, axis=1))
+    
 
     # ordeno los datos según el error en p.u absoluto
     sort = np.argsort(y_difPUABS_delta)
