@@ -41,11 +41,11 @@ if __name__ == '__main__':
     nom_series_p1 = [s + '_' + str(nid_p1) for s in nom_series_p1]
     vel_GEN_p1 = parque1.medidores[0].get_medida('vel','gen')
     dir_GEN_p1 = parque1.medidores[0].get_medida('dir','gen')
-    vel_scada_p1 = parque1.medidores[0].get_medida('vel','scada')
-    dir_scada_p1 = parque1.medidores[0].get_medida('dir','scada')
-    vel_pronos_p1 = parque1.medidores[0].get_medida('vel','pronos')
-    dir_pronos_p1 = parque1.medidores[0].get_medida('dir','pronos')
-    meds_plot_p1 = [vel_GEN_p1, dir_GEN_p1, vel_scada_p1, dir_scada_p1, vel_pronos_p1, dir_pronos_p1]
+    #vel_scada_p1 = parque1.medidores[0].get_medida('vel','scada')
+    #dir_scada_p1 = parque1.medidores[0].get_medida('dir','scada')
+    #vel_pronos_p1 = parque1.medidores[0].get_medida('vel','pronos')
+    #dir_pronos_p1 = parque1.medidores[0].get_medida('dir','pronos')
+    meds_plot_p1 = [vel_GEN_p1, dir_GEN_p1]#, vel_scada_p1, dir_scada_p1, vel_pronos_p1, dir_pronos_p1]
 
     # lectura de los datos del parque2 al cual se le van a calcular las RO.
     # Ventus
@@ -53,8 +53,8 @@ if __name__ == '__main__':
     nid_p2 = 43
     parque2 = archivos.leerArchivosCentral(nid_p2)
     
-    tini = datetime.datetime(2019, 5, 1)  
-    tfin = datetime.datetime(2020, 1, 31)
+    tini = datetime.datetime(2020, 4, 1)  
+    tfin = datetime.datetime(2020, 5, 1)
     archi = archivos.archi_ro_pendientes(nid_p2)
     parque2.calcular_liq_pendientes(tini, tfin, archi)
     
@@ -71,8 +71,7 @@ if __name__ == '__main__':
     #vel_GEN_p2 = parque2.medidores[0].get_medida('vel','gen')
     #vel_SCADA_p2 = parque2.medidores[0].get_medida('vel','scada')
     dir_PRONOS_p2 = parque2.medidores[0].get_medida('dir','pronos')
-    meds_plot_p2 = [vel_PRONOS_p2, dir_PRONOS_p2, parque2.pot,
-                    parque2.cgm]
+    meds_plot_p2 = [parque2.pot, parque2.cgm]
 
     dt_ini_calc, dt_fin_calc = archivos.leer_ro_pendientes(parque2.id)
     delta_print_datos = 500

@@ -10,10 +10,12 @@ import numpy as np
 import math
 
 
-def split_sequences_patrones(F, Data, Data_Pat, F_Pat, Calc_Pat):
+def split_sequences_patrones(F, Data, dt, Data_Pat, F_Pat, Calc_Pat):
 
     n_steps_pat = len( F_Pat )
     X, y = list(), list()
+    dt_ini = list()
+    dt_ = np.asarray(dt)
     
     for i in range(len(Data)):
         # find the end of this pattern
@@ -24,6 +26,7 @@ def split_sequences_patrones(F, Data, Data_Pat, F_Pat, Calc_Pat):
        
         data_seq_i = Data[i:end_ix, :]
         data_seq_i_pot = Data[i:end_ix,-1]
+        dt_seq_i = dt_[i:end_ix]
         
         filt_seq_i = F[i:end_ix, :]        
         filt_seq_i_pot = F[i:end_ix, -1]
@@ -39,17 +42,21 @@ def split_sequences_patrones(F, Data, Data_Pat, F_Pat, Calc_Pat):
             
             seq_x_arr = data_seq_i[~F_Pat]            
             seq_y_arr = data_seq_i_pot[Calc_Pat]
-    
+ 
             seq_x = seq_x_arr.flatten()
-            seq_y = seq_y_arr.flatten()    
-            
+            seq_y = seq_y_arr.flatten()             
+ 
+            seq_dt = dt_seq_i[Calc_Pat]
+
             X.append(seq_x)
             y.append(seq_y)
+            dt_ini.append(seq_dt)
+            
 
     print(f"{len(X)} muestras encontradas en el patron de RO")
     
     
-    return np.array(X), np.array(y)
+    return np.array(X), np.array(y), np.array(dt_ini)
 
 def split_sequences(sequences, n_steps):
     X, y = list(), list()

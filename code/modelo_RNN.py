@@ -152,14 +152,11 @@ def patrones_ro(delta, F, M_n, t, dt_ini_calc, dt_fin_calc):
     return Pats_Data_n, Pats_Filt, Pats_Calc, dtini_ro, dtfin_ro, kini_ro
 
 
-def estimar_ro(train_pu, X_n, y_n, X_RO_n, carpeta_ro, k1, k2):
+def estimar_ro(X_train_n, y_train_n, X_test_n, y_test_n, X_RO_n, carpeta_ro, k1, k2):
 
         
-        X_train_n, X_test_n, y_train_n, y_test_n = train_test_split(
-                                X_n, y_n, test_size=1-train_pu, random_state=42)
-        
-        n_features = X_n.shape[1]
-        n_output = y_n.shape[1]
+        n_features = X_train_n.shape[1]
+        n_output = y_train_n.shape[1]
         
         #defino la red
         
@@ -233,7 +230,7 @@ def estimar_ro(train_pu, X_n, y_n, X_RO_n, carpeta_ro, k1, k2):
         
         
         history = model.fit(X_train_n, y_train_n, validation_data=(X_test_n, y_test_n), 
-                            epochs=100, verbose=1, callbacks=[es])
+                            epochs=10, verbose=1, callbacks=[es])
        
         # evaluate the model
         
@@ -286,13 +283,15 @@ def estimar_ro(train_pu, X_n, y_n, X_RO_n, carpeta_ro, k1, k2):
         '''        
         
         
-        return  y_test_predict_n, y_test_n, y_train_predict_n, y_train_n, np.squeeze(y_RO_predict_n)   
+        return  y_test_predict_n, y_train_predict_n, np.squeeze(y_RO_predict_n)   
 
 def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_ini_calc,
             dt_fin_calc, delta_print_datos, meds_plot_p1, meds_plot_p2, flg_print_datos = False): 
 
     
     nid_parque = parque2.id   
+
+    meds = meds_plot_p1 + meds_plot_p2
     
     if flg_estimar_RO:
             
@@ -350,196 +349,65 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             
             print(f"Calculando RO {kRO+1} de {len(Pats_Data_n)}")
             
-            X_n,y_n = seriesAS.split_sequences_patrones(F, M_n, Pats_Data_n[kRO],
+            X_n, y_n, dt = seriesAS.split_sequences_patrones(F, M_n, t,  Pats_Data_n[kRO],
                                                  Pats_Filt[kRO], Pats_Calc[kRO])
     
             kini_RO = kini_ro[kRO] 
             X_RO_n = Pats_Data_n[kRO][~Pats_Filt[kRO]].flatten()
-            X_RO_n = np.asmatrix(X_RO_n)  
-            
-            train_pu = 0.7
+            X_RO_n = np.asmatrix(X_RO_n)              
 
             # el mejor esta dando  en (3,3), tope de escala por ahora!
             # k1_lst = [0.25, 0.5, 1, 2, 3]
             #k2_lst = [0.25, 0.5, 1, 2, 3]
             k1_lst = [3]
             k2_lst = [3]
-           
-            # itero hasta encontrar k1 y k2 óptimo
-            b_v_opt = 99999
-            # creo df donde voy a guardar los resultados de las RO
-            cols_iter_k = ['k1', 'k2', 'error_pu', 'std_pu', 'b_v_pu']
             
-            idx = np.arange(0, len(k1_lst)*len(k2_lst))
-            df_iter_k = pd.DataFrame(index=idx, columns=cols_iter_k)    
-            k_idx = 0
-            for k1 in k1_lst:
-                for k2 in k2_lst:
-                    
-                    y_test_e, y_test, y_train_e, y_train, y_RO_e = \
-                        estimar_ro(train_pu, X_n, y_n, X_RO_n, carpeta_ro, k1, k2)
+            L = largos_ro[kRO]
+            print(f"ro: {kRO} L: {L} ")
             
-                    # desnormalizo series
-                        
-                    datos_norm = [y_RO_e, y_test_e, y_train_e, y_test, y_train]
-                    [y_RO_e, y_test_e, y_train_e, y_test, y_train] = \
-                        desnormalizar_datos(datos_norm, min_pot, max_pot)
-                    
-                            
-                    # concateno (train + test) salidas del modelo y datos reales 
-                    y_e_all = np.concatenate((y_test_e, y_train_e), axis=0)
-                    y_all = np.concatenate((y_test, y_train), axis=0)
-                    
-                                                   
-                    y_e_all_acum = np.sum(y_e_all, axis = 1)
-                    y_e_all_acum_MWh = y_e_all_acum/6
+            train_pu = 0.7
             
-                    y_all_acum = np.sum(y_all, axis = 1)
-                    y_all_acum_MWh = y_all_acum/6
-                    
-                    y_dif_all_acum_MWh = np.subtract(y_e_all_acum_MWh, y_all_acum_MWh)        
-                    
-                    error_pu = np.mean(y_dif_all_acum_MWh)/np.mean(y_all_acum_MWh)
-                    
-                    #print('Error medio [p.u] = ' , error_pu)
-                    
-                    std_pu = np.std(y_dif_all_acum_MWh)/np.mean(y_all_acum_MWh)
-            
-                    #print('std [p.u] = ' , std_pu)
-            
-                    b_v = (error_pu ** 2 + std_pu ** 2) ** (1/2)
-                    
-                    #print('bias-variance [p.u] = ', b_v)
-                    
-                    
-                    df_iter_k.loc[k_idx] = [k1, k2, error_pu, std_pu, b_v]
-                    k_idx = k_idx + 1
-                    L = largos_ro[kRO]
-                    print(f"ro: {kRO} L: {L} k1: {k1}, k2: {k2}, b_v: {b_v}")
-                    
-                    if b_v < b_v_opt:
-                        k1_opt = k1
-                        k2_opt = k2
-                        b_v_opt = b_v
-                        error_pu_opt = error_pu
-                        std_pu_opt = std_pu                        
-                        y_RO_e_opt = np.array(y_RO_e, copy=True)
-                        y_e_all_acum_MWh_opt = np.array(y_e_all_acum_MWh, copy=True)
-                        y_dif_all_acum_MWh_opt = np.array(y_dif_all_acum_MWh, copy=True)
-                        
-            
-            df_iter_k.to_csv(carpeta_ro + 'iter_k1k2.txt', index=True, sep='\t',
-                     float_format='%.2f')
-            
-            
-            b_v = b_v_opt
-            error_pu = error_pu_opt       
-            std_pu = std_pu_opt
-            y_RO_e = y_RO_e_opt
-            y_e_all_acum_MWh = y_e_all_acum_MWh_opt
-            y_dif_all_acum_MWh = y_dif_all_acum_MWh_opt
-            
-            # calculo las dist empíricas para cada rango de ptos
-            sort = np.argsort(y_e_all_acum_MWh)
-            y_e_all_acum_MWh_sort = np.array(y_e_all_acum_MWh)[sort]
-            y_dif_acum_MWh_sort = np.array(y_dif_all_acum_MWh)[sort]
-            
-            NDatos_hist = 300
-            delta_datos = math.trunc(NDatos_hist/2)
-            
-            y_dif_acum_MWh_sort_PE70 = np.zeros(len(y_dif_acum_MWh_sort))
-            y_dif_acum_MWh_sort_PE30 = np.zeros(len(y_dif_acum_MWh_sort))
-            y_dif_acum_MWh_sort_PE50 = np.zeros(len(y_dif_acum_MWh_sort))
-            y_dif_acum_MWh_sort_VE = np.zeros(len(y_dif_acum_MWh_sort))
-            
-            for k in range(len(y_e_all_acum_MWh_sort)):
-                idx_izq = max(0, k-delta_datos) 
-                idx_der = min(len(y_e_all_acum_MWh_sort), k+delta_datos)
-                
-                y_dif_delta = y_dif_acum_MWh_sort[idx_izq:idx_der]
-                
-                y_dif_acum_MWh_sort_PE70[k] = np.quantile(y_dif_delta, 0.3) 
-                y_dif_acum_MWh_sort_PE30[k] = np.quantile(y_dif_delta, 0.7)
-                y_dif_acum_MWh_sort_PE50[k] = np.quantile(y_dif_delta, 0.5)
-                y_dif_acum_MWh_sort_VE[k] = np.mean(y_dif_delta)
-            
-            
-            pot_estimada[kini_RO:kini_RO+y_RO_e.size] = y_RO_e        
-            
-            E_est_MWh = np.sum(y_RO_e)/6        
-            E_dif_MWh_PE70 = np.interp(E_est_MWh,y_e_all_acum_MWh_sort
-                                       , y_dif_acum_MWh_sort_PE70)      
-            E_dif_MWh_PE30 = np.interp(E_est_MWh,y_e_all_acum_MWh_sort
-                                       , y_dif_acum_MWh_sort_PE30)
-            E_dif_MWh_VE = np.interp(E_est_MWh,y_e_all_acum_MWh_sort
-                                       , y_dif_acum_MWh_sort_VE)
+            # separo datos de entrenamiento y testeo 
+            X_train_n, X_test_n, y_train_n, y_test_n, dt_train, dt_test = \
+                train_test_split(X_n, y_n, dt, test_size = 1-train_pu, random_state=42)            
 
-            E_gen_RO = sum(pot[kini_RO:kini_RO+y_RO_e.size])/6
-                    
-            ENS_VE = max(E_est_MWh-E_gen_RO,0)
+            # calibro la RN y calculo para la RO y datos test y entrenamiento
+            k1, k2, b_v, error_pu, std_pu, y_RO_e, y_test_e, y_test, y_train_e, y_train = \
+                estimar_ro_iter(k1_lst, k2_lst, X_train_n, y_train_n, X_test_n, 
+                                y_test_n, X_RO_n, carpeta_ro, min_pot, max_pot)
             
-            delta_70 = np.abs(E_dif_MWh_VE-E_dif_MWh_PE70)
-    
-            #E_est_MWh_PE70 = E_est_MWh - delta_70
-            E_est_MWh_PE70 = E_est_MWh + E_dif_MWh_PE70           
+            pot_estimada[kini_RO:kini_RO+y_RO_e.size] = y_RO_e            
             
-            ENS_PE_70 = max(E_est_MWh_PE70-E_gen_RO,0)
-            
-            pPE70 = y_RO_e * E_est_MWh_PE70 / E_est_MWh
-            
-            # Esta función topea la potencia y redistribuye el resto en las horas
-            # en las que no aplica el tope
-            
-            # aca tengo que hacer una funcion que distribuya ENS_PE_70 de modo 
-            # que cuando sume (PE_70_calc - PGen) =  ENS_PE_70        
-            
-            
-            '''
-            PAut = parque2.PAutorizada 
-            
-            filt_mayor_PAut = (pPE70 >= PAut)
-            
-            while np.any(filt_mayor_PAut):
-                recorte =np.sum(pPE70[filt_mayor_PAut]) 
-                pPE70[filt_mayor_PAut] = PAut
-                E_sin_recorte = np.sum(pPE70[~filt_mayor_PAut])
-                factor = (E_sin_recorte + recorte)/E_sin_recorte
-                pPE70[~filt_mayor_PAut] = pPE70[~filt_mayor_PAut] * factor
-                filt_mayor_PAut = pPE70 >= PAut
-            '''
-            
+            y_RO_gen = pot[kini_RO:kini_RO+y_RO_e.size]
+                                   
+            # estimo la potencia con probabilidad de excedencia 70 %            
+            pPE70, ENS_VE, delta_70, E_est_PE70, ENS_PE_70, E_dif_PE30, E_dif_PE70, E_dif_VE = \
+                estimar_pot_PE(y_test_e, y_train_e, y_test, y_train, y_RO_e, y_RO_gen, carpeta_ro)
+
             pot_estimada_PE70[kini_RO:kini_RO+y_RO_e.size] = pPE70
+
+            calculos_ro = [dtini_ro[kRO], dtfin_ro[kRO], dtfin_ro[kRO] - dtini_ro[kRO],
+                           sum(y_RO_e)/6, E_dif_PE70, E_dif_PE30, E_dif_VE,
+                           delta_70, sum(y_RO_gen)/6, ENS_VE, ENS_PE_70, k1, k2,
+                           error_pu, std_pu, b_v]                     
             
-            plt.figure()
-            plt.scatter(y_e_all_acum_MWh_sort,y_dif_all_acum_MWh, marker = '.',
-                        color=(0,0,0,0.1), label = 'Datos')
-            plt.plot(y_e_all_acum_MWh_sort, y_dif_acum_MWh_sort_PE70, label = 'PE70')
-            plt.plot(y_e_all_acum_MWh_sort, y_dif_acum_MWh_sort_PE50, label = 'PE50')
-            plt.plot(y_e_all_acum_MWh_sort, y_dif_acum_MWh_sort_PE30, label = 'PE30')
-            plt.plot(y_e_all_acum_MWh_sort, y_dif_acum_MWh_sort_VE, label = 'VE')
-    
-            plt.axvline(E_est_MWh, color='k', linestyle='--', label = 'ENS_estimada')
-            plt.legend()
-            plt.grid()
-            plt.xlabel('E_modelo [MWh]')
-            plt.ylabel('E_dif [MWh]')        
-            #plt.show()
-            plt.savefig(carpeta_ro + 'errores.png')
-    
-    
             archi_ro = carpeta_ro + 'resumen.txt'
-    
-            calculos_ro = [dtini_ro[kRO], dtfin_ro[kRO], dtfin_ro[kRO]-dtini_ro[kRO], E_est_MWh, E_dif_MWh_PE70,
-                           E_dif_MWh_PE30, E_dif_MWh_VE, delta_70, E_gen_RO, 
-                           ENS_VE, ENS_PE_70, k1_opt, k2_opt, error_pu_opt, 
-                           std_pu_opt, b_v_opt]                     
-            
             s = pd.Series(calculos_ro, index=columns_ro)
             s.to_csv(archi_ro, index=True, sep='\t') 
             
-            df_ro = df_ro.append(s,ignore_index=True)
+            df_ro = df_ro.append(s, ignore_index=True) 
             
-    
+            # ejemplos de cálculo
+            y_e_ej, y_r_ej, t_ej = \
+                ejemplos_modelo_test (y_test_e, y_test, dt_test, y_RO_e, 300, 3)
+            
+            carpeta_ro = archivos.path_ro(kRO+1, nid_parque)
+            
+            # grafico los ejemplos
+            
+            graficar_ejemplos(y_e_ej, y_r_ej, t_ej, meds, parque2,
+                              delta_print_datos, carpeta_ro)
+            
         # guardo resumen RO
         
         path_resultados = archivos.path_carpeta_resultados(nid_parque)
@@ -562,7 +430,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
         # imprimo la ens topeada para que pinyectada + pnosuministrada < Ptope = Pautorizada
         archivos.generar_ens_topeada(nid_parque, parque2.PAutorizada)
    
-    meds = meds_plot_p1 + meds_plot_p2
+ 
 
     if flg_estimar_RO:
         meds.append(pot_p2_mod)
@@ -596,5 +464,257 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             carpeta_datos = archivos.path_carpeta_datos(nid_parque) 
             plt.savefig(carpeta_datos + str(kcalc) + '.png' )
         
-   
+
+def estimar_pot_PE(y_test_e, y_train_e, y_test, y_train, y_RO_e, y_RO_gen, carpeta_ro):
+
+    # para calcular PE 70 % uso datos de entrenamiento y validación.
+    y_e = np.concatenate((y_test_e, y_train_e), axis=0)
+    y_r = np.concatenate((y_test, y_train), axis=0)
+
+    #y_e = y_test_e
+    #y_r = y_test    
     
+    # cantidad de datos que se consideran para calcular las dist empíricas
+    NDatos_hist = 300
+    delta_datos = math.trunc(NDatos_hist/2)
+    
+    y_e_acum = np.sum(y_e, axis = 1)
+    y_e_acum = y_e_acum/6
+
+    y_r_acum = np.sum(y_r, axis = 1)
+    y_r_acum = y_r_acum/6
+    
+    y_dif_acum = np.subtract(y_e_acum, y_r_acum) 
+    
+    # calculo las dist empíricas para cada rango de ptos
+    sort = np.argsort(y_e_acum)
+    y_e_acum_sort = np.array(y_e_acum)[sort]
+    y_dif_acum_sort = np.array(y_dif_acum)[sort]       
+    
+    y_dif_acum_sort_PE70 = np.zeros(len(y_dif_acum_sort))
+    y_dif_acum_sort_PE30 = np.zeros(len(y_dif_acum_sort))
+    y_dif_acum_sort_PE50 = np.zeros(len(y_dif_acum_sort))
+    y_dif_acum_sort_VE = np.zeros(len(y_dif_acum_sort))
+    
+    for k in range(len(y_e_acum_sort)):
+        
+        idx_izq = max(0, k - delta_datos) 
+        idx_der = min(len(y_e_acum_sort), k + delta_datos)
+        
+        y_dif_delta = y_dif_acum_sort[idx_izq:idx_der]
+        
+        y_dif_acum_sort_PE70[k] = np.quantile(y_dif_delta, 0.3) 
+        y_dif_acum_sort_PE30[k] = np.quantile(y_dif_delta, 0.7)
+        y_dif_acum_sort_PE50[k] = np.quantile(y_dif_delta, 0.5)
+        y_dif_acum_sort_VE[k] = np.mean(y_dif_delta)
+    
+    
+    # interpolo las dist empíricas en la energía estimada para la RO
+    # para calcular las excedencias del error        
+    
+    y_e_RO_acum = np.sum(y_RO_e)/6        
+    E_dif_PE70 = np.interp(y_e_RO_acum,y_e_acum_sort
+                               , y_dif_acum_sort_PE70)      
+    E_dif_PE30 = np.interp(y_e_RO_acum,y_e_acum_sort
+                               , y_dif_acum_sort_PE30)
+    E_dif_VE = np.interp(y_e_RO_acum, y_e_acum_sort
+                               , y_dif_acum_sort_VE)
+
+    y_r_RO_acum = sum(y_RO_gen)/6
+            
+    ENS_VE = max(y_e_RO_acum - y_r_RO_acum, 0)
+    
+    delta_70 = np.abs(E_dif_VE - E_dif_PE70)
+
+    #E_est_MWh_PE70 = E_est_MWh - delta_70
+    E_est_PE70 = y_e_RO_acum + E_dif_PE70           
+    
+    ENS_PE_70 = max(E_est_PE70 - y_r_RO_acum, 0)
+    
+    pPE70 = y_RO_e * E_est_PE70 / y_e_RO_acum
+    
+    # Esta función topea la potencia y redistribuye el resto en las horas
+    # en las que no aplica el tope
+    
+    # aca tengo que hacer una funcion que distribuya ENS_PE_70 de modo 
+    # que cuando sume (PE_70_calc - PGen) =  ENS_PE_70         
+      
+    plt.figure()
+    plt.scatter(y_e_acum_sort,y_dif_acum, marker = '.',
+                color=(0,0,0,0.1), label = 'Datos')
+    plt.plot(y_e_acum_sort, y_dif_acum_sort_PE70, label = 'PE70')
+    plt.plot(y_e_acum_sort, y_dif_acum_sort_PE50, label = 'PE50')
+    plt.plot(y_e_acum_sort, y_dif_acum_sort_PE30, label = 'PE30')
+    plt.plot(y_e_acum_sort, y_dif_acum_sort_VE, label = 'VE')
+
+    plt.axvline(y_e_RO_acum, color='k', linestyle='--', label = 'E_estimada')
+    plt.legend()
+    plt.grid()
+    plt.xlabel('E_modelo [MWh]')
+    plt.ylabel('E_modelo - E_gen [MWh]')        
+    #plt.show()
+    plt.savefig(carpeta_ro + 'errores.png')
+    
+    return pPE70, ENS_VE, delta_70, E_est_PE70, ENS_PE_70, E_dif_PE30, E_dif_PE70, E_dif_VE
+
+
+def ejemplos_modelo_test (y_e, y_r, t, y_RO_e, NDatos_delta, NEjemplos):
+
+    delta_datos = math.trunc(NDatos_delta/2)
+    
+    y_e_acum = np.sum(y_e, axis = 1)
+    y_e_acum = y_e_acum/6
+
+    y_r_acum = np.sum(y_r, axis = 1)
+    y_r_acum = y_r_acum/6
+        
+    y_e_RO_acum = np.sum(y_RO_e)/6
+       
+    # ordeno los datos según la energía estimada
+    sort = np.argsort(y_e_acum)
+
+    # ordeno el resto de los datos para ser coherentes
+    y_e_acum_sort = np.array(y_e_acum)[sort]
+    y_r_acum_sort = np.array(y_r_acum)[sort]
+    t_sort = np.array(t)[sort, :]
+    y_e_sort = np.array(y_e)[sort, :]
+    y_r_sort = np.array(y_r)[sort, :]
+
+
+    # encuentro el índice mas cercano a la estimación 
+    idx_RO = np.searchsorted(y_e_acum_sort, y_e_RO_acum, side="left")
+
+    # ahora selecciono un intervalo de datos en torno a la energía estimada
+    # durante la RO    
+    idx_izq = max(0, idx_RO - delta_datos) 
+    idx_der = min(len(y_e_acum_sort), idx_RO + delta_datos)
+        
+    y_e_delta = y_e_sort[idx_izq:idx_der][:]
+    y_r_delta = y_r_sort[idx_izq:idx_der][:]
+    t_delta = t_sort[idx_izq:idx_der][:]
+    y_e_acum_delta = y_e_acum_sort[idx_izq:idx_der][:]
+    y_r_acum_delta = y_r_acum_sort[idx_izq:idx_der][:]
+    
+    y_difPUABS_delta = np.subtract(y_e_acum_delta, y_r_acum_delta) 
+    y_difPUABS_delta = np.divide(y_difPUABS_delta, y_r_acum_delta)
+    y_difPUABS_delta = np.absolute(y_difPUABS_delta)
+
+    # ordeno los datos según el error en p.u absoluto
+    sort = np.argsort(y_difPUABS_delta)
+    
+    plt.figure()
+    plt.plot(y_difPUABS_delta[sort])
+    
+    y_e_def = y_e_delta[sort, :]
+    y_r_def = y_r_delta[sort, :]
+    t_def = t_delta[sort, :]
+    
+    idx = np.round(np.linspace(0, len(y_e_def[:, 0]) - 1, NEjemplos)).astype(int)
+    
+        
+    return y_e_def[idx, :], y_r_def[idx, :], t_def[idx, :]
+
+
+def graficar_ejemplos(y_e, y_r, t, meds, parque, delta_print_datos, carpeta_ro):
+    
+
+    for kej in range(len(y_e[:,0])):
+        
+        meds_ = copy.deepcopy(meds)
+        
+        pot_estim = datos.Medida('estimacion',y_e[kej,:], t[kej,:],
+            'pot','pot_estimada', parque.pot.minval, parque.pot.maxval, 3)     
+        
+        pot_real = datos.Medida('estimacion',y_r[kej,:], t[kej,:],
+            'pot','pot_real', parque.pot.minval, parque.pot.maxval, 3)     
+        
+        
+        meds_.append(pot_estim)
+        meds_.append(pot_real)
+        
+        graficas.clickplot(meds_)    
+        
+        dtini_w = t[kej,0] - datetime.timedelta(minutes=delta_print_datos)
+        dtfin_w = t[kej,-1] + datetime.timedelta(minutes=delta_print_datos)    
+        
+        graficas.window = [dtini_w, dtfin_w]
+        
+        graficas.clickplot_redraw()
+        
+        
+        plt.savefig(carpeta_ro + 'datos_ej_' + str(kej) + '.png', dpi=300)
+    
+        
+
+def estimar_ro_iter (k1_lst, k2_lst, X_train_n, y_train_n, X_test_n, y_test_n, 
+                     X_RO_n, carpeta_ro, min_pot, max_pot):
+
+    # itero hasta encontrar k1 y k2 óptimo
+    b_v_opt = 99999
+    
+    # creo df donde voy a guardar los resultados de las RO
+    cols_iter_k = ['k1', 'k2', 'error_pu', 'std_pu', 'b_v_pu']
+    
+    idx = np.arange(0, len(k1_lst)*len(k2_lst))
+    df_iter_k = pd.DataFrame(index=idx, columns=cols_iter_k)    
+    k_idx = 0
+   
+    [y_test, y_train] = desnormalizar_datos([y_test_n, y_train_n], min_pot, max_pot)
+    
+    for k1 in k1_lst:
+        for k2 in k2_lst:
+            
+            y_test_n_e, y_train_n_e, y_RO_n_e = \
+                estimar_ro(X_train_n, y_train_n, X_test_n, y_test_n, X_RO_n,
+                           carpeta_ro, k1, k2)
+  
+            datos_norm = [y_test_n_e, y_train_n_e, y_RO_n_e]
+            [y_test_e, y_train_e, y_RO_e] = desnormalizar_datos(datos_norm, min_pot, max_pot)                
+
+            # concateno (train + test) salidas del modelo y datos reales 
+            y_e_all = np.concatenate((y_test_e, y_train_e), axis=0)
+            y_all = np.concatenate((y_test, y_train), axis=0)
+                              
+            y_e_all_acum = np.sum(y_e_all, axis = 1)
+            y_e_all_acum_MWh = y_e_all_acum/6
+    
+            y_all_acum = np.sum(y_all, axis = 1)
+            y_all_acum_MWh = y_all_acum/6
+            
+            y_dif_all_acum_MWh = np.subtract(y_e_all_acum_MWh, y_all_acum_MWh)        
+            
+            error_pu = np.mean(y_dif_all_acum_MWh)/np.mean(y_all_acum_MWh)
+            
+            #print('Error medio [p.u] = ' , error_pu)
+            
+            std_pu = np.std(y_dif_all_acum_MWh)/np.mean(y_all_acum_MWh)
+    
+            #print('std [p.u] = ' , std_pu)
+    
+            b_v = (error_pu ** 2 + std_pu ** 2) ** (1/2)
+            
+            #print('bias-variance [p.u] = ', b_v)
+            
+            
+            df_iter_k.loc[k_idx] = [k1, k2, error_pu, std_pu, b_v]
+            k_idx = k_idx + 1
+            
+            print(f"  k1: {k1}, k2: {k2}, b_v: {b_v}")
+            
+            if b_v < b_v_opt:
+                k1_opt = k1
+                k2_opt = k2
+                b_v_opt = b_v
+                error_pu_opt = error_pu
+                std_pu_opt = std_pu                        
+                y_RO_e_opt = np.array(y_RO_e, copy=True)
+                y_test_e_opt = np.array(y_test_e, copy=True)
+                y_train_e_opt = np.array(y_train_e, copy=True)
+                
+    
+    df_iter_k.to_csv(carpeta_ro + 'iter_k1k2.txt', index=True, sep='\t',
+             float_format='%.2f')
+    
+    
+    return (k1_opt, k2_opt, b_v_opt, error_pu_opt, std_pu_opt, y_RO_e_opt, 
+        y_test_e_opt, y_test, y_train_e_opt, y_train)
