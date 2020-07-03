@@ -57,7 +57,7 @@ if __name__ == '__main__':
     
 
     tini = datetime.datetime(2020, 4, 1)  
-    tfin = datetime.datetime(2020, 5, 1)
+    tfin = datetime.datetime(2020, 6, 1)
 
 
     archi = archivos.archi_ro_pendientes(nid_p2)
