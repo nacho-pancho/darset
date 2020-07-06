@@ -50,12 +50,12 @@ if __name__ == '__main__':
     nid_p2 = 7
     parque2 = archivos.leerArchivosCentral(nid_p2)
     
-    '''
-    tini = datetime.datetime(2019, 5, 1)  
-    tfin = datetime.datetime(2019, 12, 31)
+    
+    tini = datetime.datetime(2019, 7, 19)  
+    tfin = datetime.datetime(2019, 7, 23)
     archi = archivos.archi_ro_pendientes(nid_p2)
     parque2.calcular_liq_pendientes(tini, tfin, archi)
-    '''
+    
     
     parque2.registrar()
     medidor2 = parque2.medidores[0]

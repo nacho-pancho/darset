@@ -230,7 +230,7 @@ def estimar_ro(X_train_n, y_train_n, X_test_n, y_test_n, X_RO_n, carpeta_ro, k1,
         
         
         history = model.fit(X_train_n, y_train_n, validation_data=(X_test_n, y_test_n), 
-                            epochs=100, verbose=1, callbacks=[es])
+                            epochs=100, verbose=0, callbacks=[es])
        
         # evaluate the model
         
@@ -387,8 +387,8 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             pot_estimada_PE70[kini_RO:kini_RO+y_RO_e.size] = pPE70
 
             calculos_ro = [dtini_ro[kRO], dtfin_ro[kRO], dtfin_ro[kRO] - dtini_ro[kRO],
-                           sum(y_RO_e)/6, E_dif_PE70, E_dif_PE30, E_dif_VE,
-                           delta_70, sum(y_RO_gen)/6, ENS_VE, ENS_PE_70, k1, k2,
+                           np.sum(y_RO_e)/6, E_dif_PE70, E_dif_PE30, E_dif_VE,
+                           delta_70, np.sum(y_RO_gen)/6, ENS_VE, ENS_PE_70, k1, k2,
                            error_pu, std_pu, b_v]                     
             
             archi_ro = carpeta_ro + 'resumen.txt'
@@ -399,7 +399,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             
             # ejemplos de cálculo
             y_e_ej, y_r_ej, t_ej = \
-                ejemplos_modelo_test (y_test_e, y_test, dt_test, y_RO_e, 300, 3)
+                ejemplos_modelo_test (y_test_e, y_test, dt_test, y_RO_e, 300, 10)
             
             carpeta_ro = archivos.path_ro(kRO+1, nid_parque)
             
@@ -651,7 +651,7 @@ def graficar_ejemplos(y_e, y_r, t, meds, parque, delta_print_datos, carpeta_ro):
         
         
         plt.savefig(carpeta_ro + 'datos_ej_' + str(kej) + '.png', dpi=300)
-    
+        plt.close('all')
         
 
 def estimar_ro_iter (k1_lst, k2_lst, X_train_n, y_train_n, X_test_n, y_test_n, 

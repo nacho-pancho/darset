@@ -279,7 +279,7 @@ def create_alarm_map (map_h,map_width, medidas, t0, t1):
         t_i1 = t_i[-1]
         t_i0 = t_i[0]
         filtros = m.get_filtros()
-        dt = (tfin - tini) / (len(t_i) - 1)
+        dt = (tfin - tini) / max((len(t_i) - 1), 1)
         for fnom,fdata in filtros.items():
             #print('filtro:',fnom,' data:', len(fdata))
             row_i[:] = 0
