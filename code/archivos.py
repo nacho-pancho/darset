@@ -558,6 +558,7 @@ def leerArchivosCentral (nidCentral):
     parqueGen = leerArchi(nidCentral,'gen')
     if parqueGen is not None:
         parque.medidores[0].agregar_meds(parqueGen.medidores[0]._medidas)
+        parque.pot_GEN = copy.deepcopy(parqueGen.pot)
     else:
         print("AVISO: No hay archivo GEN para esta central.")
     

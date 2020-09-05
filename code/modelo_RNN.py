@@ -95,7 +95,7 @@ def patrones_ro(delta, F, M_n, t, dt_ini_calc, dt_fin_calc):
 
     filt_pot = F[:,-1]
     
-    print(t)
+    #print(t)
     dt = t[1] - t[0]    
 
     k_ini_calc = [round((dt_ - t[0])/dt) for dt_ in dt_ini_calc]
@@ -399,7 +399,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             
             # ejemplos de cálculo
             y_e_ej, y_r_ej, t_ej = \
-                ejemplos_modelo_test (y_test_e, y_test, dt_test, y_RO_e, 300, 10)
+                ejemplos_modelo_test (y_test_e, y_test, dt_test, y_RO_e, 300, 3)
             
             carpeta_ro = archivos.path_ro(kRO+1, nid_parque)
             
