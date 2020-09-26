@@ -20,7 +20,7 @@ import datetime
 if __name__ == '__main__':
 
     
-    flg_estimar_RO = False
+    flg_estimar_RO = True
 
     
     plt.close('all')
@@ -52,8 +52,8 @@ if __name__ == '__main__':
     nid_p2 = 57
     parque2 = archivos.leerArchivosCentral(nid_p2)
     
-    tini = datetime.datetime(2020, 6, 1)  
-    tfin = datetime.datetime(2020, 7, 1)
+    tini = datetime.datetime(2020, 7, 1)  
+    tfin = datetime.datetime(2020, 8, 1)
     archi = archivos.archi_ro_pendientes(nid_p2)
     parque2.calcular_liq_pendientes(tini, tfin, archi)
     
@@ -78,7 +78,7 @@ if __name__ == '__main__':
 
     modelo.main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, 
                    dt_ini_calc, dt_fin_calc, delta_print_datos, meds_plot_p1,
-                   meds_plot_p2, True)
+                   meds_plot_p2, False)
     
     
     

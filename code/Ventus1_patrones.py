@@ -56,8 +56,8 @@ if __name__ == '__main__':
     parque2 = archivos.leerArchivosCentral(nid_p2)
     
 
-    tini = datetime.datetime(2020, 6, 1)  
-    tfin = datetime.datetime(2020, 7, 1)
+    tini = datetime.datetime(2020, 7, 1)  
+    tfin = datetime.datetime(2020, 8, 1)
 
 
     archi = archivos.archi_ro_pendientes(nid_p2)
