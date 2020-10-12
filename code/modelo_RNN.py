@@ -52,6 +52,11 @@ from tensorflow.compat.v1.keras.regularizers import l2
 from tensorflow.compat.v1.keras.models import Sequential
 
 
+import matplotlib.pyplot as plt
+from sklearn import datasets, linear_model
+from sklearn.metrics import mean_squared_error, r2_score
+
+
 
 def my_loss(y_true, y_pred):
     
@@ -371,10 +376,19 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             X_train_n, X_test_n, y_train_n, y_test_n, dt_train, dt_test = \
                 train_test_split(X_n, y_n, dt, test_size = 1-train_pu, random_state=42)            
 
+            '''
             # calibro la RN y calculo para la RO y datos test y entrenamiento
             k1, k2, b_v, error_pu, std_pu, y_RO_e, y_test_e, y_test, y_train_e, y_train = \
                 estimar_ro_iter(k1_lst, k2_lst, X_train_n, y_train_n, X_test_n, 
                                 y_test_n, X_RO_n, carpeta_ro, min_pot, max_pot)
+            '''
+            
+            
+            k1, k2, b_v, error_pu, std_pu, y_RO_e, y_test_e, y_test, y_train_e, y_train = \
+                estimar_ro_mvlr(X_train_n, y_train_n, X_test_n, y_test_n, 
+                                X_RO_n, carpeta_ro, min_pot, max_pot)
+            
+            
             
             pot_estimada[kini_RO:kini_RO+y_RO_e.size] = y_RO_e            
             
@@ -726,3 +740,29 @@ def estimar_ro_iter (k1_lst, k2_lst, X_train_n, y_train_n, X_test_n, y_test_n,
     
     return (k1_opt, k2_opt, b_v_opt, error_pu_opt, std_pu_opt, y_RO_e_opt, 
         y_test_e_opt, y_test, y_train_e_opt, y_train)
+    
+    
+def estimar_ro_mvlr(X_train_n, y_train_n, X_test_n, y_test_n, 
+                     X_RO_n, carpeta_ro, min_pot, max_pot):
+    
+    [y_test, y_train] = desnormalizar_datos([y_test_n, y_train_n], min_pot, max_pot)
+    
+    # Create linear regression object
+    regr = linear_model.LinearRegression()
+
+    # Train the model using the training sets
+    regr.fit(X_train_n, y_train_n)
+    
+    # Make predictions using the testing, training and RO set
+    y_test_n_e = regr.predict(X_test_n)
+    y_train_n_e = regr.predict(X_train_n)
+    y_RO_n_e = regr.predict(X_RO_n)
+    
+    
+    datos_norm = [y_test_n_e, y_train_n_e, y_RO_n_e]
+    [y_test_e, y_train_e, y_RO_e] = desnormalizar_datos(datos_norm, min_pot, max_pot) 
+    
+    
+    return (-1, -1, -1, -1, -1, y_RO_e, 
+        y_test_e, y_test, y_train_e, y_train)
+    

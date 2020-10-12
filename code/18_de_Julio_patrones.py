@@ -52,7 +52,7 @@ if __name__ == '__main__':
     nid_p2 = 57
     parque2 = archivos.leerArchivosCentral(nid_p2)
     
-    tini = datetime.datetime(2020, 7, 1)  
+    tini = datetime.datetime(2020, 1, 1)  
     tfin = datetime.datetime(2020, 8, 1)
     archi = archivos.archi_ro_pendientes(nid_p2)
     parque2.calcular_liq_pendientes(tini, tfin, archi)
