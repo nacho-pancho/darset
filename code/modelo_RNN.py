@@ -291,7 +291,8 @@ def estimar_ro(X_train_n, y_train_n, X_test_n, y_test_n, X_RO_n, carpeta_ro, k1,
         return  y_test_predict_n, y_train_predict_n, np.squeeze(y_RO_predict_n)   
 
 def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_ini_calc,
-            dt_fin_calc, delta_print_datos, meds_plot_p1, meds_plot_p2, flg_print_datos = False): 
+            dt_fin_calc, delta_print_datos, meds_plot_p1, meds_plot_p2, 
+            flg_print_datos = False, flg_recorte_SMEC = True, tipo_calc = 'NN'): 
 
     
     nid_parque = parque2.id   
@@ -346,10 +347,12 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
         ros = indices
         #ros = range(0, min(2,n_ro))
         #ros = [4]
+     
+        carpeta_res = archivos.path_carpeta_resultados(nid_parque, tipo_calc)
         
         for kRO in ros:
             
-            carpeta_ro = archivos.path_ro(kRO + 1, nid_parque)
+            carpeta_ro = archivos.path_ro(kRO + 1, carpeta_res)
             
             
             print(f"Calculando RO {kRO+1} de {len(Pats_Data_n)}")
@@ -376,17 +379,15 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             X_train_n, X_test_n, y_train_n, y_test_n, dt_train, dt_test = \
                 train_test_split(X_n, y_n, dt, test_size = 1-train_pu, random_state=42)            
 
-            '''
-            # calibro la RN y calculo para la RO y datos test y entrenamiento
-            k1, k2, b_v, error_pu, std_pu, y_RO_e, y_test_e, y_test, y_train_e, y_train = \
-                estimar_ro_iter(k1_lst, k2_lst, X_train_n, y_train_n, X_test_n, 
-                                y_test_n, X_RO_n, carpeta_ro, min_pot, max_pot)
-            '''
-            
-            
-            k1, k2, b_v, error_pu, std_pu, y_RO_e, y_test_e, y_test, y_train_e, y_train = \
-                estimar_ro_mvlr(X_train_n, y_train_n, X_test_n, y_test_n, 
-                                X_RO_n, carpeta_ro, min_pot, max_pot)
+            # calibro y calculo para la RO y datos test y entrenamiento                        
+            if tipo_calc == 'NN':
+                k1, k2, b_v, error_pu, std_pu, y_RO_e, y_test_e, y_test, y_train_e, y_train = \
+                    estimar_ro_iter(k1_lst, k2_lst, X_train_n, y_train_n, X_test_n, 
+                                    y_test_n, X_RO_n, carpeta_ro, min_pot, max_pot)
+            elif tipo_calc == 'MVLR':                
+                k1, k2, b_v, error_pu, std_pu, y_RO_e, y_test_e, y_test, y_train_e, y_train = \
+                    estimar_ro_mvlr(X_train_n, y_train_n, X_test_n, y_test_n, 
+                                    X_RO_n, carpeta_ro, min_pot, max_pot)
             
             
             
@@ -413,9 +414,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             
             # ejemplos de cálculo
             y_e_ej, y_r_ej, t_ej = \
-                ejemplos_modelo_test (y_test_e, y_test, dt_test, y_RO_e, 300, 3)
-            
-            carpeta_ro = archivos.path_ro(kRO+1, nid_parque)
+                ejemplos_modelo_test (y_test_e, y_test, dt_test, y_RO_e, 300, 3)           
             
             # grafico los ejemplos
             
@@ -424,8 +423,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             
         # guardo resumen RO
         
-        path_resultados = archivos.path_carpeta_resultados(nid_parque)
-        df_ro.to_csv( path_resultados + 'resumen.txt', index=True, sep='\t',
+        df_ro.to_csv( carpeta_res + 'resumen.txt', index=True, sep='\t',
                      float_format='%.4f') 
     
             
@@ -440,9 +438,10 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
         
         # imprimo el detalle de la energía no suministrada por hora (formato DTE)
         # divido entre 6 para pasar de MW a MWh
-        archivos.generar_ens_dte(pot_estimada_PE70/6, pot/6, t, path_resultados)
+        archivos.generar_ens_dte(pot_estimada_PE70/6, pot/6, t, carpeta_res)
         # imprimo la ens topeada para que pinyectada + pnosuministrada < Ptope = Pautorizada
-        archivos.generar_ens_topeada(nid_parque, parque2.PAutorizada)
+        if flg_recorte_SMEC:
+            archivos.generar_ens_topeada(nid_parque, parque2.PAutorizada)
    
  
 
@@ -463,8 +462,8 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             graficas.window = [dtini_w, dtfin_w]
             
             graficas.clickplot_redraw()
-            
-            carpeta_ro = archivos.path_ro(kRO+1, nid_parque)
+            carpeta_ro = archivos.path_ro(kRO + 1, carpeta_res)            
+
             plt.savefig(carpeta_ro + 'datos.png', dpi=300)
     elif flg_print_datos:
         for kcalc in range(len(dt_ini_calc)):           
@@ -474,7 +473,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             graficas.window = [dtini_w, dtfin_w]
             
             graficas.clickplot_redraw()
-            
+
             carpeta_datos = archivos.path_carpeta_datos(nid_parque) 
             plt.savefig(carpeta_datos + str(kcalc) + '.png' )
         
