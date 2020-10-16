@@ -771,13 +771,41 @@ def estimar_ro_mvlr(X_train_n, y_train_n, X_test_n, y_test_n, X_val_n, y_val_n,
     
     [y_test, y_train, y_val] = desnormalizar_datos([y_test_n, y_train_n, y_val_n], min_pot, max_pot)
     
+    '''
     # Create linear regression object
     regr = linear_model.LinearRegression()
 
     # Train the model using the training sets
     regr.fit(X_train_n, y_train_n)
+    '''
+
+    # Create linear regression object
+    alfa_ = np.linspace(0, 50, 50)
+    val_score = np.zeros_like(alfa_)
+    k = 0
+    val_score_max = -999999
+    for a in alfa_:
+        regr_ = linear_model.Ridge(alpha=a)
     
-    # Make predictions using the testing, training and RO set
+        # Train the model using the training sets
+        regr_.fit(X_train_n, y_train_n)    
+    
+        val_score[k] = regr_.score(X_val_n, y_val_n)
+        
+        if val_score[k] > val_score_max:
+            val_score_max = val_score[k]
+            regr = regr_
+       
+        k = k + 1
+
+            
+    
+    plt.plot(alfa_, val_score, 'o')
+    plt.xlabel('alfa')
+    plt.ylabel('score')    
+    plt.savefig(carpeta_ro + 'ridge.png')    
+    
+    # Make predictions using the testing, training, val and RO set
     y_test_n_e = regr.predict(X_test_n)
     y_train_n_e = regr.predict(X_train_n)
     y_val_n_e = regr.predict(X_val_n)
