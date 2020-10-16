@@ -157,7 +157,8 @@ def patrones_ro(delta, F, M_n, t, dt_ini_calc, dt_fin_calc):
     return Pats_Data_n, Pats_Filt, Pats_Calc, dtini_ro, dtfin_ro, kini_ro
 
 
-def estimar_ro(X_train_n, y_train_n, X_test_n, y_test_n, X_RO_n, carpeta_ro, k1, k2):
+def estimar_ro(X_train_n, y_train_n, X_val_n, y_val_n, X_test_n, y_test_n,
+               X_RO_n, carpeta_ro, k1, k2):
 
         
         n_features = X_train_n.shape[1]
@@ -234,7 +235,7 @@ def estimar_ro(X_train_n, y_train_n, X_test_n, y_test_n, X_RO_n, carpeta_ro, k1,
         # fit model
         
         
-        history = model.fit(X_train_n, y_train_n, validation_data=(X_test_n, y_test_n), 
+        history = model.fit(X_train_n, y_train_n, validation_data=(X_val_n, y_val_n), 
                             epochs=100, verbose=0, callbacks=[es])
        
         # evaluate the model
@@ -254,7 +255,7 @@ def estimar_ro(X_train_n, y_train_n, X_test_n, y_test_n, X_RO_n, carpeta_ro, k1,
         
         plt.figure()
         plt.plot(history.history['loss'], label='train')
-        plt.plot(history.history['val_loss'], label='test')
+        plt.plot(history.history['val_loss'], label='val')
         plt.legend()
         plt.grid()
         #plt.show() 
@@ -264,7 +265,8 @@ def estimar_ro(X_train_n, y_train_n, X_test_n, y_test_n, X_RO_n, carpeta_ro, k1,
         
        
         y_test_predict_n = model.predict(X_test_n) 
-        y_train_predict_n = model.predict(X_train_n) 
+        y_train_predict_n = model.predict(X_train_n)
+        y_val_predict_n = model.predict(X_val_n)
 
         
         '''
@@ -288,7 +290,7 @@ def estimar_ro(X_train_n, y_train_n, X_test_n, y_test_n, X_RO_n, carpeta_ro, k1,
         '''        
         
         
-        return  y_test_predict_n, y_train_predict_n, np.squeeze(y_RO_predict_n)   
+        return  y_test_predict_n, y_train_predict_n, y_val_predict_n, np.squeeze(y_RO_predict_n)   
 
 def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_ini_calc,
             dt_fin_calc, delta_print_datos, meds_plot_p1, meds_plot_p2, 
@@ -374,20 +376,32 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             print(f"ro: {kRO} L: {L} ")
             
             train_pu = 0.7
+            val_pu = 0.1
+            test_pu = 1 - train_pu - val_pu
+            resto_pu = val_pu + test_pu
             
-            # separo datos de entrenamiento y testeo 
-            X_train_n, X_test_n, y_train_n, y_test_n, dt_train, dt_test = \
-                train_test_split(X_n, y_n, dt, test_size = 1-train_pu, random_state=42)            
+            # separo datos de entrenamiento, validación y testeo
+            X_train_n, X_resto_n, y_train_n, y_resto_n, dt_train, dt_resto = \
+                train_test_split(X_n, y_n, dt, test_size = resto_pu, random_state=42)            
 
+            X_test_n, X_val_n, y_test_n, y_val_n, dt_test, dt_val = \
+                train_test_split(X_resto_n, y_resto_n, dt_resto,
+                                 test_size = val_pu/resto_pu, random_state=42)              
+               
             # calibro y calculo para la RO y datos test y entrenamiento                        
             if tipo_calc == 'NN':
-                k1, k2, b_v, error_pu, std_pu, y_RO_e, y_test_e, y_test, y_train_e, y_train = \
-                    estimar_ro_iter(k1_lst, k2_lst, X_train_n, y_train_n, X_test_n, 
-                                    y_test_n, X_RO_n, carpeta_ro, min_pot, max_pot)
+                k1, k2, b_v, error_pu, std_pu, y_RO_e, y_test_e, y_test, \
+                y_train_e, y_train, y_val_e_opt, y_val = \
+                    estimar_ro_iter(k1_lst, k2_lst, X_train_n, y_train_n, X_val_n,
+                                    y_val_n, X_test_n, y_test_n, X_RO_n,
+                                    carpeta_ro, min_pot, max_pot)                     
+    
             elif tipo_calc == 'MVLR':                
-                k1, k2, b_v, error_pu, std_pu, y_RO_e, y_test_e, y_test, y_train_e, y_train = \
+                k1, k2, b_v, error_pu, std_pu, y_RO_e, y_test_e, y_test, \
+                y_train_e, y_train, y_val_e, y_val = \
                     estimar_ro_mvlr(X_train_n, y_train_n, X_test_n, y_test_n, 
-                                    X_RO_n, carpeta_ro, min_pot, max_pot)
+                                    X_val_n, y_val_n, X_RO_n, carpeta_ro, 
+                                    min_pot, max_pot)
             
             
             
@@ -480,12 +494,14 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
 
 def estimar_pot_PE(y_test_e, y_train_e, y_test, y_train, y_RO_e, y_RO_gen, carpeta_ro):
 
+    '''
     # para calcular PE 70 % uso datos de entrenamiento y validación.
     y_e = np.concatenate((y_test_e, y_train_e), axis=0)
     y_r = np.concatenate((y_test, y_train), axis=0)
-
-    #y_e = y_test_e
-    #y_r = y_test    
+    '''
+    
+    y_e = y_test_e
+    y_r = y_test    
     
     # cantidad de datos que se consideran para calcular las dist empíricas
     NDatos_hist = 300
@@ -667,8 +683,8 @@ def graficar_ejemplos(y_e, y_r, t, meds, parque, delta_print_datos, carpeta_ro):
         plt.close('all')
         
 
-def estimar_ro_iter (k1_lst, k2_lst, X_train_n, y_train_n, X_test_n, y_test_n, 
-                     X_RO_n, carpeta_ro, min_pot, max_pot):
+def estimar_ro_iter (k1_lst, k2_lst, X_train_n, y_train_n, X_val_n, y_val_n,
+                     X_test_n, y_test_n, X_RO_n, carpeta_ro, min_pot, max_pot):
 
     # itero hasta encontrar k1 y k2 óptimo
     b_v_opt = 99999
@@ -680,22 +696,30 @@ def estimar_ro_iter (k1_lst, k2_lst, X_train_n, y_train_n, X_test_n, y_test_n,
     df_iter_k = pd.DataFrame(index=idx, columns=cols_iter_k)    
     k_idx = 0
    
-    [y_test, y_train] = desnormalizar_datos([y_test_n, y_train_n], min_pot, max_pot)
+    [y_test, y_train, y_val] = desnormalizar_datos([y_test_n, y_train_n, y_val_n], min_pot, max_pot)
     
     for k1 in k1_lst:
         for k2 in k2_lst:
             
-            y_test_n_e, y_train_n_e, y_RO_n_e = \
-                estimar_ro(X_train_n, y_train_n, X_test_n, y_test_n, X_RO_n,
-                           carpeta_ro, k1, k2)
+            y_test_n_e, y_train_n_e, y_val_n_e, y_RO_n_e = \
+                estimar_ro(X_train_n, y_train_n, X_val_n, y_val_n, X_test_n, y_test_n, X_RO_n,
+                           carpeta_ro, k1, k2)               
   
-            datos_norm = [y_test_n_e, y_train_n_e, y_RO_n_e]
-            [y_test_e, y_train_e, y_RO_e] = desnormalizar_datos(datos_norm, min_pot, max_pot)                
+            datos_norm = [y_test_n_e, y_train_n_e, y_val_n_e, y_RO_n_e]
+            [y_test_e, y_train_e, y_val_e, y_RO_e] = desnormalizar_datos(datos_norm, min_pot, max_pot)                
 
+            '''
             # concateno (train + test) salidas del modelo y datos reales 
-            y_e_all = np.concatenate((y_test_e, y_train_e), axis=0)
-            y_all = np.concatenate((y_test, y_train), axis=0)
-                              
+            y_e_all = np.concatenate((y_test_e, y_train_e, y_val_e), axis=0)
+            y_all = np.concatenate((y_test, y_train, y_val), axis=0)
+            
+
+            y_e_all = np.concatenate((y_val_e), axis=0)
+            y_all = np.concatenate((y_val), axis=0)
+            '''            
+            y_e_all = y_test_e
+            y_all = y_test 
+            
             y_e_all_acum = np.sum(y_e_all, axis = 1)
             y_e_all_acum_MWh = y_e_all_acum/6
     
@@ -731,6 +755,7 @@ def estimar_ro_iter (k1_lst, k2_lst, X_train_n, y_train_n, X_test_n, y_test_n,
                 y_RO_e_opt = np.array(y_RO_e, copy=True)
                 y_test_e_opt = np.array(y_test_e, copy=True)
                 y_train_e_opt = np.array(y_train_e, copy=True)
+                y_val_e_opt = np.array(y_val_e, copy=True)
                 
     
     df_iter_k.to_csv(carpeta_ro + 'iter_k1k2.txt', index=True, sep='\t',
@@ -738,13 +763,13 @@ def estimar_ro_iter (k1_lst, k2_lst, X_train_n, y_train_n, X_test_n, y_test_n,
     
     
     return (k1_opt, k2_opt, b_v_opt, error_pu_opt, std_pu_opt, y_RO_e_opt, 
-        y_test_e_opt, y_test, y_train_e_opt, y_train)
+        y_test_e_opt, y_test, y_train_e_opt, y_train, y_val_e_opt, y_val)
     
     
-def estimar_ro_mvlr(X_train_n, y_train_n, X_test_n, y_test_n, 
-                     X_RO_n, carpeta_ro, min_pot, max_pot):
+def estimar_ro_mvlr(X_train_n, y_train_n, X_test_n, y_test_n, X_val_n, y_val_n,
+                    X_RO_n, carpeta_ro, min_pot, max_pot):
     
-    [y_test, y_train] = desnormalizar_datos([y_test_n, y_train_n], min_pot, max_pot)
+    [y_test, y_train, y_val] = desnormalizar_datos([y_test_n, y_train_n, y_val_n], min_pot, max_pot)
     
     # Create linear regression object
     regr = linear_model.LinearRegression()
@@ -755,13 +780,14 @@ def estimar_ro_mvlr(X_train_n, y_train_n, X_test_n, y_test_n,
     # Make predictions using the testing, training and RO set
     y_test_n_e = regr.predict(X_test_n)
     y_train_n_e = regr.predict(X_train_n)
+    y_val_n_e = regr.predict(X_val_n)
     y_RO_n_e = regr.predict(X_RO_n)
     
     
-    datos_norm = [y_test_n_e, y_train_n_e, y_RO_n_e]
-    [y_test_e, y_train_e, y_RO_e] = desnormalizar_datos(datos_norm, min_pot, max_pot) 
+    datos_norm = [y_test_n_e, y_train_n_e, y_val_n_e, y_RO_n_e]
+    [y_test_e, y_train_e, y_val_e, y_RO_e] = desnormalizar_datos(datos_norm, min_pot, max_pot) 
     
     
     return (-1, -1, -1, -1, -1, y_RO_e, 
-        y_test_e, y_test, y_train_e, y_train)
+            y_test_e, y_test, y_train_e, y_train, y_val_e, y_val)
     
