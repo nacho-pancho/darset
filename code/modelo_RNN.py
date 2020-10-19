@@ -378,7 +378,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             # separo datos de entrenamiento, validación y testeo 
             X_train_n, X_test_n, X_val_n, y_train_n, y_test_n, y_val_n, dt_train,
               dt_test, dt_val = 
-                train_test_val_split(X_n, y_n, dt, 0.7, 0.2, 0.1, 42  )
+                train_test_val_split(X_n, y_n, dt, 0.7, 0.2, 0.1, 42)
  
             # calibro y calculo para la RO y datos test y entrenamiento                        
             if tipo_calc == 'NN':
