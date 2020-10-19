@@ -52,6 +52,11 @@ from tensorflow.compat.v1.keras.regularizers import l2
 from tensorflow.compat.v1.keras.models import Sequential
 
 
+import matplotlib.pyplot as plt
+from sklearn import datasets, linear_model
+from sklearn.metrics import mean_squared_error, r2_score
+
+
 
 def my_loss(y_true, y_pred):
     
@@ -95,7 +100,7 @@ def patrones_ro(delta, F, M_n, t, dt_ini_calc, dt_fin_calc):
 
     filt_pot = F[:,-1]
     
-    print(t)
+    #print(t)
     dt = t[1] - t[0]    
 
     k_ini_calc = [round((dt_ - t[0])/dt) for dt_ in dt_ini_calc]
@@ -152,7 +157,8 @@ def patrones_ro(delta, F, M_n, t, dt_ini_calc, dt_fin_calc):
     return Pats_Data_n, Pats_Filt, Pats_Calc, dtini_ro, dtfin_ro, kini_ro
 
 
-def estimar_ro(X_train_n, y_train_n, X_test_n, y_test_n, X_RO_n, carpeta_ro, k1, k2):
+def estimar_ro(X_train_n, y_train_n, X_val_n, y_val_n, X_test_n, y_test_n,
+               X_RO_n, carpeta_ro, k1, k2):
 
         
         n_features = X_train_n.shape[1]
@@ -229,8 +235,8 @@ def estimar_ro(X_train_n, y_train_n, X_test_n, y_test_n, X_RO_n, carpeta_ro, k1,
         # fit model
         
         
-        history = model.fit(X_train_n, y_train_n, validation_data=(X_test_n, y_test_n), 
-                            epochs=100, verbose=1, callbacks=[es])
+        history = model.fit(X_train_n, y_train_n, validation_data=(X_val_n, y_val_n), 
+                            epochs=100, verbose=0, callbacks=[es])
        
         # evaluate the model
         
@@ -249,7 +255,7 @@ def estimar_ro(X_train_n, y_train_n, X_test_n, y_test_n, X_RO_n, carpeta_ro, k1,
         
         plt.figure()
         plt.plot(history.history['loss'], label='train')
-        plt.plot(history.history['val_loss'], label='test')
+        plt.plot(history.history['val_loss'], label='val')
         plt.legend()
         plt.grid()
         #plt.show() 
@@ -259,7 +265,8 @@ def estimar_ro(X_train_n, y_train_n, X_test_n, y_test_n, X_RO_n, carpeta_ro, k1,
         
        
         y_test_predict_n = model.predict(X_test_n) 
-        y_train_predict_n = model.predict(X_train_n) 
+        y_train_predict_n = model.predict(X_train_n)
+        y_val_predict_n = model.predict(X_val_n)
 
         
         '''
@@ -283,10 +290,11 @@ def estimar_ro(X_train_n, y_train_n, X_test_n, y_test_n, X_RO_n, carpeta_ro, k1,
         '''        
         
         
-        return  y_test_predict_n, y_train_predict_n, np.squeeze(y_RO_predict_n)   
+        return  y_test_predict_n, y_train_predict_n, y_val_predict_n, np.squeeze(y_RO_predict_n)   
 
 def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_ini_calc,
-            dt_fin_calc, delta_print_datos, meds_plot_p1, meds_plot_p2, flg_print_datos = False): 
+            dt_fin_calc, delta_print_datos, meds_plot_p1, meds_plot_p2, 
+            flg_print_datos = False, flg_recorte_SMEC = True, tipo_calc = 'NN'): 
 
     
     nid_parque = parque2.id   
@@ -341,10 +349,12 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
         ros = indices
         #ros = range(0, min(2,n_ro))
         #ros = [4]
+     
+        carpeta_res = archivos.path_carpeta_resultados(nid_parque, tipo_calc)
         
         for kRO in ros:
             
-            carpeta_ro = archivos.path_ro(kRO + 1, nid_parque)
+            carpeta_ro = archivos.path_ro(kRO + 1, carpeta_res)
             
             
             print(f"Calculando RO {kRO+1} de {len(Pats_Data_n)}")
@@ -366,15 +376,34 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             print(f"ro: {kRO} L: {L} ")
             
             train_pu = 0.7
+            val_pu = 0.1
+            test_pu = 1 - train_pu - val_pu
+            resto_pu = val_pu + test_pu
             
-            # separo datos de entrenamiento y testeo 
-            X_train_n, X_test_n, y_train_n, y_test_n, dt_train, dt_test = \
-                train_test_split(X_n, y_n, dt, test_size = 1-train_pu, random_state=42)            
+            # separo datos de entrenamiento, validación y testeo
+            X_train_n, X_resto_n, y_train_n, y_resto_n, dt_train, dt_resto = \
+                train_test_split(X_n, y_n, dt, test_size = resto_pu, random_state=42)            
 
-            # calibro la RN y calculo para la RO y datos test y entrenamiento
-            k1, k2, b_v, error_pu, std_pu, y_RO_e, y_test_e, y_test, y_train_e, y_train = \
-                estimar_ro_iter(k1_lst, k2_lst, X_train_n, y_train_n, X_test_n, 
-                                y_test_n, X_RO_n, carpeta_ro, min_pot, max_pot)
+            X_test_n, X_val_n, y_test_n, y_val_n, dt_test, dt_val = \
+                train_test_split(X_resto_n, y_resto_n, dt_resto,
+                                 test_size = val_pu/resto_pu, random_state=42)              
+               
+            # calibro y calculo para la RO y datos test y entrenamiento                        
+            if tipo_calc == 'NN':
+                k1, k2, b_v, error_pu, std_pu, y_RO_e, y_test_e, y_test, \
+                y_train_e, y_train, y_val_e_opt, y_val = \
+                    estimar_ro_iter(k1_lst, k2_lst, X_train_n, y_train_n, X_val_n,
+                                    y_val_n, X_test_n, y_test_n, X_RO_n,
+                                    carpeta_ro, min_pot, max_pot)                     
+    
+            elif tipo_calc == 'MVLR':                
+                k1, k2, b_v, error_pu, std_pu, y_RO_e, y_test_e, y_test, \
+                y_train_e, y_train, y_val_e, y_val = \
+                    estimar_ro_mvlr(X_train_n, y_train_n, X_test_n, y_test_n, 
+                                    X_val_n, y_val_n, X_RO_n, carpeta_ro, 
+                                    min_pot, max_pot)
+            
+            
             
             pot_estimada[kini_RO:kini_RO+y_RO_e.size] = y_RO_e            
             
@@ -387,8 +416,8 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             pot_estimada_PE70[kini_RO:kini_RO+y_RO_e.size] = pPE70
 
             calculos_ro = [dtini_ro[kRO], dtfin_ro[kRO], dtfin_ro[kRO] - dtini_ro[kRO],
-                           sum(y_RO_e)/6, E_dif_PE70, E_dif_PE30, E_dif_VE,
-                           delta_70, sum(y_RO_gen)/6, ENS_VE, ENS_PE_70, k1, k2,
+                           np.sum(y_RO_e)/6, E_dif_PE70, E_dif_PE30, E_dif_VE,
+                           delta_70, np.sum(y_RO_gen)/6, ENS_VE, ENS_PE_70, k1, k2,
                            error_pu, std_pu, b_v]                     
             
             archi_ro = carpeta_ro + 'resumen.txt'
@@ -399,9 +428,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             
             # ejemplos de cálculo
             y_e_ej, y_r_ej, t_ej = \
-                ejemplos_modelo_test (y_test_e, y_test, dt_test, y_RO_e, 300, 3)
-            
-            carpeta_ro = archivos.path_ro(kRO+1, nid_parque)
+                ejemplos_modelo_test (y_test_e, y_test, dt_test, y_RO_e, 300, 3)           
             
             # grafico los ejemplos
             
@@ -410,8 +437,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             
         # guardo resumen RO
         
-        path_resultados = archivos.path_carpeta_resultados(nid_parque)
-        df_ro.to_csv( path_resultados + 'resumen.txt', index=True, sep='\t',
+        df_ro.to_csv( carpeta_res + 'resumen.txt', index=True, sep='\t',
                      float_format='%.4f') 
     
             
@@ -426,9 +452,10 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
         
         # imprimo el detalle de la energía no suministrada por hora (formato DTE)
         # divido entre 6 para pasar de MW a MWh
-        archivos.generar_ens_dte(pot_estimada_PE70/6, pot/6, t, path_resultados)
+        archivos.generar_ens_dte(pot_estimada_PE70/6, pot/6, t, carpeta_res)
         # imprimo la ens topeada para que pinyectada + pnosuministrada < Ptope = Pautorizada
-        archivos.generar_ens_topeada(nid_parque, parque2.PAutorizada)
+        if flg_recorte_SMEC:
+            archivos.generar_ens_topeada(nid_parque, parque2.PAutorizada)
    
  
 
@@ -449,8 +476,8 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             graficas.window = [dtini_w, dtfin_w]
             
             graficas.clickplot_redraw()
-            
-            carpeta_ro = archivos.path_ro(kRO+1, nid_parque)
+            carpeta_ro = archivos.path_ro(kRO + 1, carpeta_res)            
+
             plt.savefig(carpeta_ro + 'datos.png', dpi=300)
     elif flg_print_datos:
         for kcalc in range(len(dt_ini_calc)):           
@@ -460,19 +487,21 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             graficas.window = [dtini_w, dtfin_w]
             
             graficas.clickplot_redraw()
-            
+
             carpeta_datos = archivos.path_carpeta_datos(nid_parque) 
             plt.savefig(carpeta_datos + str(kcalc) + '.png' )
         
 
 def estimar_pot_PE(y_test_e, y_train_e, y_test, y_train, y_RO_e, y_RO_gen, carpeta_ro):
 
+    '''
     # para calcular PE 70 % uso datos de entrenamiento y validación.
     y_e = np.concatenate((y_test_e, y_train_e), axis=0)
     y_r = np.concatenate((y_test, y_train), axis=0)
-
-    #y_e = y_test_e
-    #y_r = y_test    
+    '''
+    
+    y_e = y_test_e
+    y_r = y_test    
     
     # cantidad de datos que se consideran para calcular las dist empíricas
     NDatos_hist = 300
@@ -651,11 +680,11 @@ def graficar_ejemplos(y_e, y_r, t, meds, parque, delta_print_datos, carpeta_ro):
         
         
         plt.savefig(carpeta_ro + 'datos_ej_' + str(kej) + '.png', dpi=300)
-    
+        plt.close('all')
         
 
-def estimar_ro_iter (k1_lst, k2_lst, X_train_n, y_train_n, X_test_n, y_test_n, 
-                     X_RO_n, carpeta_ro, min_pot, max_pot):
+def estimar_ro_iter (k1_lst, k2_lst, X_train_n, y_train_n, X_val_n, y_val_n,
+                     X_test_n, y_test_n, X_RO_n, carpeta_ro, min_pot, max_pot):
 
     # itero hasta encontrar k1 y k2 óptimo
     b_v_opt = 99999
@@ -667,22 +696,30 @@ def estimar_ro_iter (k1_lst, k2_lst, X_train_n, y_train_n, X_test_n, y_test_n,
     df_iter_k = pd.DataFrame(index=idx, columns=cols_iter_k)    
     k_idx = 0
    
-    [y_test, y_train] = desnormalizar_datos([y_test_n, y_train_n], min_pot, max_pot)
+    [y_test, y_train, y_val] = desnormalizar_datos([y_test_n, y_train_n, y_val_n], min_pot, max_pot)
     
     for k1 in k1_lst:
         for k2 in k2_lst:
             
-            y_test_n_e, y_train_n_e, y_RO_n_e = \
-                estimar_ro(X_train_n, y_train_n, X_test_n, y_test_n, X_RO_n,
-                           carpeta_ro, k1, k2)
+            y_test_n_e, y_train_n_e, y_val_n_e, y_RO_n_e = \
+                estimar_ro(X_train_n, y_train_n, X_val_n, y_val_n, X_test_n, y_test_n, X_RO_n,
+                           carpeta_ro, k1, k2)               
   
-            datos_norm = [y_test_n_e, y_train_n_e, y_RO_n_e]
-            [y_test_e, y_train_e, y_RO_e] = desnormalizar_datos(datos_norm, min_pot, max_pot)                
+            datos_norm = [y_test_n_e, y_train_n_e, y_val_n_e, y_RO_n_e]
+            [y_test_e, y_train_e, y_val_e, y_RO_e] = desnormalizar_datos(datos_norm, min_pot, max_pot)                
 
+            '''
             # concateno (train + test) salidas del modelo y datos reales 
-            y_e_all = np.concatenate((y_test_e, y_train_e), axis=0)
-            y_all = np.concatenate((y_test, y_train), axis=0)
-                              
+            y_e_all = np.concatenate((y_test_e, y_train_e, y_val_e), axis=0)
+            y_all = np.concatenate((y_test, y_train, y_val), axis=0)
+            
+
+            y_e_all = np.concatenate((y_val_e), axis=0)
+            y_all = np.concatenate((y_val), axis=0)
+            '''            
+            y_e_all = y_test_e
+            y_all = y_test 
+            
             y_e_all_acum = np.sum(y_e_all, axis = 1)
             y_e_all_acum_MWh = y_e_all_acum/6
     
@@ -718,6 +755,7 @@ def estimar_ro_iter (k1_lst, k2_lst, X_train_n, y_train_n, X_test_n, y_test_n,
                 y_RO_e_opt = np.array(y_RO_e, copy=True)
                 y_test_e_opt = np.array(y_test_e, copy=True)
                 y_train_e_opt = np.array(y_train_e, copy=True)
+                y_val_e_opt = np.array(y_val_e, copy=True)
                 
     
     df_iter_k.to_csv(carpeta_ro + 'iter_k1k2.txt', index=True, sep='\t',
@@ -725,4 +763,59 @@ def estimar_ro_iter (k1_lst, k2_lst, X_train_n, y_train_n, X_test_n, y_test_n,
     
     
     return (k1_opt, k2_opt, b_v_opt, error_pu_opt, std_pu_opt, y_RO_e_opt, 
-        y_test_e_opt, y_test, y_train_e_opt, y_train)
+        y_test_e_opt, y_test, y_train_e_opt, y_train, y_val_e_opt, y_val)
+    
+    
+def estimar_ro_mvlr(X_train_n, y_train_n, X_test_n, y_test_n, X_val_n, y_val_n,
+                    X_RO_n, carpeta_ro, min_pot, max_pot):
+    
+    [y_test, y_train, y_val] = desnormalizar_datos([y_test_n, y_train_n, y_val_n], min_pot, max_pot)
+    
+    '''
+    # Create linear regression object
+    regr = linear_model.LinearRegression()
+
+    # Train the model using the training sets
+    regr.fit(X_train_n, y_train_n)
+    '''
+
+    # Create linear regression object
+    alfa_ = np.linspace(0, 50, 50)
+    val_score = np.zeros_like(alfa_)
+    k = 0
+    val_score_max = -999999
+    for a in alfa_:
+        regr_ = linear_model.Ridge(alpha=a)
+    
+        # Train the model using the training sets
+        regr_.fit(X_train_n, y_train_n)    
+    
+        val_score[k] = regr_.score(X_val_n, y_val_n)
+        
+        if val_score[k] > val_score_max:
+            val_score_max = val_score[k]
+            regr = regr_
+       
+        k = k + 1
+
+            
+    
+    plt.plot(alfa_, val_score, 'o')
+    plt.xlabel('alfa')
+    plt.ylabel('score')    
+    plt.savefig(carpeta_ro + 'ridge.png')    
+    
+    # Make predictions using the testing, training, val and RO set
+    y_test_n_e = regr.predict(X_test_n)
+    y_train_n_e = regr.predict(X_train_n)
+    y_val_n_e = regr.predict(X_val_n)
+    y_RO_n_e = regr.predict(X_RO_n)
+    
+    
+    datos_norm = [y_test_n_e, y_train_n_e, y_val_n_e, y_RO_n_e]
+    [y_test_e, y_train_e, y_val_e, y_RO_e] = desnormalizar_datos(datos_norm, min_pot, max_pot) 
+    
+    
+    return (-1, -1, -1, -1, -1, y_RO_e, 
+            y_test_e, y_test, y_train_e, y_train, y_val_e, y_val)
+    

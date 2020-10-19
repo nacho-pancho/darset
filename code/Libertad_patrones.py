@@ -45,15 +45,15 @@ if __name__ == '__main__':
     dir_scada_p1 = parque1.medidores[0].get_medida('dir','scada')
     vel_pronos_p1 = parque1.medidores[0].get_medida('vel','pronos')
     dir_pronos_p1 = parque1.medidores[0].get_medida('dir','pronos')
-    meds_plot_p1 = [vel_GEN_p1, dir_GEN_p1, vel_scada_p1, dir_scada_p1, vel_pronos_p1, dir_pronos_p1]
+    meds_plot_p1 = [vel_GEN_p1, dir_GEN_p1]
 
     # lectura de los datos del parque2 al cual se le van a calcular las RO.
     # Libertad
     nid_p2 = 23
     parque2 = archivos.leerArchivosCentral(nid_p2)
     
-    tini = datetime.datetime(2019, 5, 1)  
-    tfin = datetime.datetime(2019, 12, 31)
+    tini = datetime.datetime(2020, 6, 1)  
+    tfin = datetime.datetime(2020, 7, 1)
     archi = archivos.archi_ro_pendientes(nid_p2)
     parque2.calcular_liq_pendientes(tini, tfin, archi)
     

@@ -146,8 +146,7 @@ def path_central(ncentral):
 
 ##############################################################################
 
-def path_ro (nro_ro, ncentral):
-    carpeta_res = path_carpeta_resultados(ncentral)    
+def path_ro (nro_ro, carpeta_res):  
     carpeta_ro = carpeta_res + str(nro_ro)  + '/'
     if not os.path.exists(carpeta_ro):
         os.makedirs(carpeta_ro)
@@ -164,9 +163,9 @@ def path_carpeta_datos(ncentral):
 
 ##############################################################################
 
-def path_carpeta_resultados(nidcentral):
+def path_carpeta_resultados(nidcentral, tipo_calc):
     carpeta_central = path_central(nidcentral)
-    carpeta_res = carpeta_central + 'resultados/'
+    carpeta_res = carpeta_central + 'resultados_' + tipo_calc + '/'
     if not os.path.exists(carpeta_res):
         os.mkdir(carpeta_res)
     return carpeta_res
@@ -558,6 +557,7 @@ def leerArchivosCentral (nidCentral):
     parqueGen = leerArchi(nidCentral,'gen')
     if parqueGen is not None:
         parque.medidores[0].agregar_meds(parqueGen.medidores[0]._medidas)
+        parque.pot_GEN = copy.deepcopy(parqueGen.pot)
     else:
         print("AVISO: No hay archivo GEN para esta central.")
     

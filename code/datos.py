@@ -328,7 +328,8 @@ class Parque(object):
             self.medidores.append(medidores)
         self.id = id
         self.cgm = cgm
-        self.pot = pot # medida principal del parque
+        self.pot = pot # medida principal del parque (SCADA)
+        self.pot_GEN = None # medida principal del parque (GEN)        
         self.pot_SMEC = None # medida principal según SMEC, no siempre disponible
         self.dis = dis
         self.decorr = None
