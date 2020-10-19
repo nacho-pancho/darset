@@ -375,19 +375,11 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             L = largos_ro[kRO]
             print(f"ro: {kRO} L: {L} ")
             
-            train_pu = 0.7
-            val_pu = 0.1
-            test_pu = 1 - train_pu - val_pu
-            resto_pu = val_pu + test_pu
-            
-            # separo datos de entrenamiento, validación y testeo
-            X_train_n, X_resto_n, y_train_n, y_resto_n, dt_train, dt_resto = \
-                train_test_split(X_n, y_n, dt, test_size = resto_pu, random_state=42)            
-
-            X_test_n, X_val_n, y_test_n, y_val_n, dt_test, dt_val = \
-                train_test_split(X_resto_n, y_resto_n, dt_resto,
-                                 test_size = val_pu/resto_pu, random_state=42)              
-               
+            # separo datos de entrenamiento, validación y testeo 
+            X_train_n, X_test_n, X_val_n, y_train_n, y_test_n, y_val_n, dt_train,
+              dt_test, dt_val = 
+                train_test_val_split(X_n, y_n, dt, 0.7, 0.2, 0.1, 42  )
+ 
             # calibro y calculo para la RO y datos test y entrenamiento                        
             if tipo_calc == 'NN':
                 k1, k2, b_v, error_pu, std_pu, y_RO_e, y_test_e, y_test, \
@@ -402,8 +394,6 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
                     estimar_ro_mvlr(X_train_n, y_train_n, X_test_n, y_test_n, 
                                     X_val_n, y_val_n, X_RO_n, carpeta_ro, 
                                     min_pot, max_pot)
-            
-            
             
             pot_estimada[kini_RO:kini_RO+y_RO_e.size] = y_RO_e            
             
@@ -797,8 +787,7 @@ def estimar_ro_mvlr(X_train_n, y_train_n, X_test_n, y_test_n, X_val_n, y_val_n,
             regr = regr_
        
         k = k + 1
-
-            
+         
     
     plt.plot(alfa_, val_score, 'o')
     plt.xlabel('alfa')
@@ -818,4 +807,19 @@ def estimar_ro_mvlr(X_train_n, y_train_n, X_test_n, y_test_n, X_val_n, y_val_n,
     
     return (-1, -1, -1, -1, -1, y_RO_e, 
             y_test_e, y_test, y_train_e, y_train, y_val_e, y_val)
+
+
+
+train_test_val_split(X_n, y_n, dt, train_pu, test_pu, val_pu, rs  )
+ 
+    resto_pu = val_pu + test_pu
+   
+    X_train_n, X_resto_n, y_train_n, y_resto_n, dt_train, dt_resto = \
+        train_test_split(X_n, y_n, dt, test_size = resto_pu, random_state=rs)            
     
+    X_test_n, X_val_n, y_test_n, y_val_n, dt_test, dt_val = \
+        train_test_split(X_resto_n, y_resto_n, dt_resto,
+                         test_size = val_pu/resto_pu, random_state=rs) 
+        
+   return (X_train_n, X_test_n, X_val_n, y_train_n, y_test_n, y_val_n, dt_train,
+           dt_test, dt_val)
