@@ -17,8 +17,8 @@ import datetime
 
 if __name__ == '__main__':
     
-    #tipo_calc = 'NN'
-    tipo_calc = 'MVLR'
+    tipo_calc = 'NN'
+    #tipo_calc = 'MVLR'
         
     flg_estimar_RO = True
     flg_recorte_SMEC = False
@@ -47,13 +47,13 @@ if __name__ == '__main__':
     tini = datetime.datetime(2019, 6, 25)  
     tfin = datetime.datetime(2019, 6, 30)
     archi = archivos.archi_ro_pendientes(nid_p2)
-    parque2.calcular_liq_pendientes(tini, tfin, archi)    
+    #parque2.calcular_liq_pendientes(tini, tfin, archi)    
     
     parque2.registrar()
     medidor2 = parque2.medidores[0]
     filtros2 = parque2.get_filtros()
     M2, F2, nom2, t2 = parque2.exportar_medidas()
-    nom_series_p2 = ['potSCADA']
+    nom_series_p2 = ['velxPRONOS','velyPRONOS','potSCADA']
     nom_series_p2 = [s + '_' + str(nid_p2) for s in nom_series_p2]
     #vel_PRONOS_p2 = parque2.medidores[0].get_medida('vel','pronos')
     #dir_PRONOS_p2 = parque2.medidores[0].get_medida('dir','pronos')
