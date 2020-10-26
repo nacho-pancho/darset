@@ -305,7 +305,7 @@ def leerArchi(nidCentral,tipoArchi):
 
                 if TS_MIN == 60:
                     meds_sin_m = average(meds_sin, 6)
-                    meds_cos_m = average(meds_sin, 6)
+                    meds_cos_m = average(meds_cos, 6)
                 else:                    
                     meds_sin_m = signal.resample_poly(meds_sin, up=10, down=TS_MIN)
                     meds_cos_m = signal.resample_poly(meds_cos, up=10, down=TS_MIN)
