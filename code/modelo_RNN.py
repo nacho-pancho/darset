@@ -56,7 +56,7 @@ import matplotlib.pyplot as plt
 from sklearn import datasets, linear_model
 from sklearn.metrics import mean_squared_error, r2_score
 
-
+import gc
 
 def my_loss(y_true, y_pred):
     
@@ -161,6 +161,8 @@ def estimar_ro(X_train_n, y_train_n, X_val_n, y_val_n, X_test_n, y_test_n,
                X_RO_n, carpeta_ro, k1, k2):
 
         
+        print('Arranca NN')
+    
         n_features = X_train_n.shape[1]
         n_output = y_train_n.shape[1]
         
@@ -288,7 +290,10 @@ def estimar_ro(X_train_n, y_train_n, X_val_n, y_val_n, X_test_n, y_test_n,
                                                n_output,N_MIXES)
         y_RO_n = y_RO_n[:,0,:]
         '''        
-        
+
+        del model
+        gc.collect()
+        K.clear_session()
         
         return  y_test_predict_n, y_train_predict_n, y_val_predict_n, np.squeeze(y_RO_predict_n)   
 
@@ -308,7 +313,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
         
         #pltxy.plot_meds(M,F,nom_series,'velGEN_9','potSCADA_57')
 
-
+        
     
         # creo df donde voy a guardar los resultados de las RO
         columns_ro = ['dt_ini', 'dt_fin', 'largo','Estimacion [MWh]', 'Error_PE_70% [MWh]',
@@ -337,7 +342,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             patrones_ro(delta, F, M_n, t, dt_ini_calc, dt_fin_calc)       
         n_ro = len(Pats_Data_n)
         largos_ro = np.array(dtfin_ro) - np.array(dtini_ro)
-        indices = np.argsort(largos_ro)
+        indices = np.argsort(-1*largos_ro)
         diome = int(n_ro/2)
         
         print(indices[0],largos_ro[indices[0]])
@@ -352,7 +357,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
      
         carpeta_res = archivos.path_carpeta_resultados(nid_parque, tipo_calc)
         
-        for kRO in ros:
+        for kRO in ros[0:10]:
             
             carpeta_ro = archivos.path_ro(kRO + 1, carpeta_res)
             
@@ -376,9 +381,8 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             print(f"ro: {kRO} L: {L} ")
             
             # separo datos de entrenamiento, validación y testeo 
-            X_train_n, X_test_n, X_val_n, y_train_n, y_test_n, y_val_n, dt_train,
-              dt_test, dt_val = 
-                train_test_val_split(X_n, y_n, dt, 0.7, 0.2, 0.1, 42)
+            X_train_n, X_test_n, X_val_n, y_train_n, y_test_n, y_val_n, dt_train,\
+              dt_test, dt_val = train_test_val_split(X_n, y_n, dt, 0.7, 0.2, 0.1, 42)
  
             # calibro y calculo para la RO y datos test y entrenamiento                        
             if tipo_calc == 'NN':
@@ -761,14 +765,14 @@ def estimar_ro_mvlr(X_train_n, y_train_n, X_test_n, y_test_n, X_val_n, y_val_n,
     
     [y_test, y_train, y_val] = desnormalizar_datos([y_test_n, y_train_n, y_val_n], min_pot, max_pot)
     
-    '''
+    
     # Create linear regression object
     regr = linear_model.LinearRegression()
 
     # Train the model using the training sets
     regr.fit(X_train_n, y_train_n)
+    
     '''
-
     # Create linear regression object
     alfa_ = np.linspace(0, 50, 50)
     val_score = np.zeros_like(alfa_)
@@ -793,6 +797,8 @@ def estimar_ro_mvlr(X_train_n, y_train_n, X_test_n, y_test_n, X_val_n, y_val_n,
     plt.xlabel('alfa')
     plt.ylabel('score')    
     plt.savefig(carpeta_ro + 'ridge.png')    
+   
+    '''
     
     # Make predictions using the testing, training, val and RO set
     y_test_n_e = regr.predict(X_test_n)
@@ -810,10 +816,10 @@ def estimar_ro_mvlr(X_train_n, y_train_n, X_test_n, y_test_n, X_val_n, y_val_n,
 
 
 
-train_test_val_split(X_n, y_n, dt, train_pu, test_pu, val_pu, rs  )
+def train_test_val_split(X_n, y_n, dt, train_pu, test_pu, val_pu, rs ):
  
     resto_pu = val_pu + test_pu
-   
+    
     X_train_n, X_resto_n, y_train_n, y_resto_n, dt_train, dt_resto = \
         train_test_split(X_n, y_n, dt, test_size = resto_pu, random_state=rs)            
     
@@ -821,5 +827,5 @@ train_test_val_split(X_n, y_n, dt, train_pu, test_pu, val_pu, rs  )
         train_test_split(X_resto_n, y_resto_n, dt_resto,
                          test_size = val_pu/resto_pu, random_state=rs) 
         
-   return (X_train_n, X_test_n, X_val_n, y_train_n, y_test_n, y_val_n, dt_train,
+    return (X_train_n, X_test_n, X_val_n, y_train_n, y_test_n, y_val_n, dt_train,
            dt_test, dt_val)

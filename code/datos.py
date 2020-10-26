@@ -78,7 +78,9 @@ class Medida(object):
 
     def __init__(self,procedencia,muestras,tiempo,tipo,nombre,minval,maxval,nrep):
         t0 = tiempo[0]
-        # print(f"Medida {procedencia} de tipo {tipo}, nombre {nombre}, comenzando en tiempo {t0}")
+        t1 = tiempo[1]
+        tf = tiempo[-1]
+        #print(f"Medida {procedencia} de tipo {tipo}, nombre {nombre}, periodo {t0},{t1},...,{tf} ")
         self.procedencia = procedencia
         self.muestras = muestras
         self.tiempo = tiempo
@@ -102,11 +104,11 @@ class Medida(object):
         Reubica las muestras y el tiempo de la serie al rango de tiempos especificado
         Asumimos que el tiempo inicial ya está alineado a 10 minutos
         """
-        dtd10 = datetime.timedelta(minutes=10)
+        dt = datetime.timedelta(minutes=arch.TS_MIN)
         tini1 = nuevos_tiempos[0]
         n0 = len(self.tiempo)
         tini0 = self.tiempo[0]
-        offset = int((tini0-tini1)/dtd10)
+        offset = int((tini0-tini1)/dt)
 
         self.tiempo = nuevos_tiempos
         muestras_viejas = self.muestras
@@ -211,13 +213,13 @@ class Medida(object):
         dt_new = [self.tiempo[k] + Ndesf[k] * dt_m for k in range(len(med_old.tiempo))]
         dtmin,dtmax = np.min(dt_new),np.max(dt_new)
         
-        NMuestras = arch.NMuestras10minEntreDts(dtmin,dtmax) + 1
+        NMuestras = arch.NMuestrasTSEntreDts(dtmin,dtmax) + 1
 
         self.reset_med(dtmin,NMuestras)
     
-        N10min_des = arch.NMuestras10minEntreDts(dtini_old,dtmin)
+        NTS_des = arch.NMuestrasTSEntreDts(dtini_old,dtmin)
         
-        k_new = [k_old + Ndesf[k_old] - N10min_des for k_old in range(len(m_old))]
+        k_new = [k_old + Ndesf[k_old] - NTS_des for k_old in range(len(m_old))]
 
         self.muestras[k_new] = m_old
         
@@ -277,9 +279,9 @@ class Medidor(object):
                 tmin = t0
             if t1 > tmax:
                 tmax = t1
-        dtd10 = datetime.timedelta(minutes=10)
-        n =int( np.ceil( (tmax-tmin)/dtd10 ) )+ 1
-        tiempo = [tmin+dtd10*i for i in range(n)]
+        dt = datetime.timedelta(minutes=arch.TS_MIN)
+        n = int(np.ceil((tmax-tmin)/dt)) + 1
+        tiempo = [tmin+dt*i for i in range(n)]
         return tiempo
 
     def registrar(self,periodo):
@@ -359,9 +361,9 @@ class Parque(object):
                 tmin = t0
             if t1 > tmax:
                 tmax = t1
-        dtd10 = datetime.timedelta(minutes=10)
-        n = int( np.ceil( (tmax-tmin)/dtd10 ) ) + 1 
-        tiempo = [tmin+dtd10*i for i in range(n)]
+        dt = datetime.timedelta(minutes=arch.TS_MIN)
+        n = int( np.ceil( (tmax-tmin)/dt ) ) + 1
+        tiempo = [tmin+dt*i for i in range(n)]
         return tiempo
 
     def registrar(self):
@@ -461,10 +463,7 @@ class Parque(object):
         for k in range(Ndatos_afectados_RO_izq, len(filt_cgm)-Ndatos_afectados_RO_der):            
             if filt_cgm_[k] == 1:
                 filt_cgm[k-Ndatos_afectados_RO_izq:k+Ndatos_afectados_RO_der] = 1
-
-            
-            
-        
+      
         self.pot.agregar_filtro('cgm',filt_cgm)
         
         filt_dis = self.dis.muestras < self.cant_molinos

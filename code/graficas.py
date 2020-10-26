@@ -11,6 +11,7 @@ from windrose import WindroseAxes
 import time
 
 import filtros
+import archivos
 
 #=================================================================================
 
@@ -34,7 +35,7 @@ MAP_WIDTH = 2000
 MAP_WIDTH_ZOOM = 2000
 BAR_HEIGHT = 14
 DEFAULT_WINDOW_SIZE = datetime.timedelta(days=7)
-DEFAULT_TIME_DELTA = datetime.timedelta(minutes=10)
+DEFAULT_TIME_DELTA = datetime.timedelta(minutes=archivos.TS_MIN)
 ZOOM_STEP = 1.5
 
 clickfig = None
@@ -62,28 +63,21 @@ def clickplot_redraw():
         NGrafs = len(tipos)+2
     else:
         NGrafs = len(tipos)+1
-    
 
-    #print('figure',time.time()-t0)
-    t0 = time.time()
     plt.figure(clickfig.number)
-    #print("window:",window)archivos
 
-    #print('leyendas',time.time()-t0)
-    t0 = time.time()
     legends = dict()
     for tipo in tipos:
         legends.update( {tipo:list()} )
         
         
     #print('medidas',time.time()-t0)
-    t0 = time.time()
     for i in range(len(medidas)):
         med_i = medidas[i]  
         
         idx_tipo = tipos.index(med_i.tipo)
         t_i = med_i.tiempo
-        #print(len(t_i))
+        #print(t_i[0],t_i[1],'...',t_i[-1])
         legends[med_i.tipo].append(med_i.nombre)
         if 1:
             idx_i = list(map(lambda t: (t >= window[0]) and (t < window[1]), t_i))
@@ -96,18 +90,16 @@ def clickplot_redraw():
         else:
             x_i = list()
             y_i = list()
-            w0,w1 = window[0],window[1]
+            w0, w1 = window[0],window[1]
             for j in range(len(t_i)):
                 t = t_i[j]
                 if (t >= w0) and (t < w1):
                     x_i.append(t)
                     y_i.append(med_i.muestras[j])
-        #    filtrados = filter(lambda t:lambda t: (t[0] >= window[0]) and (t[0] < window[1]), zip(t_i,med_i.muestras) )
-        #    x_i,y_i = zip(*filtrados)
-        #print(x_i[0],x_i[-1])
+
         plt.subplot(NGrafs,1,idx_tipo+1)
         c_i = viridis(i/len(medidas))
-        plt.plot(x_i,y_i,color=c_i)
+        plt.plot(x_i, y_i, color=c_i)
         
         #min_max_tipo = filtros.min_max(med_i.tipo,50,1000)
         plt.axis([window[0],window[1],med_i.minval*0.9,med_i.maxval*1.1])
@@ -177,7 +169,7 @@ def click_event_handler(event):
     tcenter = tini + (ix/MAP_WIDTH)*(tfin-tini)
     w0 = tcenter - window_size/2
     w1 = tcenter + window_size/2
-    window = (w0,w1)
+    window = (w0, w1)
     clickplot_redraw()
 
 
@@ -217,7 +209,7 @@ def clickplot(_medidas,figsize=(8,6)):
     medidas = _medidas
     tini = medidas[0].tiempo[0]
     tfin = medidas[0].tiempo[-1]
-
+    #print(tini,tfin)
     tipos = set()
     for m in medidas:
         if m.tipo not in tipos:
