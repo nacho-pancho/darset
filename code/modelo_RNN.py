@@ -337,7 +337,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
         
         # Busco secuencias de patrones que quiero calcular su pot
         
-        delta = 5 # agrega delta datos 10min antes y despues de las RO encontradas
+        delta = max(int(5*(10/archivos.TS_MIN)), 1) # agrega delta datos 10min antes y despues de las RO encontradas
         Pats_Data_n, Pats_Filt, Pats_Calc, dtini_ro, dtfin_ro, kini_ro = \
             patrones_ro(delta, F, M_n, t, dt_ini_calc, dt_fin_calc)       
         n_ro = len(Pats_Data_n)
