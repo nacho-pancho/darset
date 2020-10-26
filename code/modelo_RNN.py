@@ -357,7 +357,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
      
         carpeta_res = archivos.path_carpeta_resultados(nid_parque, tipo_calc)
         
-        for kRO in ros[0:10]:
+        for kRO in ros:
             
             carpeta_ro = archivos.path_ro(kRO + 1, carpeta_res)
             

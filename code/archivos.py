@@ -303,9 +303,18 @@ def leerArchi(nidCentral,tipoArchi):
                 meds_sin = [m.sin(m.radians(k)) for k in meds]
                 meds_cos = [m.cos(m.radians(k)) for k in meds]
 
+                if TS_MIN == 60:
+                    meds_sin_m = average(meds_sin, 6)
+                    meds_cos_m = average(meds_sin, 6)
+                else:                    
+                    meds_sin_m = signal.resample_poly(meds_sin, up=10, down=TS_MIN)
+                    meds_cos_m = signal.resample_poly(meds_cos, up=10, down=TS_MIN)
+
+                '''
                 meds_sin_m = signal.resample_poly(meds_sin, up=10, down=TS_MIN)
                 meds_cos_m = signal.resample_poly(meds_cos, up=10, down=TS_MIN)
-
+                '''
+                
                 meds_m = [m.atan2(s, c) for s, c in zip(meds_sin_m, meds_cos_m)]
                 meds_m = [m.degrees(k) for k in meds_m]
                 for k in range(len(meds_m)):
@@ -315,8 +324,13 @@ def leerArchi(nidCentral,tipoArchi):
                 meds = np.asarray(meds_m)
             else:
                 # asumo que está función promedia cuando pasa de 10 a 60min
-                meds = signal.resample_poly(meds, up=10, down=TS_MIN) 
-
+                if TS_MIN == 60:
+                    meds = average(meds, 6)
+                    #meds = np.mean(meds.reshape(-1, 6), 1)
+                else:                    
+                    meds = signal.resample_poly(meds, up=10, down=TS_MIN) 
+                
+                
         dtini_TS = dt_to_dtTS(tiempo[0])
         tiempo = fechaInitoDateTimeN(dtini_TS, len(meds))
         med = datos.Medida(tipoArchi,meds,tiempo,tipoDato,nombre,minmax[0],minmax[1],nrep)
@@ -494,7 +508,8 @@ def leerArchiPRONOS(nidCentral):
             if tipoDato == 'dir':
                 meds = resample_poly_dir(meds, 60, TS_MIN)
             else:            
-                meds = signal.resample_poly(meds,up=60,down=TS_MIN)        
+                meds = signal.resample_poly(meds,up=60,down=TS_MIN)
+                
             
         dt_TS = fechaInitoDateTimeN ( dt_ini, len(meds))
         med = datos.Medida('pronos',meds,dt_TS,tipoDato,nombre,minmax[0],minmax[1],nrep)
@@ -751,4 +766,8 @@ def resample_poly_dir(med, up_, down_):
             meds_m[k] = meds_m[k] + 360
     
     return np.asarray(meds_m)        
-    
+
+def average(arr, n):
+    end = n * int(len(arr)/n)
+    arr_np = np.array(arr)
+    return np.mean(arr_np[:end].reshape(-1, n), 1)    
