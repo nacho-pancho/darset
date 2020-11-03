@@ -20,6 +20,7 @@ import math
 import numpy as np
 import plot_scatter as pltxy
 import matplotlib
+from sklearn.multioutput import MultiOutputRegressor
 #matplotlib.use('Agg')
 
 # 1. Set `PYTHONHASHSEED` envcondaironment variable at a fixed value
@@ -109,7 +110,6 @@ def patrones_ro(delta, F, M_n, t, dt_ini_calc, dt_fin_calc):
     Pats_Data_n = list()
     Pats_Filt = list()
     Pats_Calc = list()   
-    
 
     dtini_ro = list()
     dtfin_ro = list()
@@ -169,6 +169,7 @@ def estimar_ro(X_train_n, y_train_n, X_val_n, y_val_n, X_test_n, y_test_n,
         #defino la red
         
         l2_ = l2(0.000001)
+        #l2_ = l2(0.001)
 
         init_seed = 42699930
         initializer = keras.initializers.RandomUniform(minval=-0.05, maxval=0.05,
@@ -184,15 +185,18 @@ def estimar_ro(X_train_n, y_train_n, X_val_n, y_val_n, X_test_n, y_test_n,
                         kernel_initializer = initializer,
                         bias_initializer= initializer_b))
         
-        model.add(Dense(int(k2*n_output), activation = 'tanh',
+        
+        model.add(Dense(int(k1*n_output), activation = 'tanh',
                         kernel_regularizer=l2_, bias_regularizer=l2_,
                         kernel_initializer = initializer,
                         bias_initializer= initializer_b))
-
+        
+        
         model.add(Dense(n_output, activation = 'sigmoid',
                         kernel_regularizer=l2_, bias_regularizer=l2_,
                         kernel_initializer = initializer,
                         bias_initializer= initializer_b))
+
     
         '''
         pregunta 1:
@@ -239,7 +243,10 @@ def estimar_ro(X_train_n, y_train_n, X_val_n, y_val_n, X_test_n, y_test_n,
         
         history = model.fit(X_train_n, y_train_n, validation_data=(X_val_n, y_val_n), 
                             epochs=100, verbose=0, callbacks=[es])
-       
+        
+        print(model.summary())
+        NParametros = model.count_params()
+        
         # evaluate the model
         
         _, train_acc = model.evaluate(X_train_n, y_train_n, verbose=0)
@@ -247,13 +254,13 @@ def estimar_ro(X_train_n, y_train_n, X_val_n, y_val_n, X_test_n, y_test_n,
 
         '''
         print('Train: %.3f, Test: %.3f' % (train_acc, test_acc))        
-        
-        
-        #print(model.summary())
+          
         
         # plot training history
         
         '''
+        
+        
         
         plt.figure()
         plt.plot(history.history['loss'], label='train')
@@ -295,7 +302,8 @@ def estimar_ro(X_train_n, y_train_n, X_val_n, y_val_n, X_test_n, y_test_n,
         gc.collect()
         K.clear_session()
         
-        return  y_test_predict_n, y_train_predict_n, y_val_predict_n, np.squeeze(y_RO_predict_n)   
+        return  (y_test_predict_n, y_train_predict_n, y_val_predict_n, 
+                 np.squeeze(y_RO_predict_n), NParametros) 
 
 def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_ini_calc,
             dt_fin_calc, delta_print_datos, meds_plot_p1, meds_plot_p2, 
@@ -319,7 +327,9 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
         columns_ro = ['dt_ini', 'dt_fin', 'largo','Estimacion [MWh]', 'Error_PE_70% [MWh]',
                       'Error_PE_30% [MWh]', 'Error_VE [MWh]', 'Delta Error VE - PE70 [MWh]',
                       'EG [MWh]', 'ENS VE [MWh]', 'ENS PE_70 [MWh]', 'k1_opt', 'k2_opt',
-                       'error_pu_opt', 'std_pu_opt', 'b_v_pu_opt']
+                       'error_pu_opt', 'std_pu_opt', 'b_v_pu_opt', 'NDatosTrain', 
+                       'NDatosTest', 'NDatosVal', 'NInput', 'NOutput',
+                       'NParametros']
             
         df_ro = pd.DataFrame(columns=columns_ro)    
     
@@ -382,23 +392,38 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             
             # separo datos de entrenamiento, validación y testeo 
             X_train_n, X_test_n, X_val_n, y_train_n, y_test_n, y_val_n, dt_train,\
-              dt_test, dt_val = train_test_val_split(X_n, y_n, dt, 0.7, 0.2, 0.1, 42)
- 
+              dt_test, dt_val = train_test_val_split(X_n, y_n, dt, 0.6, 0.2, 0.2, 42)
+
             # calibro y calculo para la RO y datos test y entrenamiento                        
             if tipo_calc == 'NN':
                 k1, k2, b_v, error_pu, std_pu, y_RO_e, y_test_e, y_test, \
-                y_train_e, y_train, y_val_e_opt, y_val = \
+                y_train_e, y_train, y_val_e_opt, y_val, NParametros = \
                     estimar_ro_iter(k1_lst, k2_lst, X_train_n, y_train_n, X_val_n,
                                     y_val_n, X_test_n, y_test_n, X_RO_n,
                                     carpeta_ro, min_pot, max_pot)                     
     
             elif tipo_calc == 'MVLR':                
                 k1, k2, b_v, error_pu, std_pu, y_RO_e, y_test_e, y_test, \
-                y_train_e, y_train, y_val_e, y_val = \
+                y_train_e, y_train, y_val_e, y_val, NParametros = \
                     estimar_ro_mvlr(X_train_n, y_train_n, X_test_n, y_test_n, 
                                     X_val_n, y_val_n, X_RO_n, carpeta_ro, 
                                     min_pot, max_pot)
-            
+
+            elif tipo_calc == 'MVLR_R':                
+                k1, k2, b_v, error_pu, std_pu, y_RO_e, y_test_e, y_test, \
+                y_train_e, y_train, y_val_e, y_val, NParametros = \
+                    estimar_ro_mvlr_ridge(X_train_n, y_train_n, X_test_n, y_test_n, 
+                                    X_val_n, y_val_n, X_RO_n, carpeta_ro, 
+                                    min_pot, max_pot)
+            elif tipo_calc == 'MVLR_L':                
+                k1, k2, b_v, error_pu, std_pu, y_RO_e, y_test_e, y_test, \
+                y_train_e, y_train, y_val_e, y_val, NParametros = \
+                    estimar_ro_mvlr_lasso(X_train_n, y_train_n, X_test_n, y_test_n, 
+                                    X_val_n, y_val_n, X_RO_n, carpeta_ro, 
+                                    min_pot, max_pot)                    
+            else:
+                raise Exception('Tipo de cálculo ' + tipo_calc + ' no implementado.')
+
             pot_estimada[kini_RO:kini_RO+y_RO_e.size] = y_RO_e            
             
             y_RO_gen = pot[kini_RO:kini_RO+y_RO_e.size]
@@ -412,8 +437,10 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             calculos_ro = [dtini_ro[kRO], dtfin_ro[kRO], dtfin_ro[kRO] - dtini_ro[kRO],
                            np.sum(y_RO_e)/6, E_dif_PE70, E_dif_PE30, E_dif_VE,
                            delta_70, np.sum(y_RO_gen)/6, ENS_VE, ENS_PE_70, k1, k2,
-                           error_pu, std_pu, b_v]                     
-            
+                           error_pu, std_pu, b_v, len(X_train_n), len(X_test_n), 
+                           len(X_val_n), len(X_train_n[0]), len(y_train[0]),
+                           NParametros]                     
+
             archi_ro = carpeta_ro + 'resumen.txt'
             s = pd.Series(calculos_ro, index=columns_ro)
             s.to_csv(archi_ro, index=True, sep='\t') 
@@ -433,8 +460,19 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
         
         df_ro.to_csv( carpeta_res + 'resumen.txt', index=True, sep='\t',
                      float_format='%.4f') 
+
     
-            
+        # grafico error_pu y std_pu en función del largo de la ro
+        df_ro['largo'] = df_ro['largo'].dt.total_seconds()/3600
+        ax = df_ro.plot(kind='scatter', x='largo', y='std_pu_opt', 
+                      color='DarkBlue', style='.', label='std_pu')
+        
+        df_ro.plot(kind='scatter', x='largo', y='error_pu_opt', secondary_y=True,
+            color='Red', style='.', label='error_pu', ax=ax);
+        #plt.show()
+        plt.savefig(carpeta_res + 'desempenho.png', dpi=300)
+
+                   
         # creo la potencia estimada
         tipoDato = 'pot'
         nrep = filtros.Nrep(tipoDato)
@@ -695,44 +733,15 @@ def estimar_ro_iter (k1_lst, k2_lst, X_train_n, y_train_n, X_val_n, y_val_n,
     for k1 in k1_lst:
         for k2 in k2_lst:
             
-            y_test_n_e, y_train_n_e, y_val_n_e, y_RO_n_e = \
+            y_test_n_e, y_train_n_e, y_val_n_e, y_RO_n_e, NParametros = \
                 estimar_ro(X_train_n, y_train_n, X_val_n, y_val_n, X_test_n, y_test_n, X_RO_n,
                            carpeta_ro, k1, k2)               
   
             datos_norm = [y_test_n_e, y_train_n_e, y_val_n_e, y_RO_n_e]
             [y_test_e, y_train_e, y_val_e, y_RO_e] = desnormalizar_datos(datos_norm, min_pot, max_pot)                
-
-            '''
-            # concateno (train + test) salidas del modelo y datos reales 
-            y_e_all = np.concatenate((y_test_e, y_train_e, y_val_e), axis=0)
-            y_all = np.concatenate((y_test, y_train, y_val), axis=0)
             
-
-            y_e_all = np.concatenate((y_val_e), axis=0)
-            y_all = np.concatenate((y_val), axis=0)
-            '''            
-            y_e_all = y_test_e
-            y_all = y_test 
-            
-            y_e_all_acum = np.sum(y_e_all, axis = 1)
-            y_e_all_acum_MWh = y_e_all_acum/6
-    
-            y_all_acum = np.sum(y_all, axis = 1)
-            y_all_acum_MWh = y_all_acum/6
-            
-            y_dif_all_acum_MWh = np.subtract(y_e_all_acum_MWh, y_all_acum_MWh)        
-            
-            error_pu = np.mean(y_dif_all_acum_MWh)/np.mean(y_all_acum_MWh)
-            
-            #print('Error medio [p.u] = ' , error_pu)
-            
-            std_pu = np.std(y_dif_all_acum_MWh)/np.mean(y_all_acum_MWh)
-    
-            #print('std [p.u] = ' , std_pu)
-    
-            b_v = (error_pu ** 2 + std_pu ** 2) ** (1/2)
-            
-            #print('bias-variance [p.u] = ', b_v)
+            [error_pu, std_pu, b_v] = \
+                errores_modelo(y_train, y_train_e, y_test, y_test_e, y_val, y_val_e)
             
             
             df_iter_k.loc[k_idx] = [k1, k2, error_pu, std_pu, b_v]
@@ -750,6 +759,7 @@ def estimar_ro_iter (k1_lst, k2_lst, X_train_n, y_train_n, X_val_n, y_val_n,
                 y_test_e_opt = np.array(y_test_e, copy=True)
                 y_train_e_opt = np.array(y_train_e, copy=True)
                 y_val_e_opt = np.array(y_val_e, copy=True)
+                NParametros_opt = NParametros
                 
     
     df_iter_k.to_csv(carpeta_ro + 'iter_k1k2.txt', index=True, sep='\t',
@@ -757,9 +767,10 @@ def estimar_ro_iter (k1_lst, k2_lst, X_train_n, y_train_n, X_val_n, y_val_n,
     
     
     return (k1_opt, k2_opt, b_v_opt, error_pu_opt, std_pu_opt, y_RO_e_opt, 
-        y_test_e_opt, y_test, y_train_e_opt, y_train, y_val_e_opt, y_val)
+        y_test_e_opt, y_test, y_train_e_opt, y_train, y_val_e_opt, y_val, 
+        NParametros_opt)
     
-    
+
 def estimar_ro_mvlr(X_train_n, y_train_n, X_test_n, y_test_n, X_val_n, y_val_n,
                     X_RO_n, carpeta_ro, min_pot, max_pot):
     
@@ -769,36 +780,12 @@ def estimar_ro_mvlr(X_train_n, y_train_n, X_test_n, y_test_n, X_val_n, y_val_n,
     # Create linear regression object
     regr = linear_model.LinearRegression()
 
+    X_tot_n = np.concatenate((X_train_n, X_val_n), axis=0)
+    #print(X_tot_n.size())
+    y_tot_n = np.concatenate((y_train_n, y_val_n), axis=0)
+
     # Train the model using the training sets
-    regr.fit(X_train_n, y_train_n)
-    
-    '''
-    # Create linear regression object
-    alfa_ = np.linspace(0, 50, 50)
-    val_score = np.zeros_like(alfa_)
-    k = 0
-    val_score_max = -999999
-    for a in alfa_:
-        regr_ = linear_model.Ridge(alpha=a)
-    
-        # Train the model using the training sets
-        regr_.fit(X_train_n, y_train_n)    
-    
-        val_score[k] = regr_.score(X_val_n, y_val_n)
-        
-        if val_score[k] > val_score_max:
-            val_score_max = val_score[k]
-            regr = regr_
-       
-        k = k + 1
-         
-    
-    plt.plot(alfa_, val_score, 'o')
-    plt.xlabel('alfa')
-    plt.ylabel('score')    
-    plt.savefig(carpeta_ro + 'ridge.png')    
-   
-    '''
+    regr.fit(X_tot_n, y_tot_n)
     
     # Make predictions using the testing, training, val and RO set
     y_test_n_e = regr.predict(X_test_n)
@@ -806,15 +793,103 @@ def estimar_ro_mvlr(X_train_n, y_train_n, X_test_n, y_test_n, X_val_n, y_val_n,
     y_val_n_e = regr.predict(X_val_n)
     y_RO_n_e = regr.predict(X_RO_n)
     
+    NParametros = len(regr.coef_)
     
     datos_norm = [y_test_n_e, y_train_n_e, y_val_n_e, y_RO_n_e]
     [y_test_e, y_train_e, y_val_e, y_RO_e] = desnormalizar_datos(datos_norm, min_pot, max_pot) 
     
+    [error_pu, std_pu, b_v] = \
+        errores_modelo(y_train, y_train_e, y_test, y_test_e, y_val, y_val_e)
     
-    return (-1, -1, -1, -1, -1, y_RO_e, 
-            y_test_e, y_test, y_train_e, y_train, y_val_e, y_val)
+    return (-1, -1, b_v, error_pu, std_pu, y_RO_e, 
+            y_test_e, y_test, y_train_e, y_train, y_val_e, y_val, NParametros)
 
 
+def estimar_ro_mvlr_ridge(X_train_n, y_train_n, X_test_n, y_test_n, X_val_n, y_val_n,
+                    X_RO_n, carpeta_ro, min_pot, max_pot):
+    
+    [y_test, y_train, y_val] = desnormalizar_datos([y_test_n, y_train_n, y_val_n], min_pot, max_pot)
+    
+    
+    X_tot_n = np.concatenate((X_train_n, X_val_n), axis=0)
+    #print(X_tot_n.size())
+    y_tot_n = np.concatenate((y_train_n, y_val_n), axis=0)
+    #print(y_tot_n.size())    
+    regr = linear_model.RidgeCV()
+    
+    wrapper = MultiOutputRegressor(regr)
+    # fit the model on the whole dataset
+    wrapper.fit(X_tot_n, y_tot_n)
+
+    param_nz = np.empty((0))    
+    for i in range(len(wrapper.estimators_)):
+        coefs = wrapper.estimators_[i].coef_
+        idx_coefs_nz = np.nonzero(coefs) 
+        coefs_nz = coefs[idx_coefs_nz]
+        #print(coefs_nz)
+        param_nz = np.concatenate((param_nz, coefs_nz ))
+      
+    #print(param_nz)
+    NParametros = len(param_nz)
+    
+    # Make predictions using the testing, training, val and RO set
+    y_test_n_e = wrapper.predict(X_test_n)
+    y_train_n_e = wrapper.predict(X_train_n)
+    y_val_n_e = wrapper.predict(X_val_n)
+    y_RO_n_e = wrapper.predict(X_RO_n)
+    
+    
+    datos_norm = [y_test_n_e, y_train_n_e, y_val_n_e, y_RO_n_e]
+    [y_test_e, y_train_e, y_val_e, y_RO_e] = desnormalizar_datos(datos_norm, min_pot, max_pot) 
+    
+    [error_pu, std_pu, b_v] = \
+        errores_modelo(y_train, y_train_e, y_test, y_test_e, y_val, y_val_e)
+    
+    return (-1, -1, b_v, error_pu, std_pu, y_RO_e, 
+            y_test_e, y_test, y_train_e, y_train, y_val_e, y_val, NParametros)
+
+
+def estimar_ro_mvlr_lasso(X_train_n, y_train_n, X_test_n, y_test_n, X_val_n, y_val_n,
+                    X_RO_n, carpeta_ro, min_pot, max_pot):
+    
+    [y_test, y_train, y_val] = desnormalizar_datos([y_test_n, y_train_n, y_val_n], min_pot, max_pot)
+    
+    X_tot_n = np.concatenate((X_train_n, X_val_n), axis=0)
+    #print(X_tot_n.size())
+    y_tot_n = np.concatenate((y_train_n, y_val_n), axis=0)
+    #print(y_tot_n.size())    
+    regr = linear_model.LassoCV(random_state=0, n_alphas=1000)
+    
+    wrapper = MultiOutputRegressor(regr)
+    # fit the model on the whole dataset
+    wrapper.fit(X_tot_n, y_tot_n)
+
+    param_nz = np.empty((0))    
+    for i in range(len(wrapper.estimators_)):
+        coefs = wrapper.estimators_[i].coef_
+        idx_coefs_nz = np.nonzero(coefs) 
+        coefs_nz = coefs[idx_coefs_nz]
+        #print(coefs_nz)
+        param_nz = np.concatenate((param_nz, coefs_nz ))
+      
+    #print(param_nz)
+    NParametros = len(param_nz)
+    
+    # Make predictions using the testing, training, val and RO set
+    y_test_n_e = wrapper.predict(X_test_n)
+    y_train_n_e = wrapper.predict(X_train_n)
+    y_val_n_e = wrapper.predict(X_val_n)
+    y_RO_n_e = wrapper.predict(X_RO_n)
+    
+    
+    datos_norm = [y_test_n_e, y_train_n_e, y_val_n_e, y_RO_n_e]
+    [y_test_e, y_train_e, y_val_e, y_RO_e] = desnormalizar_datos(datos_norm, min_pot, max_pot) 
+    
+    [error_pu, std_pu, b_v] = \
+        errores_modelo(y_train, y_train_e, y_test, y_test_e, y_val, y_val_e)
+    
+    return (-1, -1, b_v, error_pu, std_pu, y_RO_e, 
+            y_test_e, y_test, y_train_e, y_train, y_val_e, y_val, NParametros)
 
 def train_test_val_split(X_n, y_n, dt, train_pu, test_pu, val_pu, rs ):
  
@@ -829,3 +904,41 @@ def train_test_val_split(X_n, y_n, dt, train_pu, test_pu, val_pu, rs ):
         
     return (X_train_n, X_test_n, X_val_n, y_train_n, y_test_n, y_val_n, dt_train,
            dt_test, dt_val)
+    
+    
+def errores_modelo(y_train, y_train_e, y_test, y_test_e, y_val, y_val_e):
+    
+    '''
+    # concateno (train + test) salidas del modelo y datos reales 
+    y_e_all = np.concatenate((y_test_e, y_train_e, y_val_e), axis=0)
+    y_all = np.concatenate((y_test, y_train, y_val), axis=0)
+    
+    
+    y_e_all = np.concatenate((y_val_e), axis=0)
+    y_all = np.concatenate((y_val), axis=0)
+    '''            
+    
+    y_e_all = y_test_e
+    y_all = y_test 
+    
+    y_e_all_acum = np.sum(y_e_all, axis = 1)
+    y_e_all_acum_MWh = y_e_all_acum/6
+    
+    y_all_acum = np.sum(y_all, axis = 1)
+    y_all_acum_MWh = y_all_acum/6
+    
+    y_dif_all_acum_MWh = np.subtract(y_e_all_acum_MWh, y_all_acum_MWh)        
+    
+    error_pu = np.mean(y_dif_all_acum_MWh)/np.mean(y_all_acum_MWh)
+    
+    #print('Error medio [p.u] = ' , error_pu)
+    
+    std_pu = np.std(y_dif_all_acum_MWh)/np.mean(y_all_acum_MWh)
+    
+    #print('std [p.u] = ' , std_pu)
+    
+    b_v = (error_pu ** 2 + std_pu ** 2) ** (1/2)
+    
+    #print('bias-variance [p.u] = ', b_v)
+    
+    return (error_pu, std_pu, b_v)

@@ -30,7 +30,7 @@ else:
 '''    
 
 RUTA_DATOS = '../data/'
-TS_MIN = 60
+TS_MIN = 10
 
 ##############################################################################
 
@@ -163,7 +163,7 @@ def path_carpeta_datos(ncentral):
 
 def path_carpeta_resultados(nidcentral, tipo_calc):
     carpeta_central = path_central(nidcentral)
-    carpeta_res = carpeta_central + 'resultados_' + tipo_calc + '/'
+    carpeta_res = carpeta_central + 'resultados_' + tipo_calc + '_' + str(TS_MIN) + '/'
     if not os.path.exists(carpeta_res):
         os.mkdir(carpeta_res)
     return carpeta_res
@@ -349,9 +349,11 @@ def leerArchi(nidCentral,tipoArchi):
             
         if (tipoDato == 'dir') and (vel != None):
             
-            velx, vely = velxy_from_veldir(vel, med, ident, nidCentral)    
+            velx, vely, vel3x, vel3y = velxy_from_veldir(vel, med, ident, nidCentral)    
             medidas.append(velx)
             medidas.append(vely)
+            medidas.append(vel3x)
+            medidas.append(vel3y)
             
             cosdir, sindir = cosin_from_dir(med, ident, nidCentral)
             medidas.append(cosdir)
@@ -521,9 +523,11 @@ def leerArchiPRONOS(nidCentral):
             
         if (tipoDato == 'dir') and (vel != None):
             
-            velx, vely = velxy_from_veldir(vel, med, ident, nidCentral)               
+            velx, vely, vel3x, vel3y  = velxy_from_veldir(vel, med, ident, nidCentral)               
             medidas.append(velx)
             medidas.append(vely)
+            medidas.append(vel3x)
+            medidas.append(vel3y)
             
             cosdir, sindir = cosin_from_dir(med, ident, nidCentral)
             medidas.append(cosdir)
@@ -544,15 +548,31 @@ def velxy_from_veldir(vel, dir_, ident, nidCentral):
     velx = vel.muestras * [m.cos(m.radians(k)) for k in dir_.muestras]
     vely = vel.muestras * [m.sin(m.radians(k)) for k in dir_.muestras]
 
+    vel3 = (vel.muestras ** (3/2))
+    vel3x = vel3 * [m.cos(m.radians(k)) for k in dir_.muestras]
+    vel3y = vel3 * [m.sin(m.radians(k)) for k in dir_.muestras]
+
+
     velx = np.where(dir_.muestras > -1, velx, -99999999)
     vely = np.where(dir_.muestras > -1, vely, -99999999)
+    
+    vel3x = np.where(dir_.muestras > -1, vel3x, -99999999)
+    vel3y = np.where(dir_.muestras > -1, vel3y, -99999999)    
 
     med_velx = datos.Medida(proc, velx, vel.tiempo,'vel','velx' + ident + '_' + str(nidCentral),
                        -vel.maxval, vel.maxval, vel.nrep)
     
     med_vely = datos.Medida(proc,vely, vel.tiempo,'vel','vely' + ident + '_' + str(nidCentral),
                        -vel.maxval, vel.maxval, vel.nrep)
-    return med_velx, med_vely
+
+    med_vel3x = datos.Medida(proc, vel3x, vel.tiempo,'vel','vel3x' + ident + '_' + str(nidCentral),
+                       (-vel.maxval)** (3/2), vel.maxval, vel.nrep)
+    
+    med_vel3y = datos.Medida(proc, vel3y, vel.tiempo,'vel','vel3y' + ident + '_' + str(nidCentral),
+                       -vel.maxval, vel.maxval, vel.nrep)        
+    
+    
+    return med_velx, med_vely, med_vel3x, med_vel3y
 
 ##############################################################################
 

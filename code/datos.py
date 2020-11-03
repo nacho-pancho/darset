@@ -459,8 +459,8 @@ class Parque(object):
         filt_cgm = filt_cgm & (self.cgm.muestras < 0.999 * self.PAutorizada )#* np.ones(len(self.cgm.muestras)))
         
         # cantidad de datos afectados por la RO que hay que descartar para calibrar modelos
-        Ndatos_RO_izq = max(np.trunc(1*(10/arch.TS_MIN)), 1)
-        Ndatos_RO_der = max(np.trunc(5*(10/arch.TS_MIN)), 1)
+        Ndatos_RO_izq = int(max(np.trunc(1*(10/arch.TS_MIN)), 1))
+        Ndatos_RO_der = int(max(np.trunc(5*(10/arch.TS_MIN)), 1))
         
         filt_cgm_ = copy.deepcopy(filt_cgm)
         

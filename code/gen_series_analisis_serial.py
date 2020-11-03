@@ -142,8 +142,8 @@ def gen_series_analisis_serial(parque1, parque2, nom_series_p1, nom_series_p2,
     nom_series_p1 = [s + '_' + str(parque1.id) for s in nom_series_p1]
     nom_series_p2 = [s + '_' + str(parque2.id) for s in nom_series_p2]
     '''
+    
     nom_series_tot = nom_series_p1 + nom_series_p2
-
     
     M1_m = np.ma.array(M1_, mask=F1_.astype(int), fill_value=-999999).filled()
     M2_m = np.ma.array(M2_, mask=F2_.astype(int), fill_value=-999999).filled()
