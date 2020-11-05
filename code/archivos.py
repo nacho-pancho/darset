@@ -349,11 +349,12 @@ def leerArchi(nidCentral,tipoArchi):
             
         if (tipoDato == 'dir') and (vel != None):
             
-            velx, vely, vel3x, vel3y = velxy_from_veldir(vel, med, ident, nidCentral)    
+            velx, vely, vel3x, vel3y, vel3 = velxy_from_veldir(vel, med, ident, nidCentral)    
             medidas.append(velx)
             medidas.append(vely)
             medidas.append(vel3x)
             medidas.append(vel3y)
+            medidas.append(vel3)
             
             cosdir, sindir = cosin_from_dir(med, ident, nidCentral)
             medidas.append(cosdir)
@@ -523,11 +524,12 @@ def leerArchiPRONOS(nidCentral):
             
         if (tipoDato == 'dir') and (vel != None):
             
-            velx, vely, vel3x, vel3y  = velxy_from_veldir(vel, med, ident, nidCentral)               
+            velx, vely, vel3x, vel3y, vel3  = velxy_from_veldir(vel, med, ident, nidCentral)               
             medidas.append(velx)
             medidas.append(vely)
             medidas.append(vel3x)
             medidas.append(vel3y)
+            medidas.append(vel3)            
             
             cosdir, sindir = cosin_from_dir(med, ident, nidCentral)
             medidas.append(cosdir)
@@ -548,7 +550,7 @@ def velxy_from_veldir(vel, dir_, ident, nidCentral):
     velx = vel.muestras * [m.cos(m.radians(k)) for k in dir_.muestras]
     vely = vel.muestras * [m.sin(m.radians(k)) for k in dir_.muestras]
 
-    vel3 = (vel.muestras ** (3/2))
+    vel3 = (vel.muestras ** (3))
     vel3x = vel3 * [m.cos(m.radians(k)) for k in dir_.muestras]
     vel3y = vel3 * [m.sin(m.radians(k)) for k in dir_.muestras]
 
@@ -570,9 +572,12 @@ def velxy_from_veldir(vel, dir_, ident, nidCentral):
     
     med_vel3y = datos.Medida(proc, vel3y, vel.tiempo,'vel','vel3y' + ident + '_' + str(nidCentral),
                        -vel.maxval, vel.maxval, vel.nrep)        
+
+    med_vel3 = datos.Medida(proc, vel3, vel.tiempo,'vel','vel3' + ident + '_' + str(nidCentral),
+                       0, (vel.maxval)**3, vel.nrep)        
     
     
-    return med_velx, med_vely, med_vel3x, med_vel3y
+    return med_velx, med_vely, med_vel3x, med_vel3y, med_vel3
 
 ##############################################################################
 

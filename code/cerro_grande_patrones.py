@@ -35,7 +35,7 @@ if __name__ == '__main__':
     filtros1 = parque1.get_filtros()
     M1, F1, nom1, t1 = parque1.exportar_medidas()
     #nom_series_p1 = ['velGEN','dirGEN','velPRONOS','dirPRONOS','potSCADA']
-    nom_series_p1 = ['vel3xGEN','vel3yGEN']
+    nom_series_p1 = ['vel3GEN']
     nom_series_p1 = [s + '_' + str(nid_p1) for s in nom_series_p1]
     vel_GEN_p1 = parque1.medidores[0].get_medida('vel','gen')
     dir_GEN_p1 = parque1.medidores[0].get_medida('dir','gen')

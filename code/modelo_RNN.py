@@ -58,6 +58,10 @@ from sklearn import datasets, linear_model
 from sklearn.metrics import mean_squared_error, r2_score
 
 import gc
+import gaussianize as g
+
+
+series_g = []
 
 def my_loss(y_true, y_pred):
     
@@ -67,6 +71,9 @@ def my_loss(y_true, y_pred):
 
 
 def normalizar_datos(M, F, t, nom_series):
+
+    global series_g
+    '''
     # Normalizo datos 
     
     df_M = pd.DataFrame(M, index=t, columns=nom_series) 
@@ -85,14 +92,35 @@ def normalizar_datos(M, F, t, nom_series):
     max_pot = stats.at[ nom_series[-1], 'max']
     min_pot = stats.at[ nom_series[-1], 'min']        
 
+    '''
+    
+    M_n = copy.copy(M) 
+    max_pot = -99999999
+    min_pot = max_pot
+        
+    for col in range(M.shape[1]):            
+        idx_val = (F[:,col] == 0)         
+        x = M[idx_val, col]
+        out = g.Gaussianize(strategy='brute') 
+        out.fit(x)
+        M_n[idx_val, col] = np.squeeze(out.transform(x))
+        series_g.append(out)   
+    
     return M_n, max_pot, min_pot
 
 
 def desnormalizar_datos(datos, min_, max_):
     
+    print(series_g)
+    print(len(datos))
+    for kvect in range(len(datos)): 
+        datos[kvect] = np.squeeze(series_g[-1].inverse_transform(datos[kvect]))
+    
+    '''
     for kvect in range(len(datos)): 
         datos[kvect] = datos[kvect] * (max_-min_) + min_
-
+    '''
+        
     return datos       
 
 
@@ -815,7 +843,7 @@ def estimar_ro_mvlr_ridge(X_train_n, y_train_n, X_test_n, y_test_n, X_val_n, y_v
     #print(X_tot_n.size())
     y_tot_n = np.concatenate((y_train_n, y_val_n), axis=0)
     #print(y_tot_n.size())    
-    regr = linear_model.RidgeCV()
+    regr = linear_model.RidgeCV(cv=3)
     
     wrapper = MultiOutputRegressor(regr)
     # fit the model on the whole dataset
@@ -858,7 +886,7 @@ def estimar_ro_mvlr_lasso(X_train_n, y_train_n, X_test_n, y_test_n, X_val_n, y_v
     #print(X_tot_n.size())
     y_tot_n = np.concatenate((y_train_n, y_val_n), axis=0)
     #print(y_tot_n.size())    
-    regr = linear_model.LassoCV(random_state=0, n_alphas=1000)
+    regr = linear_model.LassoCV(cv=3)
     
     wrapper = MultiOutputRegressor(regr)
     # fit the model on the whole dataset
