@@ -161,9 +161,10 @@ def path_carpeta_datos(ncentral):
 
 ##############################################################################
 
-def path_carpeta_resultados(nidcentral, tipo_calc):
+def path_carpeta_resultados(nidcentral, tipo_calc, tipo_norm):
     carpeta_central = path_central(nidcentral)
-    carpeta_res = carpeta_central + 'resultados_' + tipo_calc + '_' + str(TS_MIN) + '/'
+    carpeta_res = carpeta_central + 'resultados_' + tipo_calc + '_' + tipo_norm \
+    + '_' + str(TS_MIN) + '/'
     if not os.path.exists(carpeta_res):
         os.mkdir(carpeta_res)
     return carpeta_res

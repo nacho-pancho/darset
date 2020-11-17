@@ -19,8 +19,15 @@ import datetime
 
 if __name__ == '__main__':
 
-    
+    tipo_calc = 'NN'
+    #tipo_calc = 'MVLR'
+    #tipo_calc = 'MVLR_L'
+    #tipo_calc = 'MVLR_R'
+        
     flg_estimar_RO = True
+    flg_recorte_SMEC = False
+    flg_print_datos = False    
+
     
     
     plt.close('all')
@@ -52,8 +59,8 @@ if __name__ == '__main__':
     nid_p2 = 46
     parque2 = archivos.leerArchivosCentral(nid_p2)
     
-    tini = datetime.datetime(2020, 5, 1)  
-    tfin = datetime.datetime(2020, 7, 1)
+    tini = datetime.datetime(2020, 9, 1)  
+    tfin = datetime.datetime(2020, 10, 1)
     archi = archivos.archi_ro_pendientes(nid_p2)
     parque2.calcular_liq_pendientes(tini, tfin, archi)
     
@@ -78,5 +85,5 @@ if __name__ == '__main__':
 
     modelo.main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, 
                    dt_ini_calc, dt_fin_calc, delta_print_datos, meds_plot_p1,
-                   meds_plot_p2)
+                   meds_plot_p2, flg_print_datos, flg_recorte_SMEC, tipo_calc )
     

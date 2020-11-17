@@ -70,59 +70,64 @@ def my_loss(y_true, y_pred):
     return custom_loss
 
 
-def normalizar_datos(M, F, t, nom_series):
+def normalizar_datos(M, F, t, nom_series, tipo_norm):
 
-    global series_g
-    '''
+    print('Normalizando datos')
+    
     # Normalizo datos 
-    
-    df_M = pd.DataFrame(M, index=t, columns=nom_series) 
-    df_F = pd.DataFrame(F, index=t, columns=nom_series)
-    
-    df_M_ = df_M[(df_F == 0).all(axis=1)]
-    
-    stats = df_M_.describe()
-    stats = stats.transpose()
+    if tipo_norm == 'Standard':
 
-    M_max = np.tile(stats['max'].values,(len(M),1))
-    M_min = np.tile(stats['min'].values,(len(M),1))
-
-    M_n = (M - M_min)/(M_max - M_min)
+        df_M = pd.DataFrame(M, index=t, columns=nom_series) 
+        df_F = pd.DataFrame(F, index=t, columns=nom_series)
         
-    max_pot = stats.at[ nom_series[-1], 'max']
-    min_pot = stats.at[ nom_series[-1], 'min']        
-
-    '''
-    
-    M_n = copy.copy(M) 
-    max_pot = -99999999
-    min_pot = max_pot
+        df_M_ = df_M[(df_F == 0).all(axis=1)]
         
-    for col in range(M.shape[1]):            
-        idx_val = (F[:,col] == 0)         
-        x = M[idx_val, col]
-        out = g.Gaussianize(strategy='brute') 
-        out.fit(x)
-        M_n[idx_val, col] = np.squeeze(out.transform(x))
-        series_g.append(out)   
+        stats = df_M_.describe()
+        stats = stats.transpose()
+        
+        M_max = np.tile(stats['max'].values,(len(M),1))
+        M_min = np.tile(stats['min'].values,(len(M),1))
+        
+        M_n = (M - M_min)/(M_max - M_min)
+            
+        max_pot = stats.at[ nom_series[-1], 'max']
+        min_pot = stats.at[ nom_series[-1], 'min'] 
+
+    elif tipo_norm == 'Gauss':
+
+        global series_g
+        M_n = copy.copy(M) 
+        max_pot = -99999999
+        min_pot = max_pot
+            
+        for col in range(M.shape[1]):            
+            idx_val = (F[:,col] == 0)         
+            x = M[idx_val, col]
+            out = g.Gaussianize(strategy='brute') 
+            out.fit(x)
+            x_n = np.squeeze(out.transform(x))
+            M_n[idx_val, col] = x_n
+            series_g.append(out)      
+
+    else:
+        raise Exception('Tipo de normalizacion ' + tipo_norm + ' no implementada.')
     
     return M_n, max_pot, min_pot
 
 
-def desnormalizar_datos(datos, min_, max_):
-    
-    print(series_g)
-    print(len(datos))
-    for kvect in range(len(datos)): 
-        datos[kvect] = np.squeeze(series_g[-1].inverse_transform(datos[kvect]))
-    
-    '''
-    for kvect in range(len(datos)): 
-        datos[kvect] = datos[kvect] * (max_-min_) + min_
-    '''
-        
-    return datos       
+def desnormalizar_datos(datos, min_, max_, tipo_norm):
 
+    print('Desnormalizando datos')
+    
+    for kvect in range(len(datos)): 
+        if tipo_norm == 'Gauss':
+            datos[kvect] = np.squeeze(series_g[-1].inverse_transform(datos[kvect].T))
+        elif tipo_norm == 'Standard':
+            datos[kvect] = datos[kvect] * (max_- min_) + min_
+        else: 
+            raise Exception('Tipo de normalizacion ' + tipo_norm + ' no implementada.')
+    
+    return datos       
 
 # Esta función crea RO y sus patrones para posteriormente ser calculados
 def patrones_ro(delta, F, M_n, t, dt_ini_calc, dt_fin_calc):
@@ -335,7 +340,8 @@ def estimar_ro(X_train_n, y_train_n, X_val_n, y_val_n, X_test_n, y_test_n,
 
 def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_ini_calc,
             dt_fin_calc, delta_print_datos, meds_plot_p1, meds_plot_p2, 
-            flg_print_datos = False, flg_recorte_SMEC = True, tipo_calc = 'NN'): 
+            flg_print_datos = False, flg_recorte_SMEC = True, tipo_calc = 'NN',
+            tipo_norm = 'Gauss'): 
 
     
     nid_parque = parque2.id   
@@ -364,7 +370,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
     
         # Normalizo datos 
         
-        M_n, max_pot, min_pot = normalizar_datos(M, F, t, nom_series)
+        M_n, max_pot, min_pot = normalizar_datos(M, F, t, nom_series, tipo_norm)
                            
         pot = M[:,-1]
        
@@ -375,7 +381,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
         
         # Busco secuencias de patrones que quiero calcular su pot
         
-        delta = max(int(5*(10/archivos.TS_MIN)), 1) # agrega delta datos 10min antes y despues de las RO encontradas
+        delta = max(int(10*(10/archivos.TS_MIN)), 1) # agrega delta datos 10min antes y despues de las RO encontradas
         Pats_Data_n, Pats_Filt, Pats_Calc, dtini_ro, dtfin_ro, kini_ro = \
             patrones_ro(delta, F, M_n, t, dt_ini_calc, dt_fin_calc)       
         n_ro = len(Pats_Data_n)
@@ -393,7 +399,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
         #ros = range(0, min(2,n_ro))
         #ros = [4]
      
-        carpeta_res = archivos.path_carpeta_resultados(nid_parque, tipo_calc)
+        carpeta_res = archivos.path_carpeta_resultados(nid_parque, tipo_calc, tipo_norm)
         
         for kRO in ros:
             
@@ -409,11 +415,6 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             X_RO_n = Pats_Data_n[kRO][~Pats_Filt[kRO]].flatten()
             X_RO_n = np.asmatrix(X_RO_n)              
 
-            # el mejor esta dando  en (3,3), tope de escala por ahora!
-            # k1_lst = [0.25, 0.5, 1, 2, 3]
-            #k2_lst = [0.25, 0.5, 1, 2, 3]
-            k1_lst = [3]
-            k2_lst = [3]
             
             L = largos_ro[kRO]
             print(f"ro: {kRO} L: {L} ")
@@ -422,43 +423,57 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             X_train_n, X_test_n, X_val_n, y_train_n, y_test_n, y_val_n, dt_train,\
               dt_test, dt_val = train_test_val_split(X_n, y_n, dt, 0.6, 0.2, 0.2, 42)
 
+            [y_test, y_train, y_val] = \
+                desnormalizar_datos([y_test_n, y_train_n, y_val_n], min_pot,
+                                    max_pot, tipo_norm)              
+
             # calibro y calculo para la RO y datos test y entrenamiento                        
             if tipo_calc == 'NN':
-                k1, k2, b_v, error_pu, std_pu, y_RO_e, y_test_e, y_test, \
-                y_train_e, y_train, y_val_e_opt, y_val, NParametros = \
-                    estimar_ro_iter(k1_lst, k2_lst, X_train_n, y_train_n, X_val_n,
-                                    y_val_n, X_test_n, y_test_n, X_RO_n,
-                                    carpeta_ro, min_pot, max_pot)                     
+                k1, k2, b_v, error_pu, std_pu, y_RO_e, y_test_e, y_train_e,
+                y_val_e, NParametros = \
+                    estimar_ro_NN(X_train_n, y_train_n, y_train, X_val_n,
+                                    y_val_n, y_val, X_test_n, y_test_n, y_test,
+                                    X_RO_n, carpeta_ro, min_pot, max_pot, tipo_norm)                     
     
             elif tipo_calc == 'MVLR':                
-                k1, k2, b_v, error_pu, std_pu, y_RO_e, y_test_e, y_test, \
-                y_train_e, y_train, y_val_e, y_val, NParametros = \
+                y_RO_n_e, y_test_n_e, y_train_n_e, y_val_n_e, NParametros = \
                     estimar_ro_mvlr(X_train_n, y_train_n, X_test_n, y_test_n, 
                                     X_val_n, y_val_n, X_RO_n, carpeta_ro, 
-                                    min_pot, max_pot)
+                                    min_pot, max_pot, tipo_norm)
 
             elif tipo_calc == 'MVLR_R':                
-                k1, k2, b_v, error_pu, std_pu, y_RO_e, y_test_e, y_test, \
-                y_train_e, y_train, y_val_e, y_val, NParametros = \
+                y_RO_n_e, y_test_n_e, y_train_n_e, y_val_n_e, NParametros = \
                     estimar_ro_mvlr_ridge(X_train_n, y_train_n, X_test_n, y_test_n, 
                                     X_val_n, y_val_n, X_RO_n, carpeta_ro, 
-                                    min_pot, max_pot)
+                                    min_pot, max_pot, tipo_norm)
             elif tipo_calc == 'MVLR_L':                
-                k1, k2, b_v, error_pu, std_pu, y_RO_e, y_test_e, y_test, \
-                y_train_e, y_train, y_val_e, y_val, NParametros = \
+                y_RO_n_e, y_test_n_e, y_train_n_e, y_val_n_e, NParametros = \
                     estimar_ro_mvlr_lasso(X_train_n, y_train_n, X_test_n, y_test_n, 
                                     X_val_n, y_val_n, X_RO_n, carpeta_ro, 
-                                    min_pot, max_pot)                    
+                                    min_pot, max_pot, tipo_norm)                    
             else:
                 raise Exception('Tipo de cálculo ' + tipo_calc + ' no implementado.')
-
+            
+            
+            if tipo_calc != 'NN':
+                k1 = -1
+                k2 = -1             
+                datos_norm = [y_test_n_e, y_train_n_e, y_val_n_e, y_RO_n_e]
+                [y_test_e, y_train_e, y_val_e, y_RO_e] = \
+                    desnormalizar_datos(datos_norm, min_pot, max_pot, tipo_norm)                
+                
+                [error_pu, std_pu, b_v] = \
+                    errores_modelo(y_train, y_train_e, y_test, y_test_e, y_val, y_val_e)            
+            
+            
             pot_estimada[kini_RO:kini_RO+y_RO_e.size] = y_RO_e            
             
             y_RO_gen = pot[kini_RO:kini_RO+y_RO_e.size]
                                    
             # estimo la potencia con probabilidad de excedencia 70 %            
             pPE70, ENS_VE, delta_70, E_est_PE70, ENS_PE_70, E_dif_PE30, E_dif_PE70, E_dif_VE = \
-                estimar_pot_PE(y_test_e, y_train_e, y_test, y_train, y_RO_e, y_RO_gen, carpeta_ro)
+                estimar_pot_PE(y_test_e, y_train_e, y_test, y_train, y_RO_e,
+                               y_RO_gen, carpeta_ro, parque2.PAutorizada)
 
             pot_estimada_PE70[kini_RO:kini_RO+y_RO_e.size] = pPE70
 
@@ -552,7 +567,8 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             plt.savefig(carpeta_datos + str(kcalc) + '.png' )
         
 
-def estimar_pot_PE(y_test_e, y_train_e, y_test, y_train, y_RO_e, y_RO_gen, carpeta_ro):
+def estimar_pot_PE(y_test_e, y_train_e, y_test, y_train, y_RO_e, y_RO_gen,
+                   carpeta_ro, Pmax):
 
     '''
     # para calcular PE 70 % uso datos de entrenamiento y validación.
@@ -636,7 +652,9 @@ def estimar_pot_PE(y_test_e, y_train_e, y_test, y_train, y_RO_e, y_RO_gen, carpe
     plt.plot(y_e_acum_sort, y_dif_acum_sort_PE30, label = 'PE30')
     plt.plot(y_e_acum_sort, y_dif_acum_sort_VE, label = 'VE')
 
-    plt.axvline(y_e_RO_acum, color='k', linestyle='--', label = 'E_estimada')
+    plt.axvline(y_e_RO_acum, color='k', linestyle='--', label = 'E_Estimada')
+    EMax = Pmax * len(y_RO_e) / 6
+    plt.axvline(EMax, color='k', linestyle='-.', label = 'E_Max')
     plt.legend()
     plt.grid()
     plt.xlabel('E_modelo [MWh]')
@@ -743,9 +761,16 @@ def graficar_ejemplos(y_e, y_r, t, meds, parque, delta_print_datos, carpeta_ro):
         plt.close('all')
         
 
-def estimar_ro_iter (k1_lst, k2_lst, X_train_n, y_train_n, X_val_n, y_val_n,
-                     X_test_n, y_test_n, X_RO_n, carpeta_ro, min_pot, max_pot):
+def estimar_ro_NN (X_train_n, y_train_n, y_train, X_val_n, y_val_n, y_val,
+                   X_test_n, y_test_n, y_test, X_RO_n, carpeta_ro, min_pot, 
+                   max_pot, tipo_norm):
 
+    # el mejor esta dando  en (3,3), tope de escala por ahora!
+    # k1_lst = [0.25, 0.5, 1, 2, 3]
+    #k2_lst = [0.25, 0.5, 1, 2, 3]
+    k1_lst = [3]
+    k2_lst = [3]
+    
     # itero hasta encontrar k1 y k2 óptimo
     b_v_opt = 99999
     
@@ -755,8 +780,6 @@ def estimar_ro_iter (k1_lst, k2_lst, X_train_n, y_train_n, X_val_n, y_val_n,
     idx = np.arange(0, len(k1_lst)*len(k2_lst))
     df_iter_k = pd.DataFrame(index=idx, columns=cols_iter_k)    
     k_idx = 0
-   
-    [y_test, y_train, y_val] = desnormalizar_datos([y_test_n, y_train_n, y_val_n], min_pot, max_pot)
     
     for k1 in k1_lst:
         for k2 in k2_lst:
@@ -766,7 +789,8 @@ def estimar_ro_iter (k1_lst, k2_lst, X_train_n, y_train_n, X_val_n, y_val_n,
                            carpeta_ro, k1, k2)               
   
             datos_norm = [y_test_n_e, y_train_n_e, y_val_n_e, y_RO_n_e]
-            [y_test_e, y_train_e, y_val_e, y_RO_e] = desnormalizar_datos(datos_norm, min_pot, max_pot)                
+            [y_test_e, y_train_e, y_val_e, y_RO_e] = \
+                desnormalizar_datos(datos_norm, min_pot, max_pot, tipo_norm)                
             
             [error_pu, std_pu, b_v] = \
                 errores_modelo(y_train, y_train_e, y_test, y_test_e, y_val, y_val_e)
@@ -787,23 +811,18 @@ def estimar_ro_iter (k1_lst, k2_lst, X_train_n, y_train_n, X_val_n, y_val_n,
                 y_test_e_opt = np.array(y_test_e, copy=True)
                 y_train_e_opt = np.array(y_train_e, copy=True)
                 y_val_e_opt = np.array(y_val_e, copy=True)
-                NParametros_opt = NParametros
-                
+                NParametros_opt = NParametros                
     
     df_iter_k.to_csv(carpeta_ro + 'iter_k1k2.txt', index=True, sep='\t',
              float_format='%.2f')
-    
-    
+        
     return (k1_opt, k2_opt, b_v_opt, error_pu_opt, std_pu_opt, y_RO_e_opt, 
-        y_test_e_opt, y_test, y_train_e_opt, y_train, y_val_e_opt, y_val, 
-        NParametros_opt)
+        y_test_e_opt, y_train_e_opt, y_val_e_opt, NParametros_opt)
     
 
 def estimar_ro_mvlr(X_train_n, y_train_n, X_test_n, y_test_n, X_val_n, y_val_n,
-                    X_RO_n, carpeta_ro, min_pot, max_pot):
-    
-    [y_test, y_train, y_val] = desnormalizar_datos([y_test_n, y_train_n, y_val_n], min_pot, max_pot)
-    
+                    X_RO_n, carpeta_ro, min_pot, max_pot, tipo_norm):
+        
     
     # Create linear regression object
     regr = linear_model.LinearRegression()
@@ -823,21 +842,11 @@ def estimar_ro_mvlr(X_train_n, y_train_n, X_test_n, y_test_n, X_val_n, y_val_n,
     
     NParametros = len(regr.coef_)
     
-    datos_norm = [y_test_n_e, y_train_n_e, y_val_n_e, y_RO_n_e]
-    [y_test_e, y_train_e, y_val_e, y_RO_e] = desnormalizar_datos(datos_norm, min_pot, max_pot) 
-    
-    [error_pu, std_pu, b_v] = \
-        errores_modelo(y_train, y_train_e, y_test, y_test_e, y_val, y_val_e)
-    
-    return (-1, -1, b_v, error_pu, std_pu, y_RO_e, 
-            y_test_e, y_test, y_train_e, y_train, y_val_e, y_val, NParametros)
+    return (y_RO_n_e, y_test_n_e, y_train_n_e, y_val_n_e, NParametros)
 
 
 def estimar_ro_mvlr_ridge(X_train_n, y_train_n, X_test_n, y_test_n, X_val_n, y_val_n,
-                    X_RO_n, carpeta_ro, min_pot, max_pot):
-    
-    [y_test, y_train, y_val] = desnormalizar_datos([y_test_n, y_train_n, y_val_n], min_pot, max_pot)
-    
+                    X_RO_n, carpeta_ro, min_pot, max_pot, tipo_norm):
     
     X_tot_n = np.concatenate((X_train_n, X_val_n), axis=0)
     #print(X_tot_n.size())
@@ -865,22 +874,14 @@ def estimar_ro_mvlr_ridge(X_train_n, y_train_n, X_test_n, y_test_n, X_val_n, y_v
     y_train_n_e = wrapper.predict(X_train_n)
     y_val_n_e = wrapper.predict(X_val_n)
     y_RO_n_e = wrapper.predict(X_RO_n)
+
     
-    
-    datos_norm = [y_test_n_e, y_train_n_e, y_val_n_e, y_RO_n_e]
-    [y_test_e, y_train_e, y_val_e, y_RO_e] = desnormalizar_datos(datos_norm, min_pot, max_pot) 
-    
-    [error_pu, std_pu, b_v] = \
-        errores_modelo(y_train, y_train_e, y_test, y_test_e, y_val, y_val_e)
-    
-    return (-1, -1, b_v, error_pu, std_pu, y_RO_e, 
-            y_test_e, y_test, y_train_e, y_train, y_val_e, y_val, NParametros)
+    return (y_RO_n_e, y_test_n_e, y_train_n_e, y_val_n_e, NParametros)
 
 
 def estimar_ro_mvlr_lasso(X_train_n, y_train_n, X_test_n, y_test_n, X_val_n, y_val_n,
-                    X_RO_n, carpeta_ro, min_pot, max_pot):
-    
-    [y_test, y_train, y_val] = desnormalizar_datos([y_test_n, y_train_n, y_val_n], min_pot, max_pot)
+                    X_RO_n, carpeta_ro, min_pot, max_pot, tipo_norm):
+
     
     X_tot_n = np.concatenate((X_train_n, X_val_n), axis=0)
     #print(X_tot_n.size())
@@ -908,18 +909,11 @@ def estimar_ro_mvlr_lasso(X_train_n, y_train_n, X_test_n, y_test_n, X_val_n, y_v
     y_train_n_e = wrapper.predict(X_train_n)
     y_val_n_e = wrapper.predict(X_val_n)
     y_RO_n_e = wrapper.predict(X_RO_n)
-    
-    
-    datos_norm = [y_test_n_e, y_train_n_e, y_val_n_e, y_RO_n_e]
-    [y_test_e, y_train_e, y_val_e, y_RO_e] = desnormalizar_datos(datos_norm, min_pot, max_pot) 
-    
-    [error_pu, std_pu, b_v] = \
-        errores_modelo(y_train, y_train_e, y_test, y_test_e, y_val, y_val_e)
-    
-    return (-1, -1, b_v, error_pu, std_pu, y_RO_e, 
-            y_test_e, y_test, y_train_e, y_train, y_val_e, y_val, NParametros)
 
-def train_test_val_split(X_n, y_n, dt, train_pu, test_pu, val_pu, rs ):
+    
+    return (y_RO_n_e, y_test_n_e, y_train_n_e, y_val_n_e, NParametros)
+
+def train_test_val_split(X_n, y_n, dt, train_pu, test_pu, val_pu, rs):
  
     resto_pu = val_pu + test_pu
     

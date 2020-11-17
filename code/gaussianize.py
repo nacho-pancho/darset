@@ -120,8 +120,9 @@ class Gaussianize(sklearn.base.TransformerMixin):
         elif self.strategy == 'boxcox':
             return np.array([(1. + lmbda_i * y_i) ** (1./lmbda_i) for y_i, lmbda_i in zip(y.T, self.coefs_)]).T
         elif self.strategy == 'brute':
-            kint = np.array([norm.cdf(y_i) * len(self.x_) + 0.5 for y_i in y.T]).astype(int)
-            return np.sort(self.x_)[kint]
+            kint = np.round([norm.cdf(y_i) * len(self.x_) + 0.5 for y_i in y.T]).astype(int)
+            #kint = np.round([norm.cdf(y_i) * len(self.x_) + 0.5 for y_i in y.T]).astype(int)
+            return np.sort(self.x_, axis = None)[kint - 1]
         else:
             raise NotImplementedError("Inversion not supported for gaussianization transform '%s'" % self.strategy)
 
