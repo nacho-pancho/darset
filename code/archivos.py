@@ -168,7 +168,20 @@ def path_carpeta_resultados(nidcentral, tipo_calc, tipo_norm):
     if not os.path.exists(carpeta_res):
         os.mkdir(carpeta_res)
     return carpeta_res
-     
+##############################################################################
+
+def path_carpeta_lentes(carpeta_res):
+    
+    carpeta_lentes = carpeta_res + 'lentes/'
+    if not os.path.exists(carpeta_lentes):
+        os.mkdir(carpeta_lentes)
+    return carpeta_lentes    
+
+##############################################################################
+
+def archi_lente(nombre, khora):
+    archi = 'l_' + nombre + '_h' + str(khora) + '.npy' 
+    return archi 
 ##############################################################################
     
 def leerCampo(file):

@@ -38,7 +38,7 @@ if __name__ == '__main__':
     filtros1 = parque1.get_filtros()
     M1, F1, nom1, t1 = parque1.exportar_medidas()
     #nom_series_p1 = ['velGEN','dirGEN','velPRONOS','dirPRONOS','potSCADA']
-    nom_series_p1 = ['velxGEN', 'velyGEN']
+    nom_series_p1 = ['velxSCADA', 'velySCADA']
     nom_series_p1 = [s + '_' + str(nid_p1) for s in nom_series_p1]
     vel_GEN_p1 = parque1.medidores[0].get_medida('vel','gen')
     dir_GEN_p1 = parque1.medidores[0].get_medida('dir','gen')
@@ -72,7 +72,8 @@ if __name__ == '__main__':
 
     modelo.main_ro( flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, 
                    dt_ini_calc, dt_fin_calc, delta_print_datos, meds_plot_p1,
-                   meds_plot_p2, flg_print_datos, flg_recorte_SMEC, tipo_calc, tipo_norm )
+                   meds_plot_p2, flg_print_datos, flg_recorte_SMEC, tipo_calc, 
+                   tipo_norm )
 
 
 

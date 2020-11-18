@@ -6,7 +6,22 @@ Created on Mon Nov 16 11:46:05 2020
 """
 import numpy as np
 from scipy.stats import norm
+import archivos as archi
+import fnmatch
+import os
 
+
+def cargar_lentes(carpeta_lentes, nombres):
+    
+    # cargo TODOS los lentes asociados a los nombres de las series
+    lentes = {}
+    for filename in os.listdir(carpeta_lentes):
+        for nombre in nombres:            
+            if filename.endswith('.npy') and fnmatch.fnmatch(filename, '*' + nombre + '*'):
+                lentes[filename] = np.load(carpeta_lentes + filename)
+    #print(lentes)            
+        
+    return lentes
 
 
 def GenerarYGuardarLentes( Mr, Filt, t, nombres, hs_overlap, carpeta_lentes):
@@ -36,145 +51,91 @@ def GenerarYGuardarLentes( Mr, Filt, t, nombres, hs_overlap, carpeta_lentes):
             mask = np.in1d(h, inth)
             #idxh = [horas.index(hi) for hi in inth]
             lente = np.sort(m[mask], axis=None) 
-            archi = carpeta_lentes + 'l_' + nombres[col] + '_h' + str(h_lente) + '.npy'          
+            archi_ = archi.archi_lente(nombres[col], h_lente)
 
-            np.save(archi, lente) 
+            np.save(carpeta_lentes + archi_, lente) 
 
 
 def GaussianisarSeries( Mr, Filt, t, nombres, carpeta_lentes ):
 
-    # cargo TODOS los lentes(se puede mejorar cargando solo los lentes de los nombres)
-    lentes = {}
-    for filename in os.listdir('C:/lentes/'):
-        if filename.endswith('.npy'):
-            lentes[filename] = np.load('C:/lentes/' + filename)
+    
+    print('Gaussianizando Series')
     
     horas = np.array([ti.hour for ti in t])
     #print(horas)    
-
-    Mg = np.empty_like(Mr)
+    lentes = cargar_lentes(carpeta_lentes, nombres)
+        
+    Mg = np.copy(Mr)
         
     for kSerie in range(Mr.shape[1]):
-        m = Mr[:, kSerie]
-        for k in range(len(m)):
-            if (Filt[k, kSerie] == 0):                
-                h = horas[k]               
-                archi_lente = archi.archi_lente(nombre, h)
-                lente = lentes[archi_lente]
-                ni = len(lente);
-                ii = max(np.where(lentes <= m[k])) # le saco el menor o igual xq me esta dando NaN
-                if not ii:   # menor que el menor dato 
-                  paux = 0.5             
-                elif (ii == ni)    % mayor o igual que el mayor dato
-                  paux = (ii - 0.5)
-                else
-                  paux = (ii - 0.5) * (m[k]-lente[ii]) + (ii-1.5) * (lente[ii + 1] - m[k])
-                  paux = paux / (lentes[ii+1]-lentes[ii])
-                paux = max( paux, 0.5 )
-                paux = paux / ni                
-                Mg[k, kSerie] = norm.ppf(paux)
+        idx_val = (Filt[:, kSerie] == 0)
+        m = Mr[idx_val, kSerie]
+        hs = horas[idx_val]
+        archis_lentes = [ archi.archi_lente(nombres[kSerie], hi) for hi in hs ]
+
+        paux_lst = []        
+        for k in range(len(m)):              
+            h = hs[k]               
+            archi_lente = archis_lentes[k]
+            lente = lentes[archi_lente]
+            ni = len(lente);
+            ii = max(np.where(lente <= m[k])) # le saco el menor o igual xq me esta dando NaN
+            #print(ii)
+            if ii.size != 0:   # menor que el menor dato 
+              paux = 0.5             
+            elif (ii == ni):    # mayor o igual que el mayor dato
+              paux = (ii - 0.5)
+            else:
+              paux = (ii - 0.5) * (m[k] - lente[ii]) + (ii - 1.5) * (lente[ii + 1] - m[k])
+              paux = paux / (lentes[ii+1]-lentes[ii])
+            paux = max( paux, 0.5 )
+            paux = paux / ni
+            
+            paux_lst.append(paux)
+            
+        Mg[idx_val, kSerie] = norm.ppf(paux_lst)
+        
+    
+    print(Mg)
 
     return Mg
 
 
-def DesGaussianizarSeries( Mg, Filt, t, nombres, carpeta_lentes )
+def DesGaussianizarSeries( Mg, Filt, t, nombres, carpeta_lentes ):
 
-    horas = np.array([ti.hour for ti in t])
+    print('DesGaussianizando Series')
+      
+    lentes = cargar_lentes(carpeta_lentes, nombres)
     
-    # cargo TODOS los lentes (se puede mejorar cargando solo los lentes de los nombres)
-    lentes = {}
-    for filename in os.listdir('C:/lentes/'):
-        if filename.endswith('.npy'):
-            lentes[filename] = np.load('C:/lentes/' + filename)
+    Mr = Mg
+    
+    for k_lst in range(len(Mg)):
+        nombre = nombres[k_lst]
+        for k_serie in range(len(Mg[k_lst])):
 
-    
-    Mr = norm.cdf(Mg);
-    
-    for kSerie in range(Mg.shape[1]):
-        m = Mg[:, kSerie]
-        for k in range(len(m)):
-            if (Filt[k, kSerie] == 0):                
-                h = horas[k]               
-                archi_lente = archi.archi_lente(nombre, h)
+            if (Filt != None):
+                idx_val = (Filt[k_lst][k_serie] == 0)
+            else:
+                idx_val = range(0, len(Mg[k_lst][k_serie]))
+
+                
+            mg = Mg[k_lst][k_serie][idx_val]
+            ts = t[k_lst][k_serie][idx_val]
+            hs = [ti.hour for ti in ts]
+            archis_lentes = [ archi.archi_lente(nombre, hi) for hi in hs ] 
+
+            m_lente = []
+            for k in range(len(mg)):
+                h = hs[k]               
+                archi_lente = archis_lentes[k]
                 lente = lentes[archi_lente]
-                Mr[]
+                kidx_lente = int(norm.cdf(mg[k]) * len(lente) - 0.5)
+                m_lente.append(lente[kidx_lente])
+            
+            Mr[k_lst][k_serie][idx_val] = m_lente   
 
-
-    for t=1:NDatos
-       if filtro(t)== 1 
-        h=hora(t,1);
-        eval(['lentes=' tipoSeries 'lentes' num2str(1) 'h' num2str(h) ';']);
-        Xr(t,1:NCrons)=quantile(lentes,Xr(t,1:NCrons));   
-       else
-          Xr(t,1:NCrons)=PotR(t);
-       end        
-    end
-    
     return Mr
     
     
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-
-'''
-Xg=Xr;
-NDatos=length(Xr(:,1));
-NSeries=length(Xr(1,:));
-eval(['load lentes/' tipoSeries ' *']);
-for v=1:NSeries
-    serie_r=squeeze(Xr(:,v));
-    for t=1:NDatos
-        if serie_r(t)~=nodata
-            h=hora(t,1);
-            eval(['lentes=' tipoSeries 'lentes' num2str(v) 'h' num2str(h) ';']);
-            ni=numel(lentes);
-            ii=max(find(lentes<=Xg(t,v)));% le saco el menor o igual xq me esta dando NaN
-            if isempty(ii)   % menor que el menor dato 
-              paux=0.5;             
-            elseif ii==ni    % mayor o igual que el mayor dato
-              paux=(ii-.5);
-            else
-              paux=(ii-.5)*(Xg(t,v)-lentes(ii))+(ii-1.5)*(lentes(ii+1)-Xg(t,v));
-              paux=paux/(lentes(ii+1)-lentes(ii));
-            end
-            paux=max(paux,0.5);
-            paux=paux/ni;
-            Xg(t,v)=norminv(paux,0,1);
-            if isnan(Xg(t,v))
-                input('ERROR Y/N [Y]: ', 's')
-            end
-        end
-    end
-    idx=find(Xg(:,v)~=nodata);
-    figure
-    hist(Xg(idx,v),100);
-    [h,p] = chi2gof(Xg(idx,v),'Alpha',0.01);
-    title (['chi2gof -> h = ' num2str(h,3) ' , p = ' num2str(p,3) ]);
-end
-eval(['clear ' tipoSeries 'lentes'  '*']);
-
-end
-
-'''
