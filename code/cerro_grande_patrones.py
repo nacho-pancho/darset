@@ -26,8 +26,8 @@ if __name__ == '__main__':
     flg_recorte_SMEC = False
     flg_print_datos = False
     
-    tipo_norm = 'Gauss'
-    #tipo_norm = 'Standard'
+    #tipo_norm = 'Gauss'
+    tipo_norm = 'Standard'
     
     plt.close('all')
     
