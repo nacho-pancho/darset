@@ -79,15 +79,18 @@ def GaussianisarSeries( Mr, Filt, t, nombres, carpeta_lentes ):
             archi_lente = archis_lentes[k]
             lente = lentes[archi_lente]
             ni = len(lente);
-            ii = max(np.where(lente <= m[k])) # le saco el menor o igual xq me esta dando NaN
-            #print(ii)
-            if ii.size != 0:   # menor que el menor dato 
+            ii = np.amax(np.where(lente <= m[k])) # le saco el menor o igual xq me esta dando NaN
+
+            #print(ii)            
+            if (ii.size == 0):   # menor que el menor dato 
               paux = 0.5             
-            elif (ii == ni):    # mayor o igual que el mayor dato
+            elif (ii == ni-1):    # mayor o igual que el mayor dato
               paux = (ii - 0.5)
             else:
               paux = (ii - 0.5) * (m[k] - lente[ii]) + (ii - 1.5) * (lente[ii + 1] - m[k])
-              paux = paux / (lentes[ii+1]-lentes[ii])
+              paux = paux / (lente[ii+1]-lente[ii])
+
+                       
             paux = max( paux, 0.5 )
             paux = paux / ni
             
@@ -96,7 +99,7 @@ def GaussianisarSeries( Mr, Filt, t, nombres, carpeta_lentes ):
         Mg[idx_val, kSerie] = norm.ppf(paux_lst)
         
     
-    print(Mg)
+    #print(Mg)
 
     return Mg
 
@@ -110,30 +113,39 @@ def DesGaussianizarSeries( Mg, Filt, t, nombres, carpeta_lentes ):
     Mr = Mg
     
     for k_lst in range(len(Mg)):
-        nombre = nombres[k_lst]
+
+        if len(nombres) == 1:
+            nombre = nombres[-1]
+        else:
+            nombre = nombres[k_lst]
+
         for k_serie in range(len(Mg[k_lst])):
 
             if (Filt != None):
                 idx_val = (Filt[k_lst][k_serie] == 0)
             else:
-                idx_val = range(0, len(Mg[k_lst][k_serie]))
-
-                
-            mg = Mg[k_lst][k_serie][idx_val]
+                idx_val = slice(len(Mg[k_lst][k_serie]))
+               
+            mg = norm.cdf(Mg[k_lst][k_serie][idx_val]) 
             ts = t[k_lst][k_serie][idx_val]
             hs = [ti.hour for ti in ts]
+            
+            #print(hs)
+            
             archis_lentes = [ archi.archi_lente(nombre, hi) for hi in hs ] 
 
             m_lente = []
+            #print(mg)
             for k in range(len(mg)):
                 h = hs[k]               
                 archi_lente = archis_lentes[k]
                 lente = lentes[archi_lente]
-                kidx_lente = int(norm.cdf(mg[k]) * len(lente) - 0.5)
+                kidx_lente = int((mg[k]) * len(lente) - 0.5)
                 m_lente.append(lente[kidx_lente])
             
             Mr[k_lst][k_serie][idx_val] = m_lente   
 
+    print('DesGaussianización Finalizada')
     return Mr
     
     

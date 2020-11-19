@@ -117,6 +117,7 @@ def normalizar_datos(M, F, t, nom_series, tipo_norm, carpeta):
        
         gauss.GenerarYGuardarLentes( M, F, t, nom_series, 4, carpeta)
         M_n = gauss.GaussianisarSeries( M, F, t, nom_series, carpeta )
+        print(M_n)
         
                 
     else:
@@ -489,9 +490,10 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
                 k1 = -1
                 k2 = -1             
                 datos_norm = [y_test_n_e, y_train_n_e, y_val_n_e, y_RO_n_e]
+                dt = [dt_test, dt_train, dt_val, dt_RO]
                 [y_test_e, y_train_e, y_val_e, y_RO_e] = \
-                    desnormalizar_datos(datos_norm, min_pot, max_pot, tipo_norm,
-                                        nom_series, carpeta_lentes)                
+                    desnormalizar_datos(datos_norm, dt, min_pot, max_pot, tipo_norm,
+                                        [nom_series[-1]], carpeta_lentes)                
                 
                 [error_pu, std_pu, b_v] = \
                     errores_modelo(y_train, y_train_e, y_test, y_test_e, y_val, y_val_e)            
@@ -816,8 +818,8 @@ def estimar_ro_NN (X_train_n, y_train_n, y_train, dt_train, X_val_n, y_val_n, y_
         for k2 in k2_lst:
             
             y_test_n_e, y_train_n_e, y_val_n_e, y_RO_n_e, NParametros = \
-                estimar_ro(X_train_n, y_train_n, X_val_n, y_val_n, X_test_n, y_test_n, X_RO_n,
-                           carpeta_ro, k1, k2)               
+                estimar_ro(X_train_n, y_train_n, X_val_n, y_val_n, X_test_n, 
+                           y_test_n, X_RO_n, carpeta_ro, k1, k2)               
   
             datos_norm = [y_test_n_e, y_train_n_e, y_val_n_e, y_RO_n_e]
             dt = [dt_test, dt_train, dt_val, dt_RO] 
