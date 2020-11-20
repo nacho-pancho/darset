@@ -454,7 +454,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             [y_test, y_train, y_val] = \
                 desnormalizar_datos([y_test_n, y_train_n, y_val_n], 
                                     [dt_test, dt_train, dt_val],
-                                    min_pot, max_pot, tipo_norm, nom_series,
+                                    min_pot, max_pot, tipo_norm, [nom_series[-1]],
                                     carpeta_lentes)              
 
             # calibro y calculo para la RO y datos test y entrenamiento                        
@@ -825,7 +825,7 @@ def estimar_ro_NN (X_train_n, y_train_n, y_train, dt_train, X_val_n, y_val_n, y_
             dt = [dt_test, dt_train, dt_val, dt_RO] 
             [y_test_e, y_train_e, y_val_e, y_RO_e] = \
                 desnormalizar_datos(datos_norm, dt, min_pot, max_pot, tipo_norm,
-                                    nom_series, carpeta_lentes)                
+                                    [nom_series[-1]], carpeta_lentes)                
             
             [error_pu, std_pu, b_v] = \
                 errores_modelo(y_train, y_train_e, y_test, y_test_e, y_val, y_val_e)

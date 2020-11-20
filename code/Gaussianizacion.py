@@ -9,6 +9,8 @@ from scipy.stats import norm
 import archivos as archi
 import fnmatch
 import os
+import copy
+
 
 
 def cargar_lentes(carpeta_lentes, nombres):
@@ -26,8 +28,8 @@ def cargar_lentes(carpeta_lentes, nombres):
 
 def GenerarYGuardarLentes( Mr, Filt, t, nombres, hs_overlap, carpeta_lentes):
 
+    print('Generando y guardando lentes.')
     horas = np.array([ti.hour for ti in t])
-    #print(horas)
 
     for col in range(Mr.shape[1]):            
         idx_val = (Filt[:, col] == 0) 
@@ -53,7 +55,8 @@ def GenerarYGuardarLentes( Mr, Filt, t, nombres, hs_overlap, carpeta_lentes):
             lente = np.sort(m[mask], axis=None) 
             archi_ = archi.archi_lente(nombres[col], h_lente)
 
-            np.save(carpeta_lentes + archi_, lente) 
+            np.save(carpeta_lentes + archi_, lente)
+        
 
 
 def GaussianisarSeries( Mr, Filt, t, nombres, carpeta_lentes ):
@@ -65,7 +68,7 @@ def GaussianisarSeries( Mr, Filt, t, nombres, carpeta_lentes ):
     #print(horas)    
     lentes = cargar_lentes(carpeta_lentes, nombres)
         
-    Mg = np.copy(Mr)
+    Mg = copy.deepcopy(Mr)
         
     for kSerie in range(Mr.shape[1]):
         idx_val = (Filt[:, kSerie] == 0)
@@ -99,7 +102,7 @@ def GaussianisarSeries( Mr, Filt, t, nombres, carpeta_lentes ):
         Mg[idx_val, kSerie] = norm.ppf(paux_lst)
         
     
-    #print(Mg)
+    print(Mg)
 
     return Mg
 
@@ -110,14 +113,11 @@ def DesGaussianizarSeries( Mg, Filt, t, nombres, carpeta_lentes ):
       
     lentes = cargar_lentes(carpeta_lentes, nombres)
     
-    Mr = Mg
+    Mr = copy.deepcopy(Mg)
     
     for k_lst in range(len(Mg)):
 
-        if len(nombres) == 1:
-            nombre = nombres[-1]
-        else:
-            nombre = nombres[k_lst]
+        nombre = nombres[min(k_lst, len(nombres) - 1)]
 
         for k_serie in range(len(Mg[k_lst])):
 
@@ -126,13 +126,19 @@ def DesGaussianizarSeries( Mg, Filt, t, nombres, carpeta_lentes ):
             else:
                 idx_val = slice(len(Mg[k_lst][k_serie]))
                
-            mg = norm.cdf(Mg[k_lst][k_serie][idx_val]) 
+            mg = norm.cdf(Mg[k_lst][k_serie][idx_val])
+            '''
+            print('mg')
+            print(mg)
+            '''
             ts = t[k_lst][k_serie][idx_val]
             hs = [ti.hour for ti in ts]
             
             #print(hs)
             
-            archis_lentes = [ archi.archi_lente(nombre, hi) for hi in hs ] 
+            archis_lentes = [ archi.archi_lente(nombre, hi) for hi in hs ]
+            
+            #print(archis_lentes)
 
             m_lente = []
             #print(mg)
@@ -142,9 +148,14 @@ def DesGaussianizarSeries( Mg, Filt, t, nombres, carpeta_lentes ):
                 lente = lentes[archi_lente]
                 kidx_lente = int((mg[k]) * len(lente) - 0.5)
                 m_lente.append(lente[kidx_lente])
+
+            '''
+            print('mr')
+            print(m_lente)
+            '''            
             
             Mr[k_lst][k_serie][idx_val] = m_lente   
-
+       
     print('DesGaussianización Finalizada')
     return Mr
     
