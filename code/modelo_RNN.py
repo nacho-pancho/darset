@@ -490,7 +490,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
                 k1 = -1
                 k2 = -1             
                 datos_norm = [y_test_n_e, y_train_n_e, y_val_n_e, y_RO_n_e]
-                dt = [dt_test, dt_train, dt_val, dt_RO]
+                dt = [dt_test, dt_train, dt_val, [dt_ro]]
                 [y_test_e, y_train_e, y_val_e, y_RO_e] = \
                     desnormalizar_datos(datos_norm, dt, min_pot, max_pot, tipo_norm,
                                         [nom_series[-1]], carpeta_lentes)                
@@ -944,7 +944,14 @@ def estimar_ro_mvlr_lasso(X_train_n, y_train_n, X_test_n, y_test_n, X_val_n, y_v
     y_train_n_e = wrapper.predict(X_train_n)
     y_val_n_e = wrapper.predict(X_val_n)
     y_RO_n_e = wrapper.predict(X_RO_n)
+    
+    print('y_test_n_e')
+    print(y_test_n_e)
 
+    #print(wrapper.summary())
+    
+    #covMatrix = np.cov(y_test_n_e - y_test_n, bias=False)
+    #print(covMatrix)
     
     return (y_RO_n_e, y_test_n_e, y_train_n_e, y_val_n_e, NParametros)
 

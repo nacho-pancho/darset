@@ -126,27 +126,21 @@ def DesGaussianizarSeries( Mg, Filt, t, nombres, carpeta_lentes ):
             else:
                 idx_val = slice(len(Mg[k_lst][k_serie]))
                
-            mg = norm.cdf(Mg[k_lst][k_serie][idx_val])
-            '''
-            print('mg')
-            print(mg)
-            '''
-            ts = t[k_lst][k_serie][idx_val]
-            hs = [ti.hour for ti in ts]
+            mg = norm.cdf(Mg[k_lst][k_serie][idx_val])         
+            ts = t[k_lst][k_serie][idx_val]           
+            archis_lentes = [ archi.archi_lente(nombre, ti.hour) for ti in ts ]
             
-            #print(hs)
+            if len(mg) > len(archis_lentes):
+                print('Hay algo mal: len(mg) > len(archis_lentes)')
+                print(ts)
+                print(mg)
             
-            archis_lentes = [ archi.archi_lente(nombre, hi) for hi in hs ]
-            
-            #print(archis_lentes)
-
-            m_lente = []
-            #print(mg)
+            m_lente = []                       
             for k in range(len(mg)):
-                h = hs[k]               
                 archi_lente = archis_lentes[k]
                 lente = lentes[archi_lente]
-                kidx_lente = int((mg[k]) * len(lente) - 0.5)
+                #kidx_lente = int((mg[k]) * len(lente) - 0.5)
+                kidx_lente = int(mg[k] * (len(lente) - 1))
                 m_lente.append(lente[kidx_lente])
 
             '''

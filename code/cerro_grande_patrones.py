@@ -26,8 +26,8 @@ if __name__ == '__main__':
     flg_recorte_SMEC = False
     flg_print_datos = False
     
-    #tipo_norm = 'Gauss'
-    tipo_norm = 'Standard'
+    tipo_norm = 'Gauss'
+    #tipo_norm = 'Standard'
     
     plt.close('all')
     
@@ -50,7 +50,7 @@ if __name__ == '__main__':
     parque2 = archivos.leerArchivosCentral(nid_p2)
     
     tini = datetime.datetime(2018, 5, 1)     
-    tfin = datetime.datetime(2018, 5, 2)
+    tfin = datetime.datetime(2018, 5, 10)
     archi = archivos.archi_ro_pendientes(nid_p2)
     parque2.calcular_liq_pendientes(tini, tfin, archi)    
     
