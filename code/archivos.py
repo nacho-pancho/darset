@@ -582,10 +582,10 @@ def velxy_from_veldir(vel, dir_, ident, nidCentral):
                        -vel.maxval, vel.maxval, vel.nrep)
 
     med_vel3x = datos.Medida(proc, vel3x, vel.tiempo,'vel','vel3x' + ident + '_' + str(nidCentral),
-                       (-vel.maxval)** (3/2), vel.maxval, vel.nrep)
+                       -vel.maxval ** 3, vel.maxval ** 3, vel.nrep)
     
     med_vel3y = datos.Medida(proc, vel3y, vel.tiempo,'vel','vel3y' + ident + '_' + str(nidCentral),
-                       -vel.maxval, vel.maxval, vel.nrep)        
+                       -vel.maxval ** 3, vel.maxval ** 3, vel.nrep)        
 
     med_vel3 = datos.Medida(proc, vel3, vel.tiempo,'vel','vel3' + ident + '_' + str(nidCentral),
                        0, (vel.maxval)**3, vel.nrep)        

@@ -22,6 +22,7 @@ import plot_scatter as pltxy
 import matplotlib
 from sklearn.multioutput import MultiOutputRegressor
 import excedencias as ex
+import normalizacion_datos as norm
 #matplotlib.use('Agg')
 
 # 1. Set `PYTHONHASHSEED` envcondaironment variable at a fixed value
@@ -59,7 +60,6 @@ from sklearn import datasets, linear_model
 from sklearn.metrics import mean_squared_error, r2_score
 
 import gc
-import gaussianize as g
 import Gaussianizacion as gauss
 
 
@@ -72,80 +72,6 @@ def my_loss(y_true, y_pred):
     return custom_loss
 
 
-def normalizar_datos(M, F, t, nom_series, tipo_norm, carpeta):
-
-    print('Normalizando datos')
-    
-    # Normalizo datos 
-    if tipo_norm == 'Standard':
-
-        df_M = pd.DataFrame(M, index=t, columns=nom_series) 
-        df_F = pd.DataFrame(F, index=t, columns=nom_series)
-        
-        df_M_ = df_M[(df_F == 0).all(axis=1)]
-        
-        stats = df_M_.describe()
-        stats = stats.transpose()
-        
-        M_max = np.tile(stats['max'].values,(len(M),1))
-        M_min = np.tile(stats['min'].values,(len(M),1))
-        
-        M_n = (M - M_min)/(M_max - M_min)
-            
-        max_pot = stats.at[ nom_series[-1], 'max']
-        min_pot = stats.at[ nom_series[-1], 'min'] 
-
-    elif tipo_norm == 'Gauss':
-
-        max_pot = -99999999
-        min_pot = max_pot
- 
-        '''        
-        global series_g
-        M_n = copy.copy(M) 
-
-            
-        for col in range(M.shape[1]):            
-            idx_val = (F[:,col] == 0)         
-            x = M[idx_val, col]
-            out = g.Gaussianize(strategy='brute') 
-            out.fit(x)
-            x_n = np.squeeze(out.transform(x))
-            M_n[idx_val, col] = x_n
-            series_g.append(out)      
-        '''
-        
-       
-        gauss.GenerarYGuardarLentes( M, F, t, nom_series, 4, carpeta)
-        M_n = gauss.GaussianisarSeries( M, F, t, nom_series, carpeta )
-        print(M_n)
-        
-                
-    else:
-        raise Exception('Tipo de normalizacion ' + tipo_norm + ' no implementada.')
-    
-    return M_n, max_pot, min_pot
-
-
-def desnormalizar_datos(datos, t, min_, max_, tipo_norm, nombres, carpeta):
-
-    print('Desnormalizando datos')
-    
-    if tipo_norm == 'Standard':
-        for kvect in range(len(datos)):         
-            datos[kvect] = datos[kvect] * (max_- min_) + min_
-
-    elif tipo_norm == 'Gauss':
-        
-        datos = gauss.DesGaussianizarSeries( datos, None, t, nombres, carpeta )
-        
-        '''
-        for kvect in range(len(datos)):         
-            datos[kvect] = np.squeeze(series_g[-1].inverse_transform(datos[kvect].T))
-        '''
-
-
-    return datos       
 
 # Esta función crea RO y sus patrones para posteriormente ser calculados
 def patrones_ro(delta, F, M_n, t, dt_ini_calc, dt_fin_calc):
@@ -396,7 +322,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
     
         # Normalizo datos 
         
-        M_n, max_pot, min_pot = normalizar_datos(M, F, t, nom_series, tipo_norm,
+        M_n, max_pot, min_pot = norm.normalizar_datos(M, F, t, nom_series, tipo_norm,
                                                  carpeta_lentes)
                            
         pot = M[:,-1]
@@ -404,6 +330,8 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
         # inicializo la pot igual a la real, luego relleno huecos
         pot_estimada = np.zeros(len(pot))
         pot_estimada_PE70 = np.zeros(len(pot))
+        pot_estimada_PE95 = np.zeros(len(pot))
+        pot_estimada_PE05 = np.zeros(len(pot))
 
         
         # Busco secuencias de patrones que quiero calcular su pot
@@ -453,14 +381,14 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
               dt_test, dt_val = train_test_val_split(X_n, y_n, dt, 0.6, 0.2, 0.2, 42)
 
             [y_test, y_train, y_val] = \
-                desnormalizar_datos([y_test_n, y_train_n, y_val_n], 
+                norm.desnormalizar_datos([y_test_n, y_train_n, y_val_n], 
                                     [dt_test, dt_train, dt_val],
                                     min_pot, max_pot, tipo_norm, [nom_series[-1]],
                                     carpeta_lentes)              
 
             # calibro y calculo para la RO y datos test y entrenamiento                        
             if tipo_calc == 'NN':
-                k1, k2, b_v, error_pu, std_pu, y_RO_e, y_test_e, y_train_e,
+                k1, k2, b_v, error_pu, std_pu, y_RO_e, y_test_e, y_train_e,\
                 y_val_e, NParametros = \
                     estimar_ro_NN(X_train_n, y_train_n, y_train, dt_train, X_val_n,
                                     y_val_n, y_val, dt_val, X_test_n, y_test_n, y_test, dt_test,
@@ -493,7 +421,7 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
                 datos_norm = [y_test_n_e, y_train_n_e, y_val_n_e, y_RO_n_e]
                 dt = [dt_test, dt_train, dt_val, [dt_ro]]
                 [y_test_e, y_train_e, y_val_e, y_RO_e] = \
-                    desnormalizar_datos(datos_norm, dt, min_pot, max_pot, tipo_norm,
+                    norm.desnormalizar_datos(datos_norm, dt, min_pot, max_pot, tipo_norm,
                                         [nom_series[-1]], carpeta_lentes)                
                 
                 [error_pu, std_pu, b_v] = \
@@ -509,9 +437,13 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
                 ex.estimar_pot_PE(y_test_e, y_train_e, y_test, y_train, y_RO_e,
                                y_RO_gen, carpeta_ro, parque2.PAutorizada)
                 
-            ex.calcular_distE_yi(y_test, y_test_e, carpeta_ro)
+            y_RO_e_rand, y_RO_e_PE95, y_RO_e_PE05 = \
+            ex.get_realizaciones_RO(y_test, y_test_e, y_RO_e, [dt_ro], 
+                                    carpeta_ro, 300, parque2.PAutorizada, 3000)
 
             pot_estimada_PE70[kini_RO:kini_RO+y_RO_e.size] = pPE70
+            pot_estimada_PE95[kini_RO:kini_RO+y_RO_e.size] = y_RO_e_PE95
+            pot_estimada_PE05[kini_RO:kini_RO+y_RO_e.size] = y_RO_e_PE05
 
             calculos_ro = [dtini_ro[kRO], dtfin_ro[kRO], dtfin_ro[kRO] - dtini_ro[kRO],
                            np.sum(y_RO_e)/6, E_dif_PE70, E_dif_PE30, E_dif_VE,
@@ -560,6 +492,14 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
         # potencia 10min con probabilidad 70% de ser excedida
         pot_p2_mod_PE70 = datos.Medida('estimacion',pot_estimada_PE70 , t,
                                tipoDato,'pot_estimada_PE_70', parque2.pot.minval, parque2.pot.maxval, nrep)     
+
+        # potencia 10min con probabilidad 95% de ser excedida (punto a punto)
+        pot_p2_mod_PE95 = datos.Medida('estimacion',pot_estimada_PE95 , t,
+                               tipoDato,'pot_estimada_PE_95', parque2.pot.minval, parque2.pot.maxval, nrep)     
+
+        # potencia 10min con probabilidad 5% de ser excedida (punto a punto)
+        pot_p2_mod_PE05 = datos.Medida('estimacion',pot_estimada_PE05 , t,
+                               tipoDato,'pot_estimada_PE_05', parque2.pot.minval, parque2.pot.maxval, nrep) 
         
         # imprimo el detalle de la energía no suministrada por hora (formato DTE)
         # divido entre 6 para pasar de MW a MWh
@@ -573,6 +513,8 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
     if flg_estimar_RO:
         meds.append(pot_p2_mod)
         meds.append(pot_p2_mod_PE70)
+        meds.append(pot_p2_mod_PE95)
+        meds.append(pot_p2_mod_PE05)
 
     graficas.clickplot(meds)
     
@@ -731,7 +673,7 @@ def estimar_ro_NN (X_train_n, y_train_n, y_train, dt_train, X_val_n, y_val_n, y_
             datos_norm = [y_test_n_e, y_train_n_e, y_val_n_e, y_RO_n_e]
             dt = [dt_test, dt_train, dt_val, dt_RO] 
             [y_test_e, y_train_e, y_val_e, y_RO_e] = \
-                desnormalizar_datos(datos_norm, dt, min_pot, max_pot, tipo_norm,
+                norm.desnormalizar_datos(datos_norm, dt, min_pot, max_pot, tipo_norm,
                                     [nom_series[-1]], carpeta_lentes)                
             
             [error_pu, std_pu, b_v] = \
@@ -852,8 +794,8 @@ def estimar_ro_mvlr_lasso(X_train_n, y_train_n, X_test_n, y_test_n, X_val_n, y_v
     y_val_n_e = wrapper.predict(X_val_n)
     y_RO_n_e = wrapper.predict(X_RO_n)
     
-    print('y_test_n_e')
-    print(y_test_n_e)
+    #print('y_test_n_e')
+    #print(y_test_n_e)
 
     #print(wrapper.summary())
     
@@ -879,18 +821,23 @@ def train_test_val_split(X_n, y_n, dt, train_pu, test_pu, val_pu, rs):
     
 def errores_modelo(y_train, y_train_e, y_test, y_test_e, y_val, y_val_e):
     
+    
     '''
     # concateno (train + test) salidas del modelo y datos reales 
-    y_e_all = np.concatenate((y_test_e, y_train_e, y_val_e), axis=0)
-    y_all = np.concatenate((y_test, y_train, y_val), axis=0)
-    
-    
-    y_e_all = np.concatenate((y_val_e), axis=0)
-    y_all = np.concatenate((y_val), axis=0)
-    '''            
-    
+    y_e_all = np.concatenate((y_train_e, y_val_e), axis=0)
+    y_all = np.concatenate((y_train, y_val), axis=0)
+
+
     y_e_all = y_test_e
     y_all = y_test 
+
+    '''            
+
+    
+    y_e_all = y_train_e
+    y_all = y_train 
+    
+    
     
     y_e_all_acum = np.sum(y_e_all, axis = 1)
     y_e_all_acum_MWh = y_e_all_acum/6
