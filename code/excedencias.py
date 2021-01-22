@@ -5,7 +5,7 @@ Created on Tue Nov 24 22:18:57 2020
 @author: jfpbf
 """
 import numpy as np
-from scipy.stats import norm, laplace
+from scipy.stats import norm, laplace, spearmanr, pearsonr
 import matplotlib.pyplot as plt
 import math
 
@@ -96,7 +96,15 @@ def estimar_pot_PE(y_test_e, y_train_e, y_test, y_train, y_RO_e, y_RO_gen,
     plt.plot(y_e_acum_sort, y_dif_acum_sort_VE, label = 'VE')
 
     plt.axvline(y_e_RO_acum, color='k', linestyle='--', label = 'E_Estimada')
-    EMax = Pmax * len(y_RO_e) / 6
+    
+    if isinstance(y_RO_e, list): 
+        N10min = len(y_RO_e) 
+    else: 
+        N10min = 1
+    
+    EMax = Pmax * N10min / 6
+    
+    
     plt.axvline(EMax, color='k', linestyle='-.', label = 'E_Max')
     plt.legend()
     plt.grid()
@@ -108,12 +116,13 @@ def estimar_pot_PE(y_test_e, y_train_e, y_test, y_train, y_RO_e, y_RO_gen,
     return pPE70, ENS_VE, delta_70, E_est_PE70, ENS_PE_70, E_dif_PE30, E_dif_PE70, E_dif_VE
 
 
-def get_realizaciones_RO(y_r, y_e, y_RO_e, dt_RO, carpeta_ro, NDatosDist, PMax, 
-                         NSorteos):
+def get_realizaciones_RO(y_r, y_e, y_RO_e, y_RO, cgm_RO, dt_RO, carpeta_ro, 
+                         NDatosDist, PMax, NSorteos):
 
     y_RO_e_rand = []
     y_RO_e_PE95 = []
     y_RO_e_PE05 = []
+    y_ENS_e_rand = []
     
     if len(y_RO_e) == 1:
         y_RO_e = y_RO_e[0]  
@@ -130,7 +139,14 @@ def get_realizaciones_RO(y_r, y_e, y_RO_e, dt_RO, carpeta_ro, NDatosDist, PMax,
         #print(y_RO_e)
         err = get_dist_empirica_error(y_r_kyi, y_e_kyi, y_RO_e[kyi], NDatosDist, 
                                       archi, PMax, flg_print)
-            
+        '''
+        y_err = np.subtract(y_e_kyi, y_r_kyi)
+        if kyi > 0:
+            coef, p =  pearsonr(y_err, y_err_ant)
+            print('Corr. Spearman: %.3f' % coef)
+        y_err_ant = y_err    
+        '''
+        
         # Fit a normal distribution to the data:
         #mu, std = norm.fit(err)
         
@@ -157,13 +173,29 @@ def get_realizaciones_RO(y_r, y_e, y_RO_e, dt_RO, carpeta_ro, NDatosDist, PMax,
         # Genero realizaciones para cada muestra yi dentro de la RO
         
         yi_RO_e_rand = generar_realizaciones_yi(y_RO_e[kyi], err, dt_RO[0][kyi], 
-                                             NSorteos )
+                                             NSorteos)
         y_RO_e_rand.append(yi_RO_e_rand)
+        
+        if abs(cgm_RO[kyi] - y_RO[kyi]) <= 4:            
+            y_ens_e_rand = [max(yi_RO_e_rand[k] - y_RO[kyi], 0) for 
+                            k in range(len(yi_RO_e_rand))]
+        else:
+            y_ens_e_rand = [0]*len(yi_RO_e_rand)            
+        
+        y_ENS_e_rand.append(y_ens_e_rand)        
         
         y_RO_e_PE95.append(np.quantile(yi_RO_e_rand, 0.05))
         y_RO_e_PE05.append(np.quantile(yi_RO_e_rand, 0.95))
+    
+    
+    ENS = np.array(y_ENS_e_rand)
+    ENS_acum = np.sum(ENS, axis=0)
+    ENS_acum_PE70 = np.quantile(ENS_acum, 0.7, interpolation='nearest')
+    idx_PE70 = abs(ENS_acum-ENS_acum_PE70).argmin()
+
+    y_RO_e_PE70 = [y_RO_e_rand[k][idx_PE70] for k in range(len(y_RO_e_rand))] 
         
-    return y_RO_e_rand, y_RO_e_PE95, y_RO_e_PE05
+    return y_RO_e_rand, y_RO_e_PE95, y_RO_e_PE05, y_RO_e_PE70
         
         
         
@@ -237,8 +269,7 @@ def NSemilla_dt(dt):
                str(dt.strftime("%d")) + str(dt.strftime("%H")) +
                str(dt.strftime("%M")))
     
-    
-    
+
     
     
     

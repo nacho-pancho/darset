@@ -54,6 +54,9 @@ from tensorflow.compat.v1.keras.layers import Dense, Dropout, LSTM
 from tensorflow.compat.v1.keras.regularizers import l2
 from tensorflow.compat.v1.keras.models import Sequential
 
+from tensorflow.compat.v1.keras.backend import set_session, clear_session
+
+
 
 import matplotlib.pyplot as plt
 from sklearn import datasets, linear_model
@@ -61,7 +64,12 @@ from sklearn.metrics import mean_squared_error, r2_score
 
 import gc
 import Gaussianizacion as gauss
+import mdn
 
+class MyCustomCallback(tf.keras.callbacks.Callback):
+  def on_epoch_end(self, epoch, logs=None):
+    gc.collect()
+      
 
 series_g = []
 
@@ -120,8 +128,8 @@ def patrones_ro(delta, F, M_n, t, dt_ini_calc, dt_fin_calc):
                 dt_ro.append(dt_RO)
                 
                 #Agrego sequencia con RO patron
-                pat_data_n = M_n[(kiniRO - delta):(kfinRO + delta),:]
-                pat_filt = F[(kiniRO - delta):(kfinRO + delta),:]
+                pat_data_n = M_n[(kiniRO - delta):(kfinRO + delta), :]
+                pat_filt = F[(kiniRO - delta):(kfinRO + delta), :]
             
                 Pats_Data_n.append(pat_data_n)
                 Pats_Filt.append(pat_filt)
@@ -143,7 +151,14 @@ def estimar_ro(X_train_n, y_train_n, X_val_n, y_val_n, X_test_n, y_test_n,
 
         
         print('Arranca NN')
-    
+
+        K.clear_session()
+        config = tf.ConfigProto()
+        config.gpu_options.per_process_gpu_memory_fraction = 0.3
+        sess = tf.Session(config=config)
+        K.set_session(sess)
+
+                
         n_features = X_train_n.shape[1]
         n_output = y_train_n.shape[1]
         
@@ -161,17 +176,17 @@ def estimar_ro(X_train_n, y_train_n, X_val_n, y_val_n, X_test_n, y_test_n,
         
         model = Sequential()
 
-        model.add(Dense(int(k1*n_output), input_dim=n_features,#, activation = 'tanh',
+        
+        model.add(Dense(int(k1*n_output), input_dim=n_features, activation = 'tanh',
                         kernel_regularizer=l2_, bias_regularizer=l2_,
                         kernel_initializer = initializer,
-                        bias_initializer= initializer_b))
-        
-        
-        model.add(Dense(int(k1*n_output), activation = 'tanh',
+                        bias_initializer= initializer_b))                
+        '''
+        model.add(Dense(int(k2*n_output), activation = 'tanh',
                         kernel_regularizer=l2_, bias_regularizer=l2_,
                         kernel_initializer = initializer,
-                        bias_initializer= initializer_b))
-        
+                        bias_initializer= initializer_b))        
+        '''
         
         model.add(Dense(n_output, activation = 'sigmoid',
                         kernel_regularizer=l2_, bias_regularizer=l2_,
@@ -192,17 +207,20 @@ def estimar_ro(X_train_n, y_train_n, X_val_n, y_val_n, X_test_n, y_test_n,
         por que no sqrt(n_output)?
         por que no cte?
 
-        '''
 
-        '''
+
+        
         N_MIXES = int(n_output*3)
         
         model.add(mdn.MDN(n_output, N_MIXES))        
-        '''
+        
         
         #model.compile(optimizer='adam', loss='mse', metrics=['mean_squared_error'])     
-        '''
-        model.compile(optimizer=keras.optimizers.Adam(), loss=mdn.get_mixture_loss_func(n_output, N_MIXES))
+        
+
+        
+        model.compile(optimizer=keras.optimizers.Adam(), 
+                      loss=mdn.get_mixture_loss_func(n_output, N_MIXES))
         '''
         
             
@@ -218,12 +236,13 @@ def estimar_ro(X_train_n, y_train_n, X_val_n, y_val_n, X_test_n, y_test_n,
 
 
         # simple early stopping
-        es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=10)
+        es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=50)
         # fit model
         
         
         history = model.fit(X_train_n, y_train_n, validation_data=(X_val_n, y_val_n), 
-                            epochs=100, verbose=0, callbacks=[es])
+                            epochs=250, verbose=1, callbacks=[es, MyCustomCallback()] 
+                            )#,use_multiprocessing=True)
         
         print(model.summary())
         NParametros = model.count_params()
@@ -286,11 +305,12 @@ def estimar_ro(X_train_n, y_train_n, X_val_n, y_val_n, X_test_n, y_test_n,
         return  (y_test_predict_n, y_train_predict_n, y_val_predict_n, 
                  np.squeeze(y_RO_predict_n), NParametros) 
 
-def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_ini_calc,
+def main_ro(tini, tfin, flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_ini_calc,
             dt_fin_calc, delta_print_datos, meds_plot_p1, meds_plot_p2, 
             flg_print_datos = False, flg_recorte_SMEC = True, tipo_calc = 'NN',
-            tipo_norm = 'Gauss'): 
+            tipo_norm = 'Standard'): 
 
+    flg_realizaciones = False
     
     nid_parque = parque2.id   
 
@@ -320,8 +340,13 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
                                                        tipo_norm)
         carpeta_lentes = archivos.path_carpeta_lentes(carpeta_res)
     
-        # Normalizo datos 
+        # saco y guardo la consigna de operación de las matrices 
+        cgm = M[:,-1]
+        M = M[:,:-1]
+        F = F[:,:-1]
+        nom_series = nom_series[:-1]
         
+        # Normalizo datos         
         M_n, max_pot, min_pot = norm.normalizar_datos(M, F, t, nom_series, tipo_norm,
                                                  carpeta_lentes)
                            
@@ -330,13 +355,14 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
         # inicializo la pot igual a la real, luego relleno huecos
         pot_estimada = np.zeros(len(pot))
         pot_estimada_PE70 = np.zeros(len(pot))
+        pot_estimada_PE70_OK = np.zeros(len(pot))
         pot_estimada_PE95 = np.zeros(len(pot))
         pot_estimada_PE05 = np.zeros(len(pot))
 
         
         # Busco secuencias de patrones que quiero calcular su pot
         
-        delta = max(int(10*(10/archivos.TS_MIN)), 1) # agrega delta datos 10min antes y despues de las RO encontradas
+        delta = max(int(6*(10/archivos.TS_MIN)), 1) # agrega delta datos 10min antes y despues de las RO encontradas
         Pats_Data_n, Pats_Filt, Pats_Calc, dtini_ro, dtfin_ro, kini_ro, dt_RO = \
             patrones_ro(delta, F, M_n, t, dt_ini_calc, dt_fin_calc)       
         n_ro = len(Pats_Data_n)
@@ -431,19 +457,24 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             pot_estimada[kini_RO:kini_RO+y_RO_e.size] = y_RO_e            
             
             y_RO_gen = pot[kini_RO:kini_RO+y_RO_e.size]
+            cgm_RO = cgm[kini_RO:kini_RO+y_RO_e.size]
                                    
             # estimo la potencia con probabilidad de excedencia 70 %            
             pPE70, ENS_VE, delta_70, E_est_PE70, ENS_PE_70, E_dif_PE30, E_dif_PE70, E_dif_VE = \
                 ex.estimar_pot_PE(y_test_e, y_train_e, y_test, y_train, y_RO_e,
                                y_RO_gen, carpeta_ro, parque2.PAutorizada)
-                
-            y_RO_e_rand, y_RO_e_PE95, y_RO_e_PE05 = \
-            ex.get_realizaciones_RO(y_test, y_test_e, y_RO_e, [dt_ro], 
-                                    carpeta_ro, 300, parque2.PAutorizada, 3000)
+
+            if flg_realizaciones:                
+                y_RO_e_rand, y_RO_e_PE95, y_RO_e_PE05, y_RO_e_PE70 = \
+                ex.get_realizaciones_RO(y_test, y_test_e, y_RO_e, y_RO_gen, cgm_RO, [dt_ro], 
+                                        carpeta_ro, 300, parque2.PAutorizada, 3000)
 
             pot_estimada_PE70[kini_RO:kini_RO+y_RO_e.size] = pPE70
-            pot_estimada_PE95[kini_RO:kini_RO+y_RO_e.size] = y_RO_e_PE95
-            pot_estimada_PE05[kini_RO:kini_RO+y_RO_e.size] = y_RO_e_PE05
+
+            if flg_realizaciones:
+                pot_estimada_PE70_OK[kini_RO:kini_RO+y_RO_e.size] = y_RO_e_PE70
+                pot_estimada_PE95[kini_RO:kini_RO+y_RO_e.size] = y_RO_e_PE95
+                pot_estimada_PE05[kini_RO:kini_RO+y_RO_e.size] = y_RO_e_PE05
 
             calculos_ro = [dtini_ro[kRO], dtfin_ro[kRO], dtfin_ro[kRO] - dtini_ro[kRO],
                            np.sum(y_RO_e)/6, E_dif_PE70, E_dif_PE30, E_dif_VE,
@@ -458,14 +489,15 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
             
             df_ro = df_ro.append(s, ignore_index=True) 
             
-            # ejemplos de cálculo
-            y_e_ej, y_r_ej, t_ej = \
-                ejemplos_modelo_test (y_test_e, y_test, dt_test, y_RO_e, 300, 3)           
-            
-            # grafico los ejemplos
-            
-            graficar_ejemplos(y_e_ej, y_r_ej, t_ej, meds, parque2,
-                              delta_print_datos, carpeta_ro)
+            if False:                
+                # ejemplos de cálculo
+                y_e_ej, y_r_ej, t_ej = \
+                    ejemplos_modelo_test (y_test_e, y_test, dt_test, y_RO_e, 300, 3)           
+                
+                # grafico los ejemplos
+                
+                graficar_ejemplos(y_e_ej, y_r_ej, t_ej, meds, parque2,
+                                  delta_print_datos, carpeta_ro)
             
         # guardo resumen RO
         
@@ -488,22 +520,32 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
         tipoDato = 'pot'
         nrep = filtros.Nrep(tipoDato)
         pot_p2_mod = datos.Medida('estimacion',pot_estimada , t,
-                               tipoDato,'pot_estimada', parque2.pot.minval, parque2.pot.maxval, nrep)     
+                               tipoDato,'pot_estimada', parque2.pot.minval, 
+                               parque2.pot.maxval, nrep)     
         # potencia 10min con probabilidad 70% de ser excedida
         pot_p2_mod_PE70 = datos.Medida('estimacion',pot_estimada_PE70 , t,
-                               tipoDato,'pot_estimada_PE_70', parque2.pot.minval, parque2.pot.maxval, nrep)     
-
-        # potencia 10min con probabilidad 95% de ser excedida (punto a punto)
-        pot_p2_mod_PE95 = datos.Medida('estimacion',pot_estimada_PE95 , t,
-                               tipoDato,'pot_estimada_PE_95', parque2.pot.minval, parque2.pot.maxval, nrep)     
-
-        # potencia 10min con probabilidad 5% de ser excedida (punto a punto)
-        pot_p2_mod_PE05 = datos.Medida('estimacion',pot_estimada_PE05 , t,
-                               tipoDato,'pot_estimada_PE_05', parque2.pot.minval, parque2.pot.maxval, nrep) 
+                               tipoDato,'pot_estimada_PE_70', parque2.pot.minval,
+                               parque2.pot.maxval, nrep)  
+        if flg_realizaciones:
+            # potencia 10min con probabilidad 70% de ser excedida POSTA
+            pot_p2_mod_PE70_OK = datos.Medida('estimacion',pot_estimada_PE70_OK , t,
+                                   tipoDato,'pot_estimada_PE_70_OK', parque2.pot.minval,
+                                   parque2.pot.maxval, nrep)          
+    
+            # potencia 10min con probabilidad 95% de ser excedida (punto a punto)
+            pot_p2_mod_PE95 = datos.Medida('estimacion',pot_estimada_PE95 , t,
+                                   tipoDato,'pot_estimada_PE_95', parque2.pot.minval,
+                                   parque2.pot.maxval, nrep)     
+    
+            # potencia 10min con probabilidad 5% de ser excedida (punto a punto)
+            pot_p2_mod_PE05 = datos.Medida('estimacion',pot_estimada_PE05 , t,
+                                   tipoDato,'pot_estimada_PE_05', parque2.pot.minval,
+                                   parque2.pot.maxval, nrep) 
         
         # imprimo el detalle de la energía no suministrada por hora (formato DTE)
         # divido entre 6 para pasar de MW a MWh
-        archivos.generar_ens_dte(pot_estimada_PE70/6, pot/6, t, carpeta_res)
+        archivos.generar_ens_dte(pot_estimada_PE70/6, pot/6, t, carpeta_res, 
+                                 tini, tfin)
         # imprimo la ens topeada para que pinyectada + pnosuministrada < Ptope = Pautorizada
         if flg_recorte_SMEC:
             archivos.generar_ens_topeada(nid_parque, parque2.PAutorizada)
@@ -513,8 +555,10 @@ def main_ro(flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_i
     if flg_estimar_RO:
         meds.append(pot_p2_mod)
         meds.append(pot_p2_mod_PE70)
-        meds.append(pot_p2_mod_PE95)
-        meds.append(pot_p2_mod_PE05)
+        if flg_realizaciones:
+            meds.append(pot_p2_mod_PE70_OK)
+            meds.append(pot_p2_mod_PE95)
+            meds.append(pot_p2_mod_PE05)
 
     graficas.clickplot(meds)
     
@@ -648,10 +692,12 @@ def estimar_ro_NN (X_train_n, y_train_n, y_train, dt_train, X_val_n, y_val_n, y_
                    max_pot, tipo_norm, nom_series, carpeta_lentes):
 
     # el mejor esta dando  en (3,3), tope de escala por ahora!
-    # k1_lst = [0.25, 0.5, 1, 2, 3]
-    #k2_lst = [0.25, 0.5, 1, 2, 3]
-    k1_lst = [3]
-    k2_lst = [3]
+    '''
+    k1_lst = [0.25, 0.5, 1, 2, 3, 4, 5]
+    k2_lst = [0.25, 0.5, 1, 2, 3, 4, 5]
+    '''
+    k1_lst = [1]
+    k2_lst = [1]
     
     # itero hasta encontrar k1 y k2 óptimo
     b_v_opt = 99999
@@ -826,17 +872,15 @@ def errores_modelo(y_train, y_train_e, y_test, y_test_e, y_val, y_val_e):
     # concateno (train + test) salidas del modelo y datos reales 
     y_e_all = np.concatenate((y_train_e, y_val_e), axis=0)
     y_all = np.concatenate((y_train, y_val), axis=0)
-
+    '''
 
     y_e_all = y_test_e
     y_all = y_test 
 
-    '''            
-
-    
+    '''                
     y_e_all = y_train_e
     y_all = y_train 
-    
+    '''    
     
     
     y_e_all_acum = np.sum(y_e_all, axis = 1)

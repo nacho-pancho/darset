@@ -63,7 +63,7 @@ if __name__ == '__main__':
     M2, F2, nom2, t2 = parque2.exportar_medidas()
     #nom_series_p2 = ['velPRONOS','dirPRONOS','potSCADA']
     #nom_series_p2 = ['velGEN','potSCADA']
-    nom_series_p2 = ['potSCADA']
+    nom_series_p2 = ['potSCADA', 'cgmSCADA']
     nom_series_p2 = [s + '_' + str(nid_p2) for s in nom_series_p2]
     
     rad_SCADA_p2 = parque2.medidores[0].get_medida('rad','scada')

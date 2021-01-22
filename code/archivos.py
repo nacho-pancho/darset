@@ -292,6 +292,7 @@ def leerArchi(nidCentral,tipoArchi):
     dis = None
     medidas = []
     for i in range(nSeries):
+        print('kserie: ', tipos[i])
         tipoDato = filtros.str_to_tipo(tipos[i])
         if tipoDato is None:
             continue
@@ -706,19 +707,25 @@ def leer_ro_pendientes(nidcentral):
    
     return date_ini, date_fin
 
-def generar_ens_dte(pot_estim, pot_gen, dt, carpeta, nid_dbSMEC = 999):
-
-    dif_pot_ = pot_estim - pot_gen
+def generar_ens_dte(pot_estim, pot_gen, dt, carpeta, dt_ini, dt_fin,
+                    nid_dbSMEC = 999):
+    delta_t = dt[1] - dt[0]
+    kini = int((dt_ini - dt[0])/delta_t) + 1
+    kfin = int((dt_fin - dt[0])/delta_t)
+    sl = slice(kini, kfin + 1)
+    dt_ = dt[sl]    
+    pot_estim_ = pot_estim[sl]
+    pot_gen_ = pot_gen[sl]
+    dif_pot_ = pot_estim_ - pot_gen_
     
-    dif_pot = np.where((pot_estim > 0) & (dif_pot_ >= 0), dif_pot_, 0)
-    
-    
+    dif_pot = np.where((pot_estim_ > 0) & (dif_pot_ >= 0), dif_pot_, 0)
+       
     #d = {'ens': dif_pot, 'pot_estim': pot_estim, 'pot_gen': pot_gen}
     d = {'ENS_MWh': dif_pot}
     
-    df = pd.DataFrame(data=d, index=dt)
+    df = pd.DataFrame(data=d, index=dt_)
     df.index.name = 'Fecha'
-    
+        
     df.to_csv(carpeta + 'RO_DTE_' + str(nid_dbSMEC) + '_3.txt', index=True, sep='\t', 
               float_format='%.4f', date_format='%d-%m-%Y %H:%M')
     

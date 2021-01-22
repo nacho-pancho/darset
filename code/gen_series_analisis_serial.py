@@ -120,8 +120,8 @@ def gen_series_analisis_serial(parque1, parque2, nom_series_p1, nom_series_p2,
     M1,F1,nom1,t1 = parque1.exportar_medidas()
     M2,F2,nom2,t2 = parque2.exportar_medidas()
     
-    M1_ = np.zeros((M1.shape[0],len(nom_series_p1)))
-    F1_ = np.zeros((F1.shape[0],len(nom_series_p1)))
+    M1_ = np.zeros((M1.shape[0], len(nom_series_p1)))
+    F1_ = np.zeros((F1.shape[0], len(nom_series_p1)))
     icol = 0
     for i in range(len(nom_series_p1)):
          x_col = nom1.index(nom_series_p1[i])
