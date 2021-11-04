@@ -13,45 +13,47 @@ import modelo_RNN as modelo
 import plot_scatter as pltxy
 import matplotlib.pyplot as plt
 import datetime
+import graficas
 #import mdn
 
 
 
 if __name__ == '__main__':
 
+    tipo_calc = 'NN'
+    tipo_norm = 'Standard'    
     flg_estimar_RO = True
     flg_recorte_SMEC = False
-    flg_print_datos = False 
-
-    
+    flg_print_datos = False
     
     plt.close('all')
 
     # lectura de los datos del parque1 que es el proporciona al parque2 los 
     # datos meteorológicos para el cálculo de las RO.
     
-    # kiyu   (podría ser con florida1 también)
-    nid_p1 = 9
-    parque1 = archivos.leerArchivosCentral(nid_p1)    
+    # Maldonado 2   
+    nid_p1 = 45
+    parque1 = archivos.leerArchivosCentral(nid_p1) 
     parque1.registrar() 
-    medidor1 = parque1.medidores[0]    
+    medidor1 = parque1.medidores[0]          
     filtros1 = parque1.get_filtros()
     
     M1, F1, nom1, t1 = parque1.exportar_medidas()
     #nom_series_p1 = ['velGEN','dirGEN','velPRONOS','dirPRONOS','potSCADA']
-    nom_series_p1 = ['velxGEN','velyGEN']
-    nom_series_p1 = [s + '_' + str(nid_p1) for s in nom_series_p1]    
-    vel_GEN_p1 = parque1.medidores[0].get_medida('vel','gen')
-    dir_GEN_p1 = parque1.medidores[0].get_medida('dir','gen')
+    nom_series_p1 = ['velxSCADA','velySCADA']
+    nom_series_p1 = [s + '_' + str(nid_p1) for s in nom_series_p1]
+    #vel_GEN_p1 = parque1.medidores[0].get_medida('vel','gen')
+    #dir_GEN_p1 = parque1.medidores[0].get_medida('dir','gen')
     vel_scada_p1 = parque1.medidores[0].get_medida('vel','scada')
     dir_scada_p1 = parque1.medidores[0].get_medida('dir','scada')
     #vel_pronos_p1 = parque1.medidores[0].get_medida('vel','pronos')
     #dir_pronos_p1 = parque1.medidores[0].get_medida('dir','pronos')
-    meds_plot_p1 = [vel_GEN_p1, dir_GEN_p1]
+    meds_plot_p1 = [vel_scada_p1, dir_scada_p1]
 
+    
     # lectura de los datos del parque2 al cual se le van a calcular las RO.
-    # María Luz
-    nid_p2 = 46
+    # Maldonado 2 (mismo parque q parque 1)
+    nid_p2 = 45
     parque2 = archivos.leerArchivosCentral(nid_p2)
     
     tini = datetime.datetime(2021, 1, 1)  
@@ -78,6 +80,9 @@ if __name__ == '__main__':
     delta_print_datos = 500
 
 
-    modelo.main_ro(tini, tfin, flg_estimar_RO, parque1, parque2, nom_series_p1, 
-                   nom_series_p2, dt_ini_calc, dt_fin_calc, delta_print_datos,
-                   meds_plot_p1, meds_plot_p2, flg_print_datos, flg_recorte_SMEC)
+    modelo.main_ro( tini, tfin, flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, 
+                   dt_ini_calc, dt_fin_calc, delta_print_datos, meds_plot_p1,
+                   meds_plot_p2, flg_print_datos, flg_recorte_SMEC, tipo_calc, 
+                   tipo_norm )
+    
+    

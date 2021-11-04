@@ -63,7 +63,7 @@ def min_max(tipo,PotAut,NMolinos):
     elif tipo == 'pot':
         return [0,PotAut]
     elif tipo == 'tem':
-        return [0,40]
+        return [0,80]
     elif tipo == 'pre':
         return [0,1800]
     elif tipo == 'hum':
@@ -175,7 +175,7 @@ def filtrar_rep(v,filtro_huecos,nRep):
     vant = v[k1]
     k = k1 + 1
     while k < len(v):
-        if ((not filtro_huecos[k]) and (v[k] == vant)):
+        if ((not filtro_huecos[k]) and (np.abs(v[k]-vant) < 0.01)):
             cnt = cnt + 1
             if cnt >= nRep:
                 while k1 <= k:

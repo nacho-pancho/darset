@@ -236,12 +236,12 @@ def estimar_ro(X_train_n, y_train_n, X_val_n, y_val_n, X_test_n, y_test_n,
 
 
         # simple early stopping
-        es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=50)
+        es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=30)
         # fit model
         
         
         history = model.fit(X_train_n, y_train_n, validation_data=(X_val_n, y_val_n), 
-                            epochs=250, verbose=1, callbacks=[es, MyCustomCallback()] 
+                            epochs=150, verbose=1, callbacks=[es, MyCustomCallback()] 
                             )#,use_multiprocessing=True)
         
         print(model.summary())
@@ -305,7 +305,7 @@ def estimar_ro(X_train_n, y_train_n, X_val_n, y_val_n, X_test_n, y_test_n,
         return  (y_test_predict_n, y_train_predict_n, y_val_predict_n, 
                  np.squeeze(y_RO_predict_n), NParametros) 
 
-def main_ro(tini, tfin, flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_ini_calc,
+def main_ro(tini_dte, tfin_dte, flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, dt_ini_calc,
             dt_fin_calc, delta_print_datos, meds_plot_p1, meds_plot_p2, 
             flg_print_datos = False, flg_recorte_SMEC = True, tipo_calc = 'NN',
             tipo_norm = 'Standard'): 
@@ -329,7 +329,7 @@ def main_ro(tini, tfin, flg_estimar_RO, parque1, parque2, nom_series_p1, nom_ser
         columns_ro = ['dt_ini', 'dt_fin', 'largo','Estimacion [MWh]', 'Error_PE_70% [MWh]',
                       'Error_PE_30% [MWh]', 'Error_VE [MWh]', 'Delta Error VE - PE70 [MWh]',
                       'EG [MWh]', 'ENS VE [MWh]', 'ENS PE_70 [MWh]', 'k1_opt', 'k2_opt',
-                       'error_pu_opt', 'std_pu_opt', 'b_v_pu_opt', 'NDatosTrain', 
+                       'MBE_pu_opt', 'RMSE_pu_opt', 'b_v_pu_opt','VE_yTest [MWh]','sqrt_VE_ydifTest [MWh]', 'NDatosTrain', 
                        'NDatosTest', 'NDatosVal', 'NInput', 'NOutput',
                        'NParametros']
             
@@ -414,12 +414,13 @@ def main_ro(tini, tfin, flg_estimar_RO, parque1, parque2, nom_series_p1, nom_ser
 
             # calibro y calculo para la RO y datos test y entrenamiento                        
             if tipo_calc == 'NN':
-                k1, k2, b_v, error_pu, std_pu, y_RO_e, y_test_e, y_train_e,\
+                k1, k2, b_v, MBE_pu, RMSE_pu, VE_y_all_acum_MWh, sqrt_VE_y_dif_all_acum2_MWh,\
+                y_RO_e, y_test_e, y_train_e,\
                 y_val_e, NParametros = \
                     estimar_ro_NN(X_train_n, y_train_n, y_train, dt_train, X_val_n,
                                     y_val_n, y_val, dt_val, X_test_n, y_test_n, y_test, dt_test,
                                     X_RO_n, dt_ro, carpeta_ro, min_pot, max_pot,
-                                    tipo_norm, nom_series, carpeta_lentes)                     
+                                    tipo_norm, nom_series, carpeta_lentes)                        
     
             elif tipo_calc == 'MVLR':                
                 y_RO_n_e, y_test_n_e, y_train_n_e, y_val_n_e, NParametros = \
@@ -479,9 +480,9 @@ def main_ro(tini, tfin, flg_estimar_RO, parque1, parque2, nom_series_p1, nom_ser
             calculos_ro = [dtini_ro[kRO], dtfin_ro[kRO], dtfin_ro[kRO] - dtini_ro[kRO],
                            np.sum(y_RO_e)/6, E_dif_PE70, E_dif_PE30, E_dif_VE,
                            delta_70, np.sum(y_RO_gen)/6, ENS_VE, ENS_PE_70, k1, k2,
-                           error_pu, std_pu, b_v, len(X_train_n), len(X_test_n), 
-                           len(X_val_n), len(X_train_n[0]), len(y_train[0]),
-                           NParametros]                     
+                           MBE_pu, RMSE_pu, b_v, VE_y_all_acum_MWh, sqrt_VE_y_dif_all_acum2_MWh,
+                           len(X_train_n), len(X_test_n), len(X_val_n), 
+                           len(X_train_n[0]), len(y_train[0]), NParametros]                     
 
             archi_ro = carpeta_ro + 'resumen.txt'
             s = pd.Series(calculos_ro, index=columns_ro)
@@ -489,7 +490,7 @@ def main_ro(tini, tfin, flg_estimar_RO, parque1, parque2, nom_series_p1, nom_ser
             
             df_ro = df_ro.append(s, ignore_index=True) 
             
-            if False:                
+            if True:                
                 # ejemplos de cálculo
                 y_e_ej, y_r_ej, t_ej = \
                     ejemplos_modelo_test (y_test_e, y_test, dt_test, y_RO_e, 300, 3)           
@@ -504,15 +505,20 @@ def main_ro(tini, tfin, flg_estimar_RO, parque1, parque2, nom_series_p1, nom_ser
         df_ro.to_csv( carpeta_res + 'resumen.txt', index=True, sep='\t',
                      float_format='%.4f') 
 
-    
         # grafico error_pu y std_pu en función del largo de la ro
         df_ro['largo'] = df_ro['largo'].dt.total_seconds()/3600
-        ax = df_ro.plot(kind='scatter', x='largo', y='std_pu_opt', 
-                      color='DarkBlue', style='.', label='std_pu')
+
+        ax = df_ro.plot(kind='line', x='largo', y='RMSE_pu_opt', color='DarkBlue', 
+                   style='.', label='RMSE')
+
+        ax2 = df_ro.plot(kind='line', x='largo', y='MBE_pu_opt', secondary_y=True,
+          color='Red', style='.', label='MBE', ax=ax);
         
-        df_ro.plot(kind='scatter', x='largo', y='error_pu_opt', secondary_y=True,
-            color='Red', style='.', label='error_pu', ax=ax);
-        #plt.show()
+        ax.set_xlabel('largo [hs]')
+        ax.set_ylabel('p.u.')
+        ax2.set_ylabel('p.u.')
+        plt.tight_layout()
+
         plt.savefig(carpeta_res + 'desempenho.png', dpi=300)
 
                    
@@ -545,7 +551,7 @@ def main_ro(tini, tfin, flg_estimar_RO, parque1, parque2, nom_series_p1, nom_ser
         # imprimo el detalle de la energía no suministrada por hora (formato DTE)
         # divido entre 6 para pasar de MW a MWh
         archivos.generar_ens_dte(pot_estimada_PE70/6, pot/6, t, carpeta_res, 
-                                 tini, tfin)
+                                 tini_dte, tfin_dte)
         # imprimo la ens topeada para que pinyectada + pnosuministrada < Ptope = Pautorizada
         if flg_recorte_SMEC:
             archivos.generar_ens_topeada(nid_parque, parque2.PAutorizada)
@@ -703,7 +709,7 @@ def estimar_ro_NN (X_train_n, y_train_n, y_train, dt_train, X_val_n, y_val_n, y_
     b_v_opt = 99999
     
     # creo df donde voy a guardar los resultados de las RO
-    cols_iter_k = ['k1', 'k2', 'error_pu', 'std_pu', 'b_v_pu']
+    cols_iter_k = ['k1', 'k2', 'MBE_pu', 'RMSE_pu', 'b_v_pu']
     
     idx = np.arange(0, len(k1_lst)*len(k2_lst))
     df_iter_k = pd.DataFrame(index=idx, columns=cols_iter_k)    
@@ -722,11 +728,11 @@ def estimar_ro_NN (X_train_n, y_train_n, y_train, dt_train, X_val_n, y_val_n, y_
                 norm.desnormalizar_datos(datos_norm, dt, min_pot, max_pot, tipo_norm,
                                     [nom_series[-1]], carpeta_lentes)                
             
-            [error_pu, std_pu, b_v] = \
+            [MBE_pu, RMSE_pu, b_v, VE_y_all_acum_MWh, sqrt_VE_y_dif_all_acum2_MWh] = \
                 errores_modelo(y_train, y_train_e, y_test, y_test_e, y_val, y_val_e)
             
             
-            df_iter_k.loc[k_idx] = [k1, k2, error_pu, std_pu, b_v]
+            df_iter_k.loc[k_idx] = [k1, k2, MBE_pu, RMSE_pu, b_v]
             k_idx = k_idx + 1
             
             print(f"  k1: {k1}, k2: {k2}, b_v: {b_v}")
@@ -735,8 +741,10 @@ def estimar_ro_NN (X_train_n, y_train_n, y_train, dt_train, X_val_n, y_val_n, y_
                 k1_opt = k1
                 k2_opt = k2
                 b_v_opt = b_v
-                error_pu_opt = error_pu
-                std_pu_opt = std_pu                        
+                MBE_pu_opt = MBE_pu
+                RMSE_pu_opt = RMSE_pu
+                VE_y_all_acum_MWh_opt = VE_y_all_acum_MWh
+                sqrt_VE_y_dif_all_acum2_MWh_opt = sqrt_VE_y_dif_all_acum2_MWh        
                 y_RO_e_opt = np.array(y_RO_e, copy=True)
                 y_test_e_opt = np.array(y_test_e, copy=True)
                 y_train_e_opt = np.array(y_train_e, copy=True)
@@ -746,8 +754,9 @@ def estimar_ro_NN (X_train_n, y_train_n, y_train, dt_train, X_val_n, y_val_n, y_
     df_iter_k.to_csv(carpeta_ro + 'iter_k1k2.txt', index=True, sep='\t',
              float_format='%.2f')
         
-    return (k1_opt, k2_opt, b_v_opt, error_pu_opt, std_pu_opt, y_RO_e_opt, 
-        y_test_e_opt, y_train_e_opt, y_val_e_opt, NParametros_opt)
+    return (k1_opt, k2_opt, b_v_opt, MBE_pu_opt, RMSE_pu_opt, VE_y_all_acum_MWh_opt,
+            sqrt_VE_y_dif_all_acum2_MWh_opt, y_RO_e_opt, y_test_e_opt, 
+            y_train_e_opt, y_val_e_opt, NParametros_opt)
     
 
 def estimar_ro_mvlr(X_train_n, y_train_n, X_test_n, y_test_n, X_val_n, y_val_n,
@@ -874,10 +883,12 @@ def errores_modelo(y_train, y_train_e, y_test, y_test_e, y_val, y_val_e):
     y_all = np.concatenate((y_train, y_val), axis=0)
     '''
 
+     
     y_e_all = y_test_e
     y_all = y_test 
 
-    '''                
+                
+    '''
     y_e_all = y_train_e
     y_all = y_train 
     '''    
@@ -889,18 +900,22 @@ def errores_modelo(y_train, y_train_e, y_test, y_test_e, y_val, y_val_e):
     y_all_acum = np.sum(y_all, axis = 1)
     y_all_acum_MWh = y_all_acum/6
     
-    y_dif_all_acum_MWh = np.subtract(y_e_all_acum_MWh, y_all_acum_MWh)        
+    y_dif_all_acum_MWh = np.subtract(y_e_all_acum_MWh, y_all_acum_MWh) 
     
-    error_pu = np.mean(y_dif_all_acum_MWh)/np.mean(y_all_acum_MWh)
+    VE_y_all_acum_MWh =  np.mean(y_all_acum_MWh)      
+    
+    MBE_pu = np.mean(y_dif_all_acum_MWh)/VE_y_all_acum_MWh
     
     #print('Error medio [p.u] = ' , error_pu)
     
-    std_pu = np.std(y_dif_all_acum_MWh)/np.mean(y_all_acum_MWh)
+    sqrt_VE_y_dif_all_acum2_MWh = np.sqrt(np.mean(y_dif_all_acum_MWh**2))    
+
+    RMSE_pu = sqrt_VE_y_dif_all_acum2_MWh/VE_y_all_acum_MWh
     
     #print('std [p.u] = ' , std_pu)
     
-    b_v = (error_pu ** 2 + std_pu ** 2) ** (1/2)
+    b_v = (MBE_pu ** 2 + RMSE_pu ** 2) ** (1/2)
     
     #print('bias-variance [p.u] = ', b_v)
     
-    return (error_pu, std_pu, b_v)
+    return (MBE_pu, RMSE_pu, b_v, VE_y_all_acum_MWh, sqrt_VE_y_dif_all_acum2_MWh)
