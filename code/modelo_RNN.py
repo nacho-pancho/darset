@@ -236,12 +236,12 @@ def estimar_ro(X_train_n, y_train_n, X_val_n, y_val_n, X_test_n, y_test_n,
 
 
         # simple early stopping
-        es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=30)
+        es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=10)
         # fit model
         
         
         history = model.fit(X_train_n, y_train_n, validation_data=(X_val_n, y_val_n), 
-                            epochs=150, verbose=1, callbacks=[es, MyCustomCallback()] 
+                            epochs=100, verbose=1, callbacks=[es, MyCustomCallback()] 
                             )#,use_multiprocessing=True)
         
         print(model.summary())
