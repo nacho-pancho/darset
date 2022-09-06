@@ -108,10 +108,13 @@ def patrones_ro(delta, F, M_n, t, dt_ini_calc, dt_fin_calc):
         
         k = kini_calc
         
+        flg_encontreRO = False
+        
         while k <= kfin_calc:
             #print (k)
             if filt_pot[k]:
                 # Encuentro RO
+                flg_encontreRO = True
                 kiniRO = k
                 kini_ro.append(kiniRO) 
                 dtiniRO = t[0] + kiniRO * dt
@@ -140,7 +143,13 @@ def patrones_ro(delta, F, M_n, t, dt_ini_calc, dt_fin_calc):
     
                 k = k + 1
             else:
-                k = k + 1  
+                k = k + 1
+                
+        
+        if not flg_encontreRO:
+            print ('****** No existe RO en el intervalo [' + dt_ini_calc[kcalc].strftime("%Y-%m-%d %H:%M")
+                   + ', ' + dt_fin_calc[kcalc].strftime("%Y-%m-%d %H:%M") + '] ******')
+            
     
     
     return Pats_Data_n, Pats_Filt, Pats_Calc, dtini_ro, dtfin_ro, kini_ro, dt_ro
