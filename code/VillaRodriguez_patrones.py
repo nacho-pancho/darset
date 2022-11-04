@@ -31,7 +31,7 @@ if __name__ == '__main__':
     # lectura de los datos del parque1 que es el proporciona al parque2 los 
     # datos meteorológicos para el cálculo de las RO.
     
-    # kiyú 
+    # kiyú o artilleros 
     nid_p1 = 36
     parque1 = archivos.leerArchivosCentral(nid_p1) 
     parque1.registrar() 
@@ -55,8 +55,8 @@ if __name__ == '__main__':
     nid_p2 = 58
     parque2 = archivos.leerArchivosCentral(nid_p2)
     
-    tini = datetime.datetime(2022, 1, 1)  
-    tfin = datetime.datetime(2022, 4, 30)
+    tini = datetime.datetime(2022, 5, 1)  
+    tfin = datetime.datetime(2022, 6, 1)
     archi = archivos.archi_ro_pendientes(nid_p2)
     parque2.calcular_liq_pendientes(tini, tfin, archi)
     
