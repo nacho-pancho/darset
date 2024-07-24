@@ -753,7 +753,7 @@ def generar_ens_dte(pot_estim, pot_gen, dt, carpeta, dt_ini, dt_fin,
                 float_format='%.4f', date_format='%d-%m-%Y')
     
     
-def generar_ens_topeada(nidCentral, Ptope):
+def generar_ens_topeada(nidCentral, Ptope, carpeta_res):
     
     archi_gen = path_central(nidCentral) + 'archivos/medidasSMEC.txt'
     f = lambda s: datetime.datetime.strptime(s,'%d/%m/%Y')
@@ -762,7 +762,7 @@ def generar_ens_topeada(nidCentral, Ptope):
     gen = gen.drop(['Acumulado'], axis=1)
 
     f = lambda s: datetime.datetime.strptime(s,'%d-%m-%Y')
-    carpeta_res = path_carpeta_resultados(nidCentral) 
+    #carpeta_res = path_carpeta_resultados(nidCentral) 
     ens = pd.read_csv(carpeta_res + 'ens_DTE.txt', 
                       index_col = 0, skiprows=2, sep = '\t', date_parser = f)    
 

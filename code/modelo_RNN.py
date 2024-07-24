@@ -186,12 +186,16 @@ def estimar_ro(X_train_n, y_train_n, X_val_n, y_val_n, X_test_n, y_test_n,
         model = Sequential()
 
         
-        model.add(Dense(int(k1*n_output), input_dim=n_features, activation = 'tanh',
+        '''
+        model.add(Dense(int(k1*n_output), input_dim=n_features, activation = 'linear',
                         kernel_regularizer=l2_, bias_regularizer=l2_,
                         kernel_initializer = initializer,
                         bias_initializer= initializer_b))                
         '''
-        model.add(Dense(int(k2*n_output), activation = 'tanh',
+        
+        #model.add(Input(int(k1*n_output)))
+        
+        model.add(Dense(int(k2*n_output), input_dim=n_features, activation = 'tanh',
                         kernel_regularizer=l2_, bias_regularizer=l2_,
                         kernel_initializer = initializer,
                         bias_initializer= initializer_b))        
@@ -202,7 +206,7 @@ def estimar_ro(X_train_n, y_train_n, X_val_n, y_val_n, X_test_n, y_test_n,
                         kernel_initializer = initializer,
                         bias_initializer= initializer_b))
 
-    
+        '''
         '''
         pregunta 1:
         (k1,k2) optimos??
@@ -563,7 +567,7 @@ def main_ro(tini_dte, tfin_dte, flg_estimar_RO, parque1, parque2, nom_series_p1,
                                  tini_dte, tfin_dte)
         # imprimo la ens topeada para que pinyectada + pnosuministrada < Ptope = Pautorizada
         if flg_recorte_SMEC:
-            archivos.generar_ens_topeada(nid_parque, parque2.PAutorizada)
+            archivos.generar_ens_topeada(nid_parque, parque2.PAutorizada, carpeta_res)
    
  
 

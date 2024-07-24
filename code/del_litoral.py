@@ -23,7 +23,7 @@ if __name__ == '__main__':
     tipo_calc = 'NN'
     tipo_norm = 'Standard'    
     flg_estimar_RO = True
-    flg_recorte_SMEC = True
+    flg_recorte_SMEC = False
     flg_print_datos = False
     
     plt.close('all')
@@ -32,8 +32,8 @@ if __name__ == '__main__':
     # datos meteorológicos para el cálculo de las RO.
     
     
-    # Petilcoran  
-    nid_p1 = 90
+    # Albisu  
+    nid_p1 = 173
     parque1 = archivos.leerArchivosCentral(nid_p1) 
     parque1.registrar() 
     medidor1 = parque1.medidores[0]          
@@ -43,21 +43,21 @@ if __name__ == '__main__':
     nom_series_p1 = ['radSCADA']
     nom_series_p1 = [s + '_' + str(nid_p1) for s in nom_series_p1]
     rad_SCADA_p1 = parque1.medidores[0].get_medida('rad','scada')
-    tem_SCADA_p1 = parque1.medidores[0].get_medida('tem','scada')
-    meds_plot_p1 = [rad_SCADA_p1, tem_SCADA_p1, parque1.pot]
+    #tem_SCADA_p1 = parque1.medidores[0].get_medida('tem','scada')
+    meds_plot_p1 = [rad_SCADA_p1, parque1.pot]
 
 
     
 
     # lectura de los datos del parque2 al cual se le van a calcular las RO.
-    # Dicano
-    nid_p2 = 91
+    # Del Litotal
+    nid_p2 = 83
     parque2 = archivos.leerArchivosCentral(nid_p2)
     
-    tini = datetime.datetime(2024, 3, 1)  
-    tfin = datetime.datetime(2024, 4, 30)
+    tini = datetime.datetime(2024, 3, 23)  
+    tfin = datetime.datetime(2024, 3, 24)
     archi = archivos.archi_ro_pendientes(nid_p2)
-    #parque2.calcular_liq_pendientes(tini, tfin, archi)
+    parque2.calcular_liq_pendientes(tini, tfin, archi)
     
     parque2.registrar()
     medidor2 = parque2.medidores[0]
@@ -65,7 +65,7 @@ if __name__ == '__main__':
     M2, F2, nom2, t2 = parque2.exportar_medidas()
     #nom_series_p2 = ['velPRONOS','dirPRONOS','potSCADA']
     #nom_series_p2 = ['velGEN','potSCADA']
-    nom_series_p2 = ['potSCADA', 'cgmSCADA']
+    nom_series_p2 = ['radSCADA','potSCADA', 'cgmSCADA']
     nom_series_p2 = [s + '_' + str(nid_p2) for s in nom_series_p2]
     
     rad_SCADA_p2 = parque2.medidores[0].get_medida('rad','scada')

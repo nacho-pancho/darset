@@ -113,10 +113,24 @@ class Medida(object):
         tini0 = self.tiempo[0]
         offset = int((tini0-tini1)/dt)
 
+        tini_inter = max(self.tiempo[0], nuevos_tiempos[0])
+        tfin_inter = min(self.tiempo[-1], nuevos_tiempos[-1])
+        
         self.tiempo = nuevos_tiempos
         muestras_viejas = self.muestras
         self.muestras = np.ones(len(nuevos_tiempos))* FUERA_DE_RANGO
-        self.muestras[offset:(offset + n0)] = muestras_viejas
+        
+        
+        if tfin_inter < tini_inter:
+            exit()
+        
+        kini_inter_nt = int((tini_inter-tini1)/dt)
+        kfin_inter_nt = int((tfin_inter-tini1)/dt)
+
+        kini_inter_t = int((tini_inter-tini0)/dt)
+        kfin_inter_t = int((tfin_inter-tini0)/dt)        
+                
+        self.muestras[kini_inter_nt:kfin_inter_nt] = muestras_viejas[kini_inter_t:kfin_inter_t]
 
     def calcular_filtros(self):
         """

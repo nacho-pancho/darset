@@ -20,8 +20,10 @@ import datetime
 if __name__ == '__main__':
 
     
+    tipo_calc = 'NN'
+    tipo_norm = 'Standard'    
     flg_estimar_RO = True
-    flg_recorte_SMEC = False
+    flg_recorte_SMEC = True
     flg_print_datos = False
 
     
@@ -39,7 +41,7 @@ if __name__ == '__main__':
     
     M1, F1, nom1, t1 = parque1.exportar_medidas()
     #nom_series_p1 = ['velGEN','dirGEN','velPRONOS','dirPRONOS','potSCADA']
-    nom_series_p1 = ['velxSCADA','velySCADA']
+    nom_series_p1 = ['velSCADA']
     nom_series_p1 = [s + '_' + str(nid_p1) for s in nom_series_p1]
     #vel_GEN_p1 = parque1.medidores[0].get_medida('vel','gen')
     #dir_GEN_p1 = parque1.medidores[0].get_medida('dir','gen')
@@ -54,8 +56,8 @@ if __name__ == '__main__':
     nid_p2 = 57
     parque2 = archivos.leerArchivosCentral(nid_p2)
     
-    tini = datetime.datetime(2021, 2, 1)  
-    tfin = datetime.datetime(2021, 3, 1)
+    tini = datetime.datetime(2024, 3, 31)  
+    tfin = datetime.datetime(2024, 4, 1)
     archi = archivos.archi_ro_pendientes(nid_p2)
     parque2.calcular_liq_pendientes(tini, tfin, archi)
     
@@ -77,11 +79,9 @@ if __name__ == '__main__':
     dt_ini_calc, dt_fin_calc = archivos.leer_ro_pendientes(parque2.id)
     delta_print_datos = 150
 
-
-    modelo.main_ro(tini, tfin, flg_estimar_RO, parque1, parque2, nom_series_p1, 
-                   nom_series_p2, dt_ini_calc, dt_fin_calc, delta_print_datos,
-                   meds_plot_p1, meds_plot_p2, flg_print_datos, flg_recorte_SMEC)
     
-    
-    
+    modelo.main_ro( tini, tfin, flg_estimar_RO, parque1, parque2, nom_series_p1, nom_series_p2, 
+                   dt_ini_calc, dt_fin_calc, delta_print_datos, meds_plot_p1,
+                   meds_plot_p2, flg_print_datos, flg_recorte_SMEC, tipo_calc, 
+                   tipo_norm )   
     

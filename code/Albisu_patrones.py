@@ -23,7 +23,7 @@ if __name__ == '__main__':
     tipo_calc = 'NN'
     tipo_norm = 'Standard'    
     flg_estimar_RO = True
-    flg_recorte_SMEC = True
+    flg_recorte_SMEC = False
     flg_print_datos = False
     
     plt.close('all')
@@ -32,8 +32,8 @@ if __name__ == '__main__':
     # datos meteorológicos para el cálculo de las RO.
     
     
-    # Petilcoran  
-    nid_p1 = 90
+    # Del Litoral  
+    nid_p1 = 83
     parque1 = archivos.leerArchivosCentral(nid_p1) 
     parque1.registrar() 
     medidor1 = parque1.medidores[0]          
@@ -43,21 +43,21 @@ if __name__ == '__main__':
     nom_series_p1 = ['radSCADA']
     nom_series_p1 = [s + '_' + str(nid_p1) for s in nom_series_p1]
     rad_SCADA_p1 = parque1.medidores[0].get_medida('rad','scada')
-    tem_SCADA_p1 = parque1.medidores[0].get_medida('tem','scada')
-    meds_plot_p1 = [rad_SCADA_p1, tem_SCADA_p1, parque1.pot]
+    #tem_SCADA_p1 = parque1.medidores[0].get_medida('tem','scada')
+    meds_plot_p1 = [rad_SCADA_p1, parque1.pot]
 
 
     
 
     # lectura de los datos del parque2 al cual se le van a calcular las RO.
-    # Dicano
-    nid_p2 = 91
+    # Albisu
+    nid_p2 = 173
     parque2 = archivos.leerArchivosCentral(nid_p2)
     
-    tini = datetime.datetime(2024, 3, 1)  
-    tfin = datetime.datetime(2024, 4, 30)
+    tini = datetime.datetime(2024, 3, 20)  
+    tfin = datetime.datetime(2024, 3, 21)
     archi = archivos.archi_ro_pendientes(nid_p2)
-    #parque2.calcular_liq_pendientes(tini, tfin, archi)
+    parque2.calcular_liq_pendientes(tini, tfin, archi)
     
     parque2.registrar()
     medidor2 = parque2.medidores[0]
